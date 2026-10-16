@@ -1,8 +1,8 @@
 {
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
-  "description": "Private local-first companion for VS Code Chat.",
-  "version": "0.1.0",
+  "description": "Private local-first VS Code companion with a fairy guide and local prompt insights.",
+  "version": "0.2.0",
   "private": true,
   "engines": {
     "vscode": "^1.100.0"
@@ -12,11 +12,14 @@
     "Other"
   ],
   "main": "./dist/src/extension.js",
+  "extensionKind": [
+    "ui"
+  ],
   "activationEvents": [
     "onChatParticipant:navi.chat",
+    "onView:navi.companion",
     "onCommand:navi.showStatus",
-    "onCommand:navi.openDataFolder",
-    "onCommand:navi.clearHistory"
+    "onCommand:navi.checkPrompt"
   ],
   "contributes": {
     "chatParticipants": [
@@ -38,6 +41,24 @@
         ]
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "navi",
+          "title": "NAVI",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "navi": [
+        {
+          "id": "navi.companion",
+          "name": "NAVI Companion",
+          "type": "webview"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "navi.showStatus",
@@ -50,6 +71,26 @@
       {
         "command": "navi.clearHistory",
         "title": "NAVI: Clear Local History"
+      },
+      {
+        "command": "navi.checkPrompt",
+        "title": "NAVI: Check Prompt"
+      },
+      {
+        "command": "navi.rebuildIndex",
+        "title": "NAVI: Rebuild Analytics Index"
+      },
+      {
+        "command": "navi.exportAnalytics",
+        "title": "NAVI: Export Sanitized Analytics"
+      },
+      {
+        "command": "navi.clearAnalytics",
+        "title": "NAVI: Delete Sanitized Analytics"
+      },
+      {
+        "command": "navi.importOtel",
+        "title": "NAVI: Import OTel Metrics JSONL (Manual)"
       }
     ],
     "configuration": {
@@ -57,15 +98,20 @@
       "properties": {
         "navi.history.enabled": {
           "type": "boolean",
-          "default": true,
-          "description": "Store NAVI's own prompt/response history locally in this VS Code profile."
+          "default": false,
+          "description": "Explicit opt-in: persist NAVI's own full prompts and responses locally. Never accesses Copilot's private history."
         },
         "navi.history.maxEntries": {
           "type": "integer",
           "default": 200,
           "minimum": 1,
           "maximum": 5000,
-          "description": "Maximum number of locally stored NAVI exchanges."
+          "description": "Maximum stored opt-in NAVI chat exchanges."
+        },
+        "navi.analytics.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Explicit opt-in: save only sanitized NAVI rule codes and metrics in local JSONL and optional SQLite index."
         }
       }
     }
@@ -82,5 +128,6 @@
     "@types/vscode": "^1.100.0",
     "@vscode/vsce": "^3.6.0",
     "typescript": "^5.8.3"
-  }
+  },
+  "icon": "media/logo.png"
 }
