@@ -1,12 +1,14 @@
 # NAVI — Copilot Companion
 
-## NAVI herunterladen und installieren
+## NAVI direkt herunterladen
 
-**[NAVI Copilot Companion v0.2.0 – VSIX herunterladen (ZIP)](https://github.com/noahmagic77/navi-copilot-companion/actions/runs/38904105451/artifacts/12047730026)**
+**[NAVI Copilot Companion v0.2.0 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.2.0.vsix)**
 
-[Neueste erfolgreiche Builds auf GitHub](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) · [Deutsche Installationsanleitung](docs/INSTALLATION.md)
+Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.2.0.vsix`.
 
-> Die GitHub-Datei ist ein ZIP-Artefakt. **ZIP entpacken** und die darin enthaltene `navi-copilot-companion-0.2.0.vsix` in VS Code über **Erweiterungen → … → Install from VSIX…** installieren. GitHub-Actions-Artefakte sind zeitlich begrenzt (hier 30 Tage); nutze danach den Link zu den neuesten Builds. Der Download erfolgt über GitHub, nicht über den VS Code Marketplace.
+[Installationsanleitung (Deutsch)](docs/INSTALLATION.md) · [Automatische Build-Ergebnisse](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)
+
+Dateigröße: 197.841 Bytes · SHA-256: `e25640ef8d28a81fd579edbebcafd59921d785bd18eabf510637882ec2bd7125`. Dies ist ein **v0.2.0-Entwicklungsstand**, nicht die VS-Code-Marketplace-Version.
 
 TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
 
@@ -21,16 +23,15 @@ TypeScript VS Code companion with an animated fairy guide, an offline determinis
 - Commands for deleting separate full-text NAVI history or sanitized analytics, export, index rebuilding and explicit local OTel metric-file import.
 - Independent deterministic tests and GitHub CI on pull requests.
 
-## Installation der VSIX-Testversion (ohne Marketplace)
+## Installation über GitHub
 
-GitHub Actions erstellt nach erfolgreichen Tests automatisch eine VSIX-Datei. **[Schritt-für-Schritt-Installationsanleitung (Deutsch)](docs/INSTALLATION.md)**.
+**[Installierbare VSIX v0.2.0](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.2.0.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
 
-1. **[GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions)** öffnen und den neuesten erfolgreichen Lauf **CI and VSIX** für den Branch `main` auswählen.
-2. Ganz unten unter **Artifacts** auf **NAVI-VSIX-...** klicken und die ZIP-Datei herunterladen. Die Artefakte laufen nach 30 Tagen ab; der nächste erfolgreiche Build erzeugt eine neue Version.
-3. ZIP entpacken, die enthaltene Datei `navi-copilot-companion-0.2.0.vsix` auf den PC kopieren und in **VS Code Desktop → Erweiterungen → ... → Install from VSIX...** auswählen.
-4. VS Code bei Bedarf neu laden, links NAVI öffnen und einen Beispielprompt mit **Prompt analysieren** testen.
+1. VSIX über den Link herunterladen (keine ZIP-Datei).
+2. VS Code Desktop öffnen und **Erweiterungen → … → Install from VSIX…** auswählen.
+3. Datei `navi-copilot-companion-0.2.0.vsix` auswählen und VS Code bei Bedarf neu laden.
 
-**Hinweis:** Dies ist ein zeitlich begrenztes GitHub-Actions-Artefakt, kein dauerhafter GitHub Release und keine Veröffentlichung im VS Code Marketplace. Das GitHub-Repository ist öffentlich.
+Die Datei ist im Repository unter `downloads/` versioniert. Bei einer neuen Version muss dieser Download explizit erneuert werden; [GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) stellt weiterhin temporäre Build-Artefakte bereit. Noch kein VS Code Marketplace Release.
 
 ## Installation for development
 

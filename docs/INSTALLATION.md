@@ -1,43 +1,34 @@
-# NAVI installieren – VSIX aus GitHub Actions
+# NAVI installieren – VSIX aus GitHub
 
-> **Entwicklungsversion 0.2.0** für VS Code Desktop ab Version 1.100. Das GitHub-Repository ist öffentlich, NAVI ist jedoch **nicht** im VS Code Marketplace veröffentlicht. Dieser Download ist eine Testversion.
+> **Entwicklungsversion 0.2.0** für VS Code Desktop ab Version 1.100. Das GitHub-Repository ist öffentlich, NAVI ist jedoch **nicht** im VS Code Marketplace veröffentlicht.
 
-## Direkter Download (letzter erfolgreicher Hauptbranch-Build)
+## Direkt herunterladen (dauerhafter Link)
 
-**[NAVI v0.2.0 – VSIX als GitHub-ZIP herunterladen](https://github.com/noahmagic77/navi-copilot-companion/actions/runs/38904105451/artifacts/12047730026)**
+**[NAVI Copilot Companion v0.2.0 – .vsix direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.2.0.vsix)**
 
-**[Immer den neuesten Build finden](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)** (Branch `main`, Workflow **CI and VSIX**, grüner Lauf, Abschnitt **Artifacts**).
+Dies ist bereits die fertige `.vsix`-Datei, **kein ZIP-Archiv**. Speichere sie auf dem Rechner, auf dem du Visual Studio Code Desktop nutzt. Die Datei gehört zur Version 0.2.0; sie wird bei zukünftigen Versionen nicht automatisch aktualisiert.
 
-> **Achtung:** Der direkte Artefakt-Link läuft nach 30 Tagen ab. Dann den neuesten erfolgreichen Build über den zweiten Link öffnen. GitHub liefert eine ZIP-Datei mit der `navi-copilot-companion-0.2.0.vsix`; nur die entpackte VSIX wird in VS Code installiert.
+**SHA-256** (optional zur Integritätsprüfung): `e25640ef8d28a81fd579edbebcafd59921d785bd18eabf510637882ec2bd7125`
 
-## Schritt 1: Installationspaket von GitHub herunterladen
+Falls der Download im mobilen Browser nicht direkt startet: Link auf deinem Computer öffnen oder über **[downloads/ im Repository](https://github.com/noahmagic77/navi-copilot-companion/tree/main/downloads)** die VSIX auswählen und **Download raw file** verwenden.
 
-1. Öffne **[NAVI – GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions)** und melde dich bei GitHub an (falls du dazu aufgefordert wirst).
-2. Öffne den neuesten erfolgreichen Lauf mit dem Namen **CI and VSIX**, der den Branch `main` betrifft.
-3. Kontrolliere, dass die Jobs **build-and-test** und **Package VSIX** grün sind.
-4. Scrolle auf der Seite des Workflow-Laufs zu **Artifacts** und klicke auf **NAVI-VSIX-<Laufnummer>**.
-5. GitHub lädt eine **ZIP-Datei** herunter. Entpacke sie; darin liegt die eigentliche Datei **`navi-copilot-companion-0.2.0.vsix`**.
+## Installation in VS Code Desktop
 
-Die ZIP ist nur die GitHub-Transportverpackung. Installiere **die entpackte `.vsix`**, nicht das ZIP-Archiv. Falls kein Artefakt angezeigt wird, warte auf den erfolgreichen Abschluss des `Package VSIX`-Jobs. Artefakte werden 30 Tage aufbewahrt.
+1. Öffne **Visual Studio Code** am PC/Mac (mindestens Version 1.100).
+2. Öffne **Erweiterungen** mit `Strg + Umschalt + X` (macOS `Cmd + Shift + X`).
+3. Öffne das Menü **…** im Erweiterungsbereich und wähle **Install from VSIX…** / **Aus VSIX installieren…**.
+4. Wähle die heruntergeladene Datei `navi-copilot-companion-0.2.0.vsix`.
+5. Lade VS Code bei Bedarf neu, öffne links **NAVI Companion** und klicke nach Eingabe eines Prompts auf **Prompt analysieren**.
 
-**Wichtig:** Das Repository ist aktuell öffentlich. Andere GitHub-Nutzer können den Quellcode ansehen. Die installierbare Preview ist noch nicht für einen breiten Produktiveinsatz freigegeben.
-
-## Schritt 2: In VS Code installieren
-
-1. Öffne **Visual Studio Code Desktop** auf deinem Windows-, Linux- oder macOS-Rechner.
-2. Öffne die **Erweiterungen** mit `Strg + Umschalt + X` (macOS: `Cmd + Shift + X`).
-3. Klicke rechts oben im Erweiterungsbereich auf das Menü **…**.
-4. Wähle **Install from VSIX…** beziehungsweise **Aus VSIX installieren…**.
-5. Wähle die entpackte **`navi-copilot-companion-0.2.0.vsix`**.
-6. Bestätige die Installation und klicke auf **Reload/Neu laden**, falls VS Code dies anbietet.
-
-**Alternative über das Terminal:**
+**Alternative im Terminal:**
 
 ```bash
 code --install-extension navi-copilot-companion-0.2.0.vsix
 ```
 
-Der `code`-Befehl muss in deiner Shell verfügbar sein und die Datei im aktuellen Verzeichnis liegen (sonst den vollständigen Pfad zur VSIX angeben).
+## Alternative: Automatischer GitHub-Actions-Build
+
+[Neueste erfolgreiche Builds auf main](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) sind ebenfalls verfügbar. Öffne einen grünen Lauf unter **CI and VSIX**, scrolle zu **Artifacts** und lade das ZIP-Artefakt herunter. Anders als beim direkten VSIX-Link musst du dort zuerst das ZIP entpacken; Artefakte werden nach 30 Tagen gelöscht.
 
 ## Schritt 3: NAVI ausprobieren
 
