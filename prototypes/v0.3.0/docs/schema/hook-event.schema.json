@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/navi/schemas/hook-event-v1.json",
+  "title": "NAVI Sanitized Hook Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ts", "kind", "session"],
+  "properties": {
+    "ts": {"type": "string", "format": "date-time"},
+    "kind": {"enum": ["prompt", "start", "tool", "unknown"]},
+    "session": {"type": "string", "minLength": 1, "maxLength": 32},
+    "category": {"enum": ["auth", "database", "testing", "ui", "devops", "performance", "documentation", "unclassified"]},
+    "words": {"type": "integer", "minimum": 0, "maximum": 100000},
+    "flags": {"type": "array", "uniqueItems": true, "maxItems": 10,
+      "items": {"enum": ["clarify", "scope", "relevant-files", "define-acceptance", "structure", "fresh-chat"]}},
+    "toolCategory": {"enum": ["search", "edit", "terminal", "other"]}
+  }
+}

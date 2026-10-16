@@ -1,0 +1,116 @@
+{
+  "name": "navi-copilot-companion",
+  "displayName": "NAVI — Copilot Efficiency Companion (Session Storage MVP)",
+  "description": "Copilot-inspired per-user local session JSONL journals and SQLite index, opt-in hooks and token metrics.",
+  "version": "0.3.0",
+  "publisher": "navi-labs",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "Copilot",
+    "efficiency",
+    "tokens",
+    "hooks",
+    "agent",
+    "prompts"
+  ],
+  "main": "./src/extension.js",
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:navi.assistant"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "navi-companion",
+          "title": "NAVI",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "navi-companion": [
+        {
+          "type": "webview",
+          "id": "navi.assistant",
+          "name": "NAVI Companion",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "navi.open",
+        "title": "NAVI: Open Companion"
+      },
+      {
+        "command": "navi.installHooks",
+        "title": "NAVI: Install Copilot Hooks (opt-in)"
+      },
+      {
+        "command": "navi.removeHooks",
+        "title": "NAVI: Remove Copilot Hooks"
+      },
+      {
+        "command": "navi.enableTelemetry",
+        "title": "NAVI: Enable local Copilot OpenTelemetry (opt-in)"
+      },
+      {
+        "command": "navi.disableTelemetry",
+        "title": "NAVI: Disable Copilot OpenTelemetry"
+      },
+      {
+        "command": "navi.demo",
+        "title": "NAVI: Simulate Hook Event"
+      },
+      {
+        "command": "navi.showDataFolder",
+        "title": "NAVI: Open Local Data Folder"
+      },
+      {
+        "command": "navi.clearData",
+        "title": "NAVI: Delete Local Data"
+      },
+      {
+        "command": "navi.reindex",
+        "title": "NAVI: Reindex local sessions"
+      },
+      {
+        "command": "navi.exportData",
+        "title": "NAVI: Export local session data"
+      }
+    ],
+    "configuration": {
+      "title": "NAVI",
+      "properties": {
+        "navi.enableNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Zeigt dezente Hinweise im NAVI-Fenster; keine Chat-Manipulation."
+        },
+        "navi.animatedFairy": {
+          "type": "boolean",
+          "default": true,
+          "description": "Animiert die Fee (respektiert außerdem reduzierte Bewegung)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.cjs",
+    "check": "node scripts/check.cjs && npm test",
+    "vsix": "python3 scripts/build_vsix.py"
+  }
+}

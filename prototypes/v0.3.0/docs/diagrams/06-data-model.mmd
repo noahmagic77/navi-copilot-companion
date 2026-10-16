@@ -1,0 +1,35 @@
+erDiagram
+    SESSION ||--o{ ANALYSIS_EVENT : emits
+    SESSION ||--o{ TOKEN_METRIC : consumes
+    RULE ||--o{ ANALYSIS_EVENT : identifies
+    SESSION {
+       text session_hash PK "SHA-256 shortened"
+       text workspace_hash "optional future field"
+       datetime started_at
+       datetime ended_at
+       text harness
+    }
+    RULE {
+       text rule_id PK
+       text severity
+       text message_key
+       boolean enabled
+    }
+    ANALYSIS_EVENT {
+       text event_id PK
+       text session_hash FK
+       text rule_id FK
+       datetime created_at
+       text source
+       text decision
+    }
+    TOKEN_METRIC {
+       text metric_id PK
+       text session_hash FK
+       text span_key UNIQUE
+       datetime created_at
+       integer input_tokens
+       integer output_tokens
+       integer cached_tokens
+       text model
+    }

@@ -1,0 +1,14 @@
+flowchart TD
+  A[VS Code Benutzerprofil] --> B[NAVI Extension]
+  B --> C[globalStorageUri]
+  C --> D[sessions/]
+  D --> E[workspace-hash/]
+  E --> F[session-hash.jsonl]
+  C --> G[(navi-index.sqlite)]
+  F -->|Index / Reindex| G
+  H[Copilot Hook] --> I[Privacy Sanitizer]
+  J[OTel Tokens] --> I
+  I --> F
+  G --> K[NAVI UI]
+  F --> L[Export / Backup]
+  L --> K

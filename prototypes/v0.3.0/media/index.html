@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}}; script-src 'nonce-{{nonce}}'; img-src {{cspSource}} data:; font-src {{cspSource}};" />
+  <link rel="stylesheet" href="{{styleUri}}" />
+  <title>NAVI Companion</title>
+</head>
+<body>
+  <main class="shell" id="shell">
+    <header class="masthead">
+      <div class="brand"><span class="brand-mark">✧</span><div><h1>NAVI</h1><div class="tagline">COPILOT COMPANION <span class="version">v0.3</span></div></div></div>
+      <span class="pill">LOCAL FIRST</span>
+    </header>
+
+    <section class="fairy-zone" aria-label="NAVI Fee und aktuelle Empfehlung">
+      <div class="orbital orbital-one"></div><div class="orbital orbital-two"></div>
+      <span class="sparkle one" aria-hidden="true">✦</span><span class="sparkle two" aria-hidden="true">✧</span><span class="sparkle three" aria-hidden="true">✦</span>
+      <svg class="fairy" viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Leuchtende türkisfarbene Fee mit vier Flügeln">
+        <defs>
+          <radialGradient id="wing" cx="65%" cy="60%" r="90%"><stop offset="0" stop-color="#dcfeff" stop-opacity=".84"/><stop offset=".55" stop-color="#70daff" stop-opacity=".4"/><stop offset="1" stop-color="#2c6dda" stop-opacity=".05"/></radialGradient>
+          <radialGradient id="core"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#edffff"/><stop offset=".72" stop-color="#a2faff"/><stop offset="1" stop-color="#2fc6ff" stop-opacity=".15"/></radialGradient>
+          <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="10" /></filter>
+        </defs>
+        <g class="wing-group left"><path d="M130 96C93 18 32 31 58 90c13 29 51 31 72 14Z" fill="url(#wing)" stroke="#91faff" stroke-opacity=".75" stroke-width="1.2"/><path d="M130 105C84 93 41 131 74 152c25 17 48-22 56-47Z" fill="url(#wing)" stroke="#91faff" stroke-opacity=".5" stroke-width="1.2" /></g>
+        <g class="wing-group right"><path d="M130 96c37-78 98-65 72-6-13 29-51 31-72 14Z" fill="url(#wing)" stroke="#91faff" stroke-opacity=".75" stroke-width="1.2"/><path d="M130 105c46-12 89 26 56 47-25 17-48-22-56-47Z" fill="url(#wing)" stroke="#91faff" stroke-opacity=".5" stroke-width="1.2" /></g>
+        <circle cx="130" cy="101" r="40" fill="#39bbff" opacity=".55" filter="url(#glow)" />
+        <circle cx="130" cy="101" r="24" fill="url(#core)" />
+        <circle cx="124" cy="93" r="8" fill="white" opacity=".83" />
+        <circle cx="130" cy="101" r="27" fill="none" stroke="#91fdff" stroke-opacity=".27" />
+      </svg>
+      <div class="fairy-ground"></div>
+      <div class="speech" id="speech" aria-live="polite">
+        <div class="speech-eyebrow"><span class="tiny-star">✧</span> NAVI SAYS</div>
+        <p id="fairy-message">Hi! Ich helfe dir, mit Copilot gezielter zu arbeiten. Prüfe einen Prompt oder aktiviere die Copilot-Hooks.</p>
+      </div>
+    </section>
+
+    <section class="section-header"><span>SESSION INSIGHTS</span><span id="connection-label">DEMO MODE</span></section>
+    <div class="metrics">
+      <div class="metric"><span class="metric-icon">↗</span><strong id="token-total">—</strong><small>Tokens erfasst</small></div>
+      <div class="metric"><span class="metric-icon">◎</span><strong id="call-count">0</strong><small>LLM-Aufrufe</small></div>
+      <div class="metric"><span class="metric-icon">⚑</span><strong id="prompt-count">0</strong><small>Hook-Ereignisse</small></div>
+    </div>
+    <p class="footnote">Lokal gespeicherte Sessions: <strong id="session-count">0</strong> · Speicher: <strong id="storage-state">Prüfung läuft</strong></p>
+    <p class="footnote">Tokens nur aus OTel-<code>chat</code>-Spans, seit Monitorstart. Keine Schätzung und keine Aussage über Einsparungen.</p>
+
+    <section class="section-header"><span>PROMPT CHECK</span><span class="section-hint">OFFLINE</span></section>
+    <div class="card check-card">
+      <label for="prompt">Deine Anfrage an Copilot</label>
+      <textarea id="prompt" rows="4" placeholder="z. B. Optimiere den Login in auth.ts. Erwartet: ..." spellcheck="false"></textarea>
+      <div class="editor-actions"><button id="check" class="button-primary">✧ Prüfen</button><button id="copy" class="button-secondary" title="Erstellt eine strukturierte Vorlage, ohne eine KI aufzurufen">Vorlage kopieren</button></div>
+      <div id="manual-result" class="manual-result" aria-live="polite"></div>
+    </div>
+
+    <section class="section-header"><span>LETZTE HINWEISE</span><span id="advice-count">0</span></section>
+    <div id="event-list" class="event-list"><div class="empty-state">Noch keine Hinweise. Nutze „Demo-Ereignis“ oder verbinde Copilot-Hooks.</div></div>
+
+    <section class="section-header"><span>VERBINDUNG</span><span class="section-hint">OPT-IN</span></section>
+    <div class="card connection-card">
+      <div class="connection-row"><div><b>Copilot-Hooks</b><small>Analysiert abgesendete Prompts lokal</small></div><span id="hook-state" class="state-label">AUS</span></div>
+      <div class="connection-row"><div><b>Token-Telemetrie</b><small>Lokaler OpenTelemetry-Dateiexport</small></div><span id="otel-state" class="state-label">AUS</span></div>
+      <div class="connection-actions"><button id="install-hooks" class="button-secondary">Hooks einrichten</button><button id="enable-otel" class="button-secondary">OTel aktivieren</button></div>
+      <div class="connection-actions"><button id="remove-hooks" class="button-secondary">Hooks entfernen</button><button id="disable-otel" class="button-secondary">OTel deaktivieren</button></div>
+      <button id="reindex" class="demo-button">Sitzungsindex neu erstellen <span>↻</span></button>
+      <button id="export-data" class="demo-button">Gespeicherte NAVI-Daten exportieren <span>⇩</span></button>
+      <button id="clear-data" class="demo-button">Lokale NAVI-Daten löschen <span>×</span></button>
+      <button id="demo" class="demo-button">Demo-Ereignis auslösen <span>→</span></button>
+    </div>
+    <footer>MADE FOR FOCUSED BUILDING <span>✧</span> NAVI POC</footer>
+  </main>
+  <script nonce="{{nonce}}" src="{{scriptUri}}"></script>
+</body>
+</html>

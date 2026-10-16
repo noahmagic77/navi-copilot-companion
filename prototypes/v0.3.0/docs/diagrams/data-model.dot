@@ -1,0 +1,12 @@
+digraph DATA {
+  graph [label="NAVI · Ziel-Datenmodell (SQLite ab v0.3)",labelloc=t,fontname="DejaVu Sans",fontsize=23,fontcolor="#e9f7ff",bgcolor="#091120",pad=0.4,ranksep=0.8,nodesep=0.6];
+  node [shape=record,style="rounded,filled",fontname="DejaVu Sans Mono",fontsize=11,color="#6095bd",fillcolor="#132c44",fontcolor="#e9f8ff",margin="0.25,0.18"];
+  edge [color="#8dacc9",penwidth=1.4,arrowsize=0.8];
+  Session [label="{SESSION|session_hash: TEXT PK\lworkspace_hash: TEXT\lharness: TEXT\lstarted_at: DATETIME\lended_at: DATETIME\l}"];
+  Rule [label="{RULE|rule_id: TEXT PK\lseverity: TEXT\lmessage_key: TEXT\lenabled: BOOLEAN\l}"];
+  Event [label="{ANALYSIS_EVENT|event_id: TEXT PK\lsession_hash: FK\lrule_id: FK\lcreated_at: DATETIME\lsource: TEXT\ldecision: TEXT\l}"];
+  Metric [label="{TOKEN_METRIC|metric_id: TEXT PK\lsession_hash: FK\lspan_key: UNIQUE\linput_tokens: INT\loutput_tokens: INT\lcached_tokens: INT\l}"];
+  Session -> Event [label="1 : N",fontcolor="#9ac6e8"];
+  Session -> Metric [label="1 : N",fontcolor="#9ac6e8"];
+  Rule -> Event [label="1 : N",fontcolor="#9ac6e8"];
+}

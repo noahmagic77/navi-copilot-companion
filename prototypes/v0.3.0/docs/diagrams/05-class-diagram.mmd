@@ -1,0 +1,67 @@
+classDiagram
+    class NaviController {
+      -context
+      -events
+      -metrics
+      +start()
+      +consumeHook(event)
+      +consumeOtel(span)
+      +refreshUI()
+      +dispose()
+    }
+    class NaviViewProvider {
+      +resolveWebviewView(view)
+      +post(message)
+    }
+    class AnalysisEngine {
+      +analyzeManual(prompt)
+      +fromHook(event)
+    }
+    class PromptChecker {
+      +analyze(prompt)
+      +proposeTemplate(prompt)
+      +classify(prompt)
+    }
+    class SessionManager {
+      -lastTopic
+      +registerPrompt(sessionHash, category)
+      +reset()
+    }
+    class RecommendationEngine {
+      +recommend(flags)
+    }
+    class TokenMetricsParser {
+      -seen
+      +parse(json)
+      +reset()
+    }
+    class IncrementalJsonlReader {
+      -offset
+      -pending
+      +poll()
+    }
+    class CopilotHookManager {
+      +install(workspace, outputFile)
+      +status(workspace)
+      +remove(workspace)
+    }
+    class JsonEventStore {
+      +load()
+      +save(events)
+      +clear()
+    }
+    class TelemetrySettingsManager {
+      +enable()
+      +disable()
+      +status()
+    }
+    NaviController *-- NaviViewProvider
+    NaviController *-- AnalysisEngine
+    NaviController *-- TokenMetricsParser
+    NaviController *-- IncrementalJsonlReader
+    NaviController *-- CopilotHookManager
+    NaviController *-- TelemetrySettingsManager
+    NaviController *-- JsonEventStore
+    AnalysisEngine *-- PromptChecker
+    AnalysisEngine *-- SessionManager
+    AnalysisEngine *-- RecommendationEngine

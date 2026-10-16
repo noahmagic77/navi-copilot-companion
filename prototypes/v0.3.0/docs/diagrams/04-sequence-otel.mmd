@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor U as Entwickler
+    participant V as NAVI UI
+    participant T as TelemetrySettingsManager
+    participant C as Copilot OTel Exporter
+    participant F as Lokale JSONL Datei
+    participant P as TokenMetricsParser
+    U->>V: OTel aktivieren (Opt-in)
+    V->>T: enable()
+    T->>T: Vorherige globale Settings sichern
+    T->>C: enabled=true, exporter=file, captureContent=false
+    Note over C: Je nach Agent-Harness und Richtlinien
+    C->>F: Spans / Token-Metriken schreiben
+    loop Abfrage in Intervallen
+      F-->>P: Neue vollständige JSONL-Zeilen
+      P->>P: chat-Spans, Zahlenvalidierung, Span-ID-Deduplizierung
+      P-->>V: Input / Output / Cache / Calls
+    end
+    U->>V: OTel deaktivieren
+    V->>T: disable()
+    T->>T: Nur von NAVI unverändert verwaltete Werte zurücksetzen

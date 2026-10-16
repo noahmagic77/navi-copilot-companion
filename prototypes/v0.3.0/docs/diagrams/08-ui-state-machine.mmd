@@ -1,0 +1,12 @@
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Observing: Hooks / OTel active
+    Observing --> Hint: Rule matched
+    Idle --> Hint: Manual prompt check
+    Hint --> Observing: Timeout / next event
+    Observing --> Warning: Critical integration issue
+    Warning --> Observing: Recovered
+    Observing --> Paused: User disables notifications
+    Paused --> Observing: User enables notifications
+    Idle --> Paused: User disables notifications
+    Paused --> Idle: No integration enabled
