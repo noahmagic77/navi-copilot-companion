@@ -1,8 +1,16 @@
 # NAVI — Copilot Companion
 
-Private TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
+## NAVI herunterladen und installieren
 
-**Status:** Experimental integration branch. Private repository; no VS Code Marketplace release.
+**[NAVI Copilot Companion v0.2.0 – VSIX herunterladen (ZIP)](https://github.com/noahmagic77/navi-copilot-companion/actions/runs/38904105451/artifacts/12047730026)**
+
+[Neueste erfolgreiche Builds auf GitHub](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) · [Deutsche Installationsanleitung](docs/INSTALLATION.md)
+
+> Die GitHub-Datei ist ein ZIP-Artefakt. **ZIP entpacken** und die darin enthaltene `navi-copilot-companion-0.2.0.vsix` in VS Code über **Erweiterungen → … → Install from VSIX…** installieren. GitHub-Actions-Artefakte sind zeitlich begrenzt (hier 30 Tage); nutze danach den Link zu den neuesten Builds. Der Download erfolgt über GitHub, nicht über den VS Code Marketplace.
+
+TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
+
+**Status:** Public GitHub repository with an experimental v0.2.0 preview on `main`; no VS Code Marketplace release.
 
 ## Key features
 
@@ -17,12 +25,12 @@ Private TypeScript VS Code companion with an animated fairy guide, an offline de
 
 GitHub Actions erstellt nach erfolgreichen Tests automatisch eine VSIX-Datei. **[Schritt-für-Schritt-Installationsanleitung (Deutsch)](docs/INSTALLATION.md)**.
 
-1. **[GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions)** öffnen und den erfolgreichen neuesten Lauf **CI and VSIX** für PR #2 / den Feature-Branch auswählen.
+1. **[GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions)** öffnen und den neuesten erfolgreichen Lauf **CI and VSIX** für den Branch `main` auswählen.
 2. Ganz unten unter **Artifacts** auf **NAVI-VSIX-...** klicken und die ZIP-Datei herunterladen. Die Artefakte laufen nach 30 Tagen ab; der nächste erfolgreiche Build erzeugt eine neue Version.
 3. ZIP entpacken, die enthaltene Datei `navi-copilot-companion-0.2.0.vsix` auf den PC kopieren und in **VS Code Desktop → Erweiterungen → ... → Install from VSIX...** auswählen.
 4. VS Code bei Bedarf neu laden, links NAVI öffnen und einen Beispielprompt mit **Prompt analysieren** testen.
 
-**Hinweis:** Es gibt noch keine Veröffentlichung im VS Code Marketplace und keinen öffentlichen GitHub Release. Die tatsächliche Sichtbarkeit des GitHub-Repositories muss vor der Weitergabe in GitHub Settings geprüft werden; sie wird durch die Erweiterung nicht gesteuert.
+**Hinweis:** Dies ist ein zeitlich begrenztes GitHub-Actions-Artefakt, kein dauerhafter GitHub Release und keine Veröffentlichung im VS Code Marketplace. Das GitHub-Repository ist öffentlich.
 
 ## Installation for development
 
@@ -56,4 +64,4 @@ NAVI **does not** access GitHub Copilot's private conversations, intercept its p
 
 The SQLite backend and official VS Code integration have not yet been validated in a live extension host. Run live E2E tests before claiming support for every OS/remote mode. See [ADR 0002](docs/adr/0002-sanitized-session-storage.md) and [Integration](docs/INTEGRATION.md).
 
-Private project. No public redistribution license granted and no marketplace publication approved.
+Public GitHub repository for an experimental preview. The repository being public does not imply a VS Code Marketplace publication; consult LICENSE.md for the applicable licensing terms.

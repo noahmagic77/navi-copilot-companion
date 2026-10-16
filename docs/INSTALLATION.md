@@ -1,18 +1,26 @@
 # NAVI installieren – VSIX aus GitHub Actions
 
-> **Entwicklungsversion 0.2.0** für VS Code Desktop ab Version 1.100. Es handelt sich um einen privaten Entwicklungs-Workflow, **nicht** um eine Veröffentlichung im VS Code Marketplace. Im Repository muss die gewünschte Sichtbarkeit separat unter **Settings** festgelegt werden.
+> **Entwicklungsversion 0.2.0** für VS Code Desktop ab Version 1.100. Das GitHub-Repository ist öffentlich, NAVI ist jedoch **nicht** im VS Code Marketplace veröffentlicht. Dieser Download ist eine Testversion.
+
+## Direkter Download (letzter erfolgreicher Hauptbranch-Build)
+
+**[NAVI v0.2.0 – VSIX als GitHub-ZIP herunterladen](https://github.com/noahmagic77/navi-copilot-companion/actions/runs/38904105451/artifacts/12047730026)**
+
+**[Immer den neuesten Build finden](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)** (Branch `main`, Workflow **CI and VSIX**, grüner Lauf, Abschnitt **Artifacts**).
+
+> **Achtung:** Der direkte Artefakt-Link läuft nach 30 Tagen ab. Dann den neuesten erfolgreichen Build über den zweiten Link öffnen. GitHub liefert eine ZIP-Datei mit der `navi-copilot-companion-0.2.0.vsix`; nur die entpackte VSIX wird in VS Code installiert.
 
 ## Schritt 1: Installationspaket von GitHub herunterladen
 
 1. Öffne **[NAVI – GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions)** und melde dich bei GitHub an (falls du dazu aufgefordert wirst).
-2. Öffne den neuesten erfolgreichen Lauf mit dem Namen **CI and VSIX**, der den Branch `feature/navi-typescript-core-ui-storage` oder dessen Pull Request betrifft.
+2. Öffne den neuesten erfolgreichen Lauf mit dem Namen **CI and VSIX**, der den Branch `main` betrifft.
 3. Kontrolliere, dass die Jobs **build-and-test** und **Package VSIX** grün sind.
 4. Scrolle auf der Seite des Workflow-Laufs zu **Artifacts** und klicke auf **NAVI-VSIX-<Laufnummer>**.
 5. GitHub lädt eine **ZIP-Datei** herunter. Entpacke sie; darin liegt die eigentliche Datei **`navi-copilot-companion-0.2.0.vsix`**.
 
 Die ZIP ist nur die GitHub-Transportverpackung. Installiere **die entpackte `.vsix`**, nicht das ZIP-Archiv. Falls kein Artefakt angezeigt wird, warte auf den erfolgreichen Abschluss des `Package VSIX`-Jobs. Artefakte werden 30 Tage aufbewahrt.
 
-**Wichtig:** GitHub-Repositories und GitHub-Actions-Artefakte können je nach Repository-Sichtbarkeit für Dritte sichtbar sein. Überprüfe die Sichtbarkeit in **Settings → General → Danger Zone → Change repository visibility**, wenn NAVI privat bleiben soll.
+**Wichtig:** Das Repository ist aktuell öffentlich. Andere GitHub-Nutzer können den Quellcode ansehen. Die installierbare Preview ist noch nicht für einen breiten Produktiveinsatz freigegeben.
 
 ## Schritt 2: In VS Code installieren
 
@@ -71,7 +79,6 @@ Dafür benötigst du einen verfügbaren Chat-Modellzugang in VS Code (z. B. GitH
 ```bash
 git clone https://github.com/noahmagic77/navi-copilot-companion.git
 cd navi-copilot-companion
-git checkout feature/navi-typescript-core-ui-storage
 npm install
 npm run check
 npm test
@@ -82,4 +89,4 @@ Die lokale Paketdatei heißt bei diesem Stand in der Regel `navi-copilot-compani
 
 ## Sicherheitshinweis
 
-Nur von vertrauenswürdigen Quellen stammende VSIX-Dateien installieren. Eine bestandene CI-Prüfung ist kein vollständiger Sicherheits- oder Kompatibilitätsnachweis. Veröffentliche NAVI nicht im Marketplace und öffne das Repository nicht für alle, solange dafür keine separate Entscheidung getroffen wurde.
+Nur von vertrauenswürdigen Quellen stammende VSIX-Dateien installieren. Eine bestandene CI-Prüfung ist kein vollständiger Sicherheits- oder Kompatibilitätsnachweis. Eine Veröffentlichung im VS Code Marketplace erfordert einen gesonderten Freigabe- und Sicherheitsschritt.
