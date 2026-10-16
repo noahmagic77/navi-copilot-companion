@@ -130,5 +130,9 @@
     "typescript": "^5.8.3"
   },
   "icon": "media/logo.png",
-  "publisher": "navi-labs"
+  "publisher": "navi-labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noahmagic77/navi-copilot-companion.git"
+  }
 }
