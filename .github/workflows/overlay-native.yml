@@ -26,7 +26,7 @@ jobs:
         run: go test ./...
       - name: Build native Windows helper
         working-directory: native/overlay
-        run: go build -trimpath -ldflags="-s -w -H=windowsgui" -o ../../build/native/navi-overlay.exe .
+        run: go build -trimpath -buildvcs=false -ldflags="-s -w -H=windowsgui" -o ../../build/native/navi-overlay.exe .
       - name: Native rendering and input self-test
         shell: pwsh
         run: |
@@ -39,6 +39,9 @@ jobs:
           if ($naviRun.ExitCode -ne 0) { throw "Native self-test failed: $($naviRun.ExitCode)" }
       - name: Native control-pipe smoke test
         run: node scripts/test-overlay-ipc.cjs build/native/navi-overlay.exe
+      - name: Native foreground and window tracking test
+        shell: pwsh
+        run: ./scripts/test-overlay-window.ps1 -Executable build/native/navi-overlay.exe -Output build/native-report
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -19,6 +19,7 @@ import (
 )
 
 type application struct {
+	transitionPending                                      bool
 	hwnd, target                                           uintptr
 	allowed                                                map[uint32]bool
 	foregroundHook, geometryHook                           uintptr
@@ -185,7 +186,12 @@ func (a *application) updateGeometry() {
 		a.flight.Active = false
 	}
 }
-func (a *application) enter(id string, context bool) { a.id = id; a.age = 0; a.context = context }
+func (a *application) enter(id string, context bool) {
+	a.transitionPending = true
+	a.id = id
+	a.age = 0
+	a.context = context
+}
 func (a *application) apply(c protocol.Command) {
 	switch c.Type {
 	case "stop":
@@ -247,6 +253,12 @@ func (a *application) syncBudget() {
 		return
 	}
 	fps := motion.FPS(a.id, a.flight.Active, a.eco)
+	if a.age < .7 {
+		fps = 30
+		if a.eco {
+			fps = 24
+		}
+	}
 	if fps != a.timerFPS {
 		pSetTimer.Call(a.hwnd, 1, uintptr(math.Ceil(1000/float64(fps))), 0)
 		a.timerFPS = fps
@@ -291,7 +303,7 @@ func (a *application) tick() {
 	}
 	if a.age >= motion.Duration(a.id) {
 		if a.context || a.id == "rest" {
-			a.age = math.Mod(a.age, motion.Duration(a.id))
+			a.age = motion.Duration(a.id)
 		} else {
 			choices := [...]string{"hover", "hover", "drift", "curious", "stretch", "figure8", "twirl"}
 			if a.id == "hover" {
@@ -311,7 +323,12 @@ func (a *application) tick() {
 	if a.id == "hover" || a.id == "listen" {
 		targetPose[motion.WingSpeed] *= .65
 	}
-	a.rig.Step(targetPose, dt)
+	rigDelta := dt
+	if a.transitionPending {
+		rigDelta = 0
+		a.transitionPending = false
+	}
+	a.rig.Step(targetPose, rigDelta)
 	p := a.rig.Value
 	a.wing = math.Mod(a.wing+dt*motion.Tau*2.05*p[motion.WingSpeed], motion.Tau)
 	a.orbit += dt * p[motion.OrbitSpeed]
