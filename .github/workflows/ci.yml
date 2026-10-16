@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run check
       - run: npm test
 
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Compile extension
         run: npm run compile
       - name: Build VSIX
@@ -55,14 +55,18 @@ jobs:
                   'extension/package.json',
                   'extension/dist/src/extension.js',
                   'extension/dist/src/ui/naviView.js',
+                  'extension/dist/src/ui/fairyMarkup.js',
+                  'extension/dist/src/ui/webviewContent.js',
                   'extension/dist/src/storage/sessionJournal.js',
+                  'extension/media/fairy.css',
+                  'extension/media/fairy.js',
                   'extension/media/icon.svg',
                   'extension/media/logo.png',
               }
               assert required.issubset(files), f'Missing: {required - files}'
               manifest = json.loads(package.read('extension/package.json'))
               assert manifest['publisher'] == 'navi-labs'
-              assert manifest['version'] == '0.2.0'
+              assert manifest['version'] == json.loads(Path('package.json').read_text())['version']
           print('VSIX manifest and essential assets verified')
           PY
       - name: Upload installable VSIX

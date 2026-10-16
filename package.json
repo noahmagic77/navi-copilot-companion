@@ -2,7 +2,7 @@
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
   "description": "Private local-first VS Code companion with a fairy guide and local prompt insights.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "engines": {
     "vscode": "^1.100.0"
@@ -61,6 +61,10 @@
     },
     "commands": [
       {
+        "command": "navi.showFairy",
+        "title": "NAVI: Show Fairy / Fee anzeigen"
+      },
+      {
         "command": "navi.showStatus",
         "title": "NAVI: Show Status"
       },
@@ -96,6 +100,12 @@
     "configuration": {
       "title": "NAVI",
       "properties": {
+        "navi.fairy.animationEnabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Animate NAVI's wings, hovering and orbiting sparkles. Respects the system's reduced-motion preference and pauses while hidden."
+        },
         "navi.history.enabled": {
           "type": "boolean",
           "default": false,

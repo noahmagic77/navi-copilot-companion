@@ -33,6 +33,9 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
   });
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('navi.showFairy',async()=>{
+      await vscode.commands.executeCommand('navi.companion.focus');
+    }),
     vscode.commands.registerCommand('navi.showStatus',async()=>{
       const enabled=vscode.workspace.getConfiguration('navi').get<boolean>('analytics.enabled',false);
       await vscode.window.showInformationMessage(`NAVI TypeScript companion active. Sanitized analytics: ${enabled?'enabled':'disabled'}. External Copilot chat history is not accessed.`);
