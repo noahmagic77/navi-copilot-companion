@@ -147,7 +147,7 @@ func newRenderer(pixels int) (r *renderer, err error) {
 			return
 		}
 		joint := point{160, 155}
-		if err = gdip(gLineBrush, uintptr(unsafe.Pointer(&tip)), uintptr(unsafe.Pointer(&joint)), 0xefffffff, 0x55ffffff, 4, ptr(&r.brushes[i])); err != nil {
+		if err = gdip(gLineBrush, uintptr(unsafe.Pointer(&tip)), uintptr(unsafe.Pointer(&joint)), 0xefffffff, 0x55ffffff, 3, ptr(&r.brushes[i])); err != nil {
 			return
 		}
 	}

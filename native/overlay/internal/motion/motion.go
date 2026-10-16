@@ -216,6 +216,9 @@ func FPS(id string, flying, eco bool) int {
 		return 10
 	}
 	if id == "hover" || id == "listen" {
+		if eco {
+			return 12
+		}
 		return 15
 	}
 	if eco {

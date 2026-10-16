@@ -216,6 +216,9 @@ func (a *application) refresh() {
 	visible, _, _ := pIsVisible.Call(a.target)
 	minimized, _, _ := pIsIconic.Call(a.target)
 	show := a.focused && a.target != 0 && exists != 0 && visible != 0 && minimized == 0 && rootWindow(foreground) == a.target && a.renderer != nil
+	if show && (a.bounds.Right-a.bounds.Left < int32(a.renderer.pixels) || a.bounds.Bottom-a.bounds.Top < int32(a.renderer.pixels)) {
+		show = false
+	}
 	if !show {
 		a.stopTimer()
 		if a.visible {
@@ -251,7 +254,7 @@ func (a *application) syncBudget() {
 }
 func (a *application) planFlight() {
 	width, height := float64(a.bounds.Right-a.bounds.Left)/a.dpi, float64(a.bounds.Bottom-a.bounds.Top)/a.dpi
-	margin := float64(a.renderer.pixels)/(2*a.dpi) + 4
+	margin := float64(a.renderer.pixels) / (2 * a.dpi)
 	// Keep all control points within the window; favour edges to leave code readable.
 	x := margin + rand.Float64()*math.Max(0, width-2*margin)
 	y := margin + rand.Float64()*math.Max(0, height-2*margin)

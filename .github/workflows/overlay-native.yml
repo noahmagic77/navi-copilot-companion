@@ -37,6 +37,8 @@ jobs:
           Get-Content build/native-stdout.txt
           Get-Content build/native-stderr.txt
           if ($naviRun.ExitCode -ne 0) { throw "Native self-test failed: $($naviRun.ExitCode)" }
+      - name: Native control-pipe smoke test
+        run: node scripts/test-overlay-ipc.cjs build/native/navi-overlay.exe
       - uses: actions/upload-artifact@v4
         if: always()
         with:
