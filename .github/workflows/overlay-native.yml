@@ -1,0 +1,48 @@
+name: Native Windows Overlay
+on:
+  push:
+    branches: [main, feat/windows-fairy-overlay]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-native:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: native/overlay/go.mod
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify shared motion contract
+        run: node scripts/native-motion-fixture.cjs --check
+      - name: Native unit tests
+        working-directory: native/overlay
+        run: go test ./...
+      - name: Build native Windows helper
+        working-directory: native/overlay
+        run: go build -trimpath -ldflags="-s -w -H=windowsgui" -o ../../build/native/navi-overlay.exe .
+      - name: Native rendering and input self-test
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build/native-report | Out-Null
+          $naviExe = (Resolve-Path build/native/navi-overlay.exe).Path
+          $naviOut = Join-Path $PWD 'build/native-report'
+          $naviRun = Start-Process -FilePath $naviExe -ArgumentList @('--self-test','--output',"`"$naviOut`"") -Wait -PassThru -RedirectStandardOutput build/native-stdout.txt -RedirectStandardError build/native-stderr.txt
+          Get-Content build/native-stdout.txt
+          Get-Content build/native-stderr.txt
+          if ($naviRun.ExitCode -ne 0) { throw "Native self-test failed: $($naviRun.ExitCode)" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: NAVI-native-Windows-${{ github.run_number }}
+          path: |
+            build/native/
+            build/native-report/
+            build/native-stdout.txt
+            build/native-stderr.txt
