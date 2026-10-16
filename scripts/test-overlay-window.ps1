@@ -88,6 +88,7 @@ try {
  $naviOwner.WindowState = 'Normal';$naviOwner.Activate();[NaviWindowTest]::SetForegroundWindow($naviOwner.Handle)|Out-Null;Pump 300
  Require ([NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay did not return after restore'
  # Exercise the real message-loop timer, not only direct renderer calls.
+ Write-Host 'Checking live fairy animation and autonomous flight'
  $naviProcess.StandardInput.WriteLine('{"type":"configure","enabled":true,"eco":false}')
  $naviProcess.StandardInput.Flush()
  Pump 300
