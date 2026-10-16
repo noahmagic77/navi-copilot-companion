@@ -18,16 +18,6 @@ public static class NaviWindowTest {
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd,System.Text.StringBuilder text,int count);
  public static IntPtr Find(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetWindowText(h,text,64);if(text.ToString()=="NAVI Fairy")found=h;}return true;},IntPtr.Zero);return found;}
  public static Rect Bounds(IntPtr hwnd) {Rect r;GetWindowRect(hwnd,out r);return r;}
- public static string Capture(Rect rect) {
-  using(var bitmap=new System.Drawing.Bitmap(rect.Right-rect.Left,rect.Bottom-rect.Top))
-  using(var graphics=System.Drawing.Graphics.FromImage(bitmap))
-  using(var stream=new System.IO.MemoryStream())
-  using(var hash=System.Security.Cryptography.SHA256.Create()) {
-   graphics.CopyFromScreen(rect.Left,rect.Top,0,0,bitmap.Size);
-   bitmap.Save(stream,System.Drawing.Imaging.ImageFormat.Png);
-   return Convert.ToBase64String(hash.ComputeHash(stream.ToArray()));
-  }
- }
 }
 '@
 function Pump([int]$Milliseconds) {
@@ -35,6 +25,16 @@ function Pump([int]$Milliseconds) {
  while ($naviWatch.ElapsedMilliseconds -lt $Milliseconds) {[Windows.Forms.Application]::DoEvents();Start-Sleep -Milliseconds 10}
 }
 function Require([bool]$Condition,[string]$Message) {if(-not $Condition){throw $Message}}
+function Capture($Rect) {
+ $naviBitmap = [Drawing.Bitmap]::new($Rect.Right-$Rect.Left,$Rect.Bottom-$Rect.Top)
+ $naviGraphics = [Drawing.Graphics]::FromImage($naviBitmap)
+ $naviStream = [IO.MemoryStream]::new()
+ try {
+  $naviGraphics.CopyFromScreen($Rect.Left,$Rect.Top,0,0,$naviBitmap.Size)
+  $naviBitmap.Save($naviStream,[Drawing.Imaging.ImageFormat]::Png)
+  return [Convert]::ToBase64String([Security.Cryptography.SHA256]::HashData($naviStream.ToArray()))
+ } finally {$naviGraphics.Dispose();$naviBitmap.Dispose();$naviStream.Dispose()}
+}
 $naviOwner = New-Object Windows.Forms.Form
 $naviOwner.Text = 'NAVI native test owner'
 $naviOwner.BackColor = [Drawing.Color]::FromArgb(30,30,30)
@@ -92,9 +92,9 @@ try {
  $naviProcess.StandardInput.Flush()
  Pump 300
  $naviAnimatedBefore = [NaviWindowTest]::Bounds($naviWindow)
- $naviImageBefore = [NaviWindowTest]::Capture($naviAnimatedBefore)
+ $naviImageBefore = Capture $naviAnimatedBefore
  Pump 500
- $naviImageAfter = [NaviWindowTest]::Capture([NaviWindowTest]::Bounds($naviWindow))
+ $naviImageAfter = Capture ([NaviWindowTest]::Bounds($naviWindow))
  Require ($naviImageBefore -ne $naviImageAfter) 'Fairy pixels remained static with animation enabled'
  $naviFlightStarted = $false
  $naviFlightWatch = [Diagnostics.Stopwatch]::StartNew()
