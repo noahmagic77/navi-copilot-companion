@@ -1,0 +1,86 @@
+{
+  "name": "navi-copilot-companion",
+  "displayName": "NAVI Copilot Companion",
+  "description": "Private local-first companion for VS Code Chat.",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Chat",
+    "Other"
+  ],
+  "main": "./dist/src/extension.js",
+  "activationEvents": [
+    "onChatParticipant:navi.chat",
+    "onCommand:navi.showStatus",
+    "onCommand:navi.openDataFolder",
+    "onCommand:navi.clearHistory"
+  ],
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "navi.chat",
+        "name": "navi",
+        "fullName": "NAVI",
+        "description": "A local-first chat companion.",
+        "isSticky": false,
+        "commands": [
+          {
+            "name": "explain",
+            "description": "Explain a topic"
+          },
+          {
+            "name": "summarize",
+            "description": "Summarize a topic"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "navi.showStatus",
+        "title": "NAVI: Show Status"
+      },
+      {
+        "command": "navi.openDataFolder",
+        "title": "NAVI: Open Local Data Folder"
+      },
+      {
+        "command": "navi.clearHistory",
+        "title": "NAVI: Clear Local History"
+      }
+    ],
+    "configuration": {
+      "title": "NAVI",
+      "properties": {
+        "navi.history.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Store NAVI's own prompt/response history locally in this VS Code profile."
+        },
+        "navi.history.maxEntries": {
+          "type": "integer",
+          "default": 200,
+          "minimum": 1,
+          "maximum": 5000,
+          "description": "Maximum number of locally stored NAVI exchanges."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "compile": "tsc -p .",
+    "check": "tsc -p . --noEmit",
+    "test": "npm run compile && node --test dist/test/*.test.js",
+    "package": "npm run compile && vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/vscode": "^1.100.0",
+    "@vscode/vsce": "^3.6.0",
+    "typescript": "^5.8.3"
+  }
+}

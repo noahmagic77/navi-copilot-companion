@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.vsix
+*.log
+.vscode-test/
+coverage/
+.env
+.env.*
+!.env.example
+.DS_Store
+# Never add local user data or secrets
+local-data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
