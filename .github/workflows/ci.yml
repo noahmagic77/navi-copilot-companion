@@ -1,11 +1,15 @@
-name: CI
+name: CI and VSIX
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -17,3 +21,54 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: npm test
+
+  package-vsix:
+    name: Package VSIX
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Compile extension
+        run: npm run compile
+      - name: Build VSIX
+        shell: bash
+        run: |
+          mkdir -p build
+          VERSION="$(node -p "require('./package.json').version")"
+          npx --no-install vsce package --no-dependencies --out "build/navi-copilot-companion-${VERSION}.vsix"
+      - name: Validate package contents
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import json
+          vsix_files = list(Path('build').glob('*.vsix'))
+          assert len(vsix_files) == 1, f'Expected exactly one VSIX, got {len(vsix_files)}'
+          with ZipFile(vsix_files[0]) as package:
+              files = set(package.namelist())
+              required = {
+                  'extension/package.json',
+                  'extension/dist/src/extension.js',
+                  'extension/dist/src/ui/naviView.js',
+                  'extension/dist/src/storage/sessionJournal.js',
+                  'extension/media/icon.svg',
+                  'extension/media/logo.png',
+              }
+              assert required.issubset(files), f'Missing: {required - files}'
+              manifest = json.loads(package.read('extension/package.json'))
+              assert manifest['publisher'] == 'navi-labs'
+              assert manifest['version'] == '0.2.0'
+          print('VSIX manifest and essential assets verified')
+          PY
+      - name: Upload installable VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: NAVI-VSIX-${{ github.run_number }}
+          path: build/*.vsix
+          if-no-files-found: error
+          retention-days: 30

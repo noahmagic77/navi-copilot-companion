@@ -13,6 +13,17 @@ Private TypeScript VS Code companion with an animated fairy guide, an offline de
 - Commands for deleting separate full-text NAVI history or sanitized analytics, export, index rebuilding and explicit local OTel metric-file import.
 - Independent deterministic tests and GitHub CI on pull requests.
 
+## Installation der VSIX-Testversion (ohne Marketplace)
+
+GitHub Actions erstellt nach erfolgreichen Tests automatisch eine VSIX-Datei. **[Schritt-für-Schritt-Installationsanleitung (Deutsch)](docs/INSTALLATION.md)**.
+
+1. **[GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions)** öffnen und den erfolgreichen neuesten Lauf **CI and VSIX** für PR #2 / den Feature-Branch auswählen.
+2. Ganz unten unter **Artifacts** auf **NAVI-VSIX-...** klicken und die ZIP-Datei herunterladen. Die Artefakte laufen nach 30 Tagen ab; der nächste erfolgreiche Build erzeugt eine neue Version.
+3. ZIP entpacken, die enthaltene Datei `navi-copilot-companion-0.2.0.vsix` auf den PC kopieren und in **VS Code Desktop → Erweiterungen → ... → Install from VSIX...** auswählen.
+4. VS Code bei Bedarf neu laden, links NAVI öffnen und einen Beispielprompt mit **Prompt analysieren** testen.
+
+**Hinweis:** Es gibt noch keine Veröffentlichung im VS Code Marketplace und keinen öffentlichen GitHub Release. Die tatsächliche Sichtbarkeit des GitHub-Repositories muss vor der Weitergabe in GitHub Settings geprüft werden; sie wird durch die Erweiterung nicht gesteuert.
+
 ## Installation for development
 
 VS Code Desktop >= 1.100, Node.js >= 22 and npm.
