@@ -1,65 +1,59 @@
 # NAVI — Copilot Companion
 
-> Private, local-first Visual Studio Code extension prototype for the VS Code / GitHub Copilot Chat experience.
+Private TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
 
-**Status:** Early development (v0.1.0). This repository is private; NAVI is not published in the VS Code Marketplace.
+**Status:** Experimental integration branch. Private repository; no VS Code Marketplace release.
 
-## What NAVI does today
+## Key features
 
-- Exposes an `@navi` participant in VS Code Chat, including `/explain` and `/summarize`.
-- Uses the language model selected by the user in VS Code Chat; no separate model credentials.
-- Optionally retains **only NAVI's own** prompt/response exchanges in local VS Code extension storage.
-- Adds commands to open the local data directory, clear NAVI history, and show the extension status.
-- Provides a typed TypeScript starter, unit tests, GitHub Actions CI and architectural documentation.
+- `@navi`, `/explain`, and `/summarize` using the model chosen by the user in VS Code Chat.
+- NAVI Activity Bar view containing a fairy, accessible speech bubble and local prompt checker. The selected NAVI logo is included as a bundled PNG.
+- Offline local prompt rules and a conservative *potential* topic-change suggestion. Tips are guidance, not verified token savings.
+- Per-profile sanitized `JSONL` session journals, salted workspace grouping and a rebuildable **optional** SQLite index (`node:sqlite` when supported).
+- Commands for deleting separate full-text NAVI history or sanitized analytics, export, index rebuilding and explicit local OTel metric-file import.
+- Independent deterministic tests and GitHub CI on pull requests.
 
-**Important boundary:** NAVI cannot automatically access, extract or replay GitHub Copilot Chat's private history. The public Chat Participant API does not provide access to other participants' private conversations. No undocumented database scraping, chat interception or telemetry is implemented.
+## Installation der VSIX-Testversion (ohne Marketplace)
 
-## Getting started
+GitHub Actions erstellt nach erfolgreichen Tests automatisch eine VSIX-Datei. **[Schritt-für-Schritt-Installationsanleitung (Deutsch)](docs/INSTALLATION.md)**.
 
-Requirements: VS Code Desktop >= 1.100, Node.js 22+, npm, and access to a language model in VS Code Chat (for example, via GitHub Copilot).
+1. **[GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions)** öffnen und den erfolgreichen neuesten Lauf **CI and VSIX** für PR #2 / den Feature-Branch auswählen.
+2. Ganz unten unter **Artifacts** auf **NAVI-VSIX-...** klicken und die ZIP-Datei herunterladen. Die Artefakte laufen nach 30 Tagen ab; der nächste erfolgreiche Build erzeugt eine neue Version.
+3. ZIP entpacken, die enthaltene Datei `navi-copilot-companion-0.2.0.vsix` auf den PC kopieren und in **VS Code Desktop → Erweiterungen → ... → Install from VSIX...** auswählen.
+4. VS Code bei Bedarf neu laden, links NAVI öffnen und einen Beispielprompt mit **Prompt analysieren** testen.
+
+**Hinweis:** Es gibt noch keine Veröffentlichung im VS Code Marketplace und keinen öffentlichen GitHub Release. Die tatsächliche Sichtbarkeit des GitHub-Repositories muss vor der Weitergabe in GitHub Settings geprüft werden; sie wird durch die Erweiterung nicht gesteuert.
+
+## Installation for development
+
+VS Code Desktop >= 1.100, Node.js >= 22 and npm.
 
 ```bash
-git clone https://github.com/noahmagic77/navi-copilot-companion.git
-cd navi-copilot-companion
 npm install
-npm run compile
+npm run check
 npm test
 ```
 
-Open the project in VS Code and press **F5** to start an **Extension Development Host**. In the new window, open Chat and type `@navi Explain the purpose of this project` or `@navi /summarize Describe a release checklist`.
+Press F5 to run the Extension Development Host. Open NAVI in the Activity Bar, enter a prompt and select **Prompt analysieren**. You can also run **NAVI: Check Prompt** or address `@navi` in VS Code Chat.
 
-Commands (Command Palette):
-- `NAVI: Show Status`
-- `NAVI: Open Local Data Folder`
-- `NAVI: Clear Local History`
+## Privacy and storage
 
-## Local-first privacy
+All local NAVI files are stored under `ExtensionContext.globalStorageUri`, separated by user environment/profile. NAVI has **no central backend**. New installations default to `navi.history.enabled=false` and `navi.analytics.enabled=false`; previous legacy chat data is untouched and can be deleted explicitly. Enabling full NAVI own-chat history saves prompt and response contents unencrypted locally, so opt in only if appropriate. Sanitized analytics contain only rule codes, session identifiers and counts, no source code and no full prompts. Exported files are user-controlled. The selected chat model may still send prompts to its provider; NAVI itself makes no extra LLM request for the local checker.
 
-`navi.history.enabled` (default: **true**) controls whether NAVI stores its *own* interactions locally. Disable it to stop new exchanges being saved. `navi.history.maxEntries` (default: 200) caps locally retained exchanges. Deletion is available from the Command Palette.
+NAVI **does not** access GitHub Copilot's private conversations, intercept its prompt input or record its token usage automatically. Importing a JSONL metric file is an explicit user action, has format constraints, and reimporting the same file creates duplicate metrics; see [Integration limitations](docs/INTEGRATION.md).
 
-History lives under VS Code's per-user/per-profile `ExtensionContext.globalStorageUri`, not in this Git repository or a corporate database. There is no account sync, centralized dashboard or extension telemetry. Invoking `@navi` sends your request through VS Code's selected language-model provider in order to generate an answer; **local storage does not mean local model inference**. Avoid sharing secrets in prompts.
+## Source tree
 
-The initial history format is a small, versioned JSON document, written with a temporary file and rename. SQLite is a possible future backend if query volume justifies it; see [Architecture](docs/architecture.md) and [ADR 0001](docs/adr/0001-local-first-storage.md).
-
-## Repository guide
-
-| Path | Purpose |
-| --- | --- |
-| `src/extension.ts` | VS Code commands and Chat participant |
-| `src/chat/` | Model request orchestration |
-| `src/storage/` | Local storage boundary and retention policy |
-| `test/` | Node.js unit tests |
-| `docs/` | Architecture, decisions and roadmap |
-| `.github/workflows/ci.yml` | Private CI; no publication |
+- `src/core/` — independent TypeScript analysis rules and OTel metric parser
+- `src/storage/sessionJournal.ts` — sanitized JSONL primary store and optional SQLite cache
+- `src/ui/naviView.ts`, `media/` — Webview UI and bundled logo
+- `src/chat/participant.ts` — existing VS Code Chat Participant, with local analysis callback
+- `src/storage/localHistoryStore.ts` — backwards-compatible, opt-in own-chat history
+- `docs/` — architecture/ADR and integration notes
+- `prototypes/v0.3.0/` — earlier reference-only JavaScript implementation on separate import branch (see PR #1)
 
 ## Scope and next milestones
 
-1. Ship this minimal, testable extension foundation.
-2. Add a user-controlled NAVI history browser, export and retention controls.
-3. Implement safe, opt-in workspace context features with tests.
-4. Evaluate SQLite only if search/performance requirements require it.
-5. Add the selected original NAVI-inspired PNG logo after the approved image file is available; no third-party artwork is committed.
+The SQLite backend and official VS Code integration have not yet been validated in a live extension host. Run live E2E tests before claiming support for every OS/remote mode. See [ADR 0002](docs/adr/0002-sanitized-session-storage.md) and [Integration](docs/INTEGRATION.md).
 
-This project is **not open source** at this stage. No redistribution license is granted. Never commit local chat records, tokens or generated `.vsix` files.
-
-See [Development roadmap](docs/roadmap.md) for planned work.
+Private project. No public redistribution license granted and no marketplace publication approved.
