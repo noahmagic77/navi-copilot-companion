@@ -1,0 +1,12 @@
+'use strict';
+const fs=require('node:fs');
+const path=require('node:path');
+const crypto=require('node:crypto');
+const file=path.join(__dirname,'../bin/win32-x64/navi-overlay.exe');
+const bytes=fs.readFileSync(file);
+const expected=fs.readFileSync(file+'.sha256','utf8').trim().split(/\s/)[0];
+if(crypto.createHash('sha256').update(bytes).digest('hex')!==expected)throw Error('Bundled native helper checksum mismatch');
+if(bytes.toString('ascii',0,2)!=='MZ')throw Error('Native helper is not a Windows executable');
+const pe=bytes.readUInt32LE(0x3c);
+if(bytes.readUInt32LE(pe)!==0x00004550||bytes.readUInt16LE(pe+4)!==0x8664)throw Error('Native helper must be a Windows x64 PE');
+console.log('Bundled Windows x64 helper and SHA-256 verified.');

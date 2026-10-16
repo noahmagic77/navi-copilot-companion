@@ -7,6 +7,8 @@ export interface WebviewResources {
   motionUri: string;
   scriptUri: string;
   animationEnabled: boolean;
+  powerMode?: string;
+  overlaySupported?: boolean;
 }
 
 /** Only extension-owned URIs and markup enter this template; no prompt contents. */
@@ -24,7 +26,7 @@ export function renderNaviWebview(resources: WebviewResources): string {
 <body>
   <main>
     <section class="companion" aria-label="NAVI Fee">
-      <div class="fairy-scene" id="fairy-scene" role="img" aria-label="Weiße leuchtende Fee mit vier Flügeln und kreisendem Sternenstaub" data-mood="idle" data-motion="paused" data-animation-enabled="${resources.animationEnabled}">
+      <div class="fairy-scene" id="fairy-scene" role="img" aria-label="Weiße leuchtende Fee mit vier Flügeln und kreisendem Sternenstaub" data-mood="idle" data-motion="paused" data-animation-enabled="${resources.animationEnabled}" data-power-mode="${resources.powerMode==='eco'?'eco':'balanced'}">
         <div class="aura" aria-hidden="true"></div>
         <div class="ground-glow" aria-hidden="true"></div>
         <div class="sparkle-field" id="sparkles" aria-hidden="true"></div>
@@ -40,6 +42,11 @@ export function renderNaviWebview(resources: WebviewResources): string {
           <svg viewBox="0 0 12 12" aria-hidden="true"><path class="pause-symbol" d="M3 2h2v8H3zm4 0h2v8H7z"/><path class="play-symbol" d="M3 1.5 10 6 3 10.5z"/></svg>
           <span id="motion-label">Animation aus</span>
         </button>
+        <button class="motion-toggle" id="toggle-power" type="button" aria-pressed="false">Sparmodus aus</button>
+      </div>
+      <div class="overlay-actions" ${resources.overlaySupported?'':'hidden'}>
+        <button class="motion-toggle" id="show-overlay" type="button">Fee im Vordergrund anzeigen</button>
+        <button class="motion-toggle" id="hide-overlay" type="button">Ausblenden</button>
       </div>
       <details class="motion-gallery">
         <summary>12 Bewegungen entdecken</summary>

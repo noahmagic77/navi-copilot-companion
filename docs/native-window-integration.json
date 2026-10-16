@@ -1,0 +1,11 @@
+{
+  "cleanShutdown": true,
+  "scope": "native WinForms host; not a VS Code end-to-end session",
+  "staysInBounds": true,
+  "minimizeRestore": true,
+  "pausedWindowMove": true,
+  "ownerTracking": true,
+  "noFocusStealing": true,
+  "windowIntegration": "passed",
+  "otherWindowHidden": true
+}

@@ -9,3 +9,6 @@ src/**
 tsconfig.json
 build/**
 downloads/**
+
+native/**
+scripts/**

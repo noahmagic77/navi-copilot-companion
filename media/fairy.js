@@ -2,7 +2,7 @@
 
 (() => {
   const vscode = acquireVsCodeApi();
-  const {motions, sampleMotion, createRig, stepRig} = window.NaviMotion;
+  const {motions, sampleMotion, createRig, stepRig, frameRate} = window.NaviMotion;
   const scene = document.getElementById('fairy-scene');
   const field = document.getElementById('sparkles');
   const float = scene.querySelector('.fairy-float');
@@ -14,6 +14,8 @@
   const shadow = scene.querySelector('.ground-glow');
   const toggle = document.getElementById('toggle-animation');
   const motionLabel = document.getElementById('motion-label');
+  const powerToggle = document.getElementById('toggle-power');
+  let powerMode = scene.dataset.powerMode === 'eco' ? 'eco' : 'balanced';
   const choice = document.getElementById('motion-choice');
   const previewAll = document.getElementById('preview-all');
   const caption = document.getElementById('motion-caption');
@@ -29,6 +31,7 @@
   let hostVisible = true;
   let frame = 0;
   let lastFrame = null;
+  let nextFrameAt = 0;
   let elapsed = 0;
   let wingPhase = 0;
   let orbitPhase = 0;
@@ -37,11 +40,15 @@
   let lastCuriosity = -10;
   let checking = false;
   let mode = 'auto';
+  let transitionPending = true;
   let previewQueue = [];
   let active = {id: 'greet', age: 0, source: 'auto', duration: 3.8};
   let pointer = {x: 0, y: 0};
   let pose = sampleMotion('hover', 0, 0);
   const rig = createRig(pose);
+  const targetPose = sampleMotion('hover', 0, 0);
+  const centers = Array(7).fill(pose);
+  let lastParticleCount = 0;
   const trail = Array.from({length: 90}, () => ({at: -1, x: 0, y: 0}));
   let trailIndex = 0;
   const idleSequence = ['drift', 'curious', 'stretch', 'drift', 'figure8', 'curious', 'twirl'];
@@ -55,11 +62,11 @@
   }
 
   // One fixed particle pool and one shared clock for the entire character.
-  const particles = Array.from({length: 28}, (_, i) => {
+  const particles = Array.from({length: 24}, (_, i) => {
     const element = document.createElement('span');
     element.className = i % 6 === 0 ? 'sparkle sparkle--star' : 'sparkle';
     field.appendChild(element);
-    return {element, phase: i * 2.399963, radius: 72 + (i % 5) * 10, speed: .44 + (i % 4) * .045};
+    return {element, phase: i * 2.399963, radius: 72 + (i % 5) * 10, speed: .44 + (i % 4) * .045, front: null};
   });
 
   function updateCaption() {
@@ -73,7 +80,10 @@
     const definition = motions.find(motion => motion.id === id);
     if (!definition) return;
     active = {id, age: 0, source, duration: duration || definition.duration};
+    transitionPending = true;
     scene.dataset.animation = id;
+    nextFrameAt = 0;
+    vscode.postMessage({type: 'motion', motion: id});
     if (source === 'preview') choice.value = id;
     updateCaption();
   }
@@ -97,7 +107,7 @@
       else resumeNaturalMotion();
     } else if (active.source === 'context') {
       // These poses are driven by the continuous clock, so looping is seamless.
-      active.age %= active.duration;
+      active.age = active.duration;
     } else if (active.source === 'feedback' || active.id !== 'hover') {
       resumeNaturalMotion();
     } else {
@@ -136,34 +146,45 @@
     glint.style.transform = `translate(${pose.gazeX}px, ${pose.gazeY}px) rotate(-35deg)`;
     shadow.style.transform = `translateX(${pose.x * modelScale * .5}px) scale(${clamp(.85 + pose.y * .012, .65, 1.1)})`;
     shadow.style.opacity = String(clamp(.65 + pose.y * .015, .3, .95));
-    particles.forEach((particle, i) => {
+    for (let i = 0; i < centers.length; i++) centers[i] = delayedCenter(.055 * i);
+    const count = powerMode === 'eco' ? 6 : pose.scatter > .35 ? 24 : 12;
+    if (count !== lastParticleCount) {particles.forEach((particle, i) => {particle.element.hidden = i >= count;}); lastParticleCount = count;}
+    for (let i = 0; i < count; i++) {
+      const particle = particles[i];
       const angle = particle.phase + orbitPhase * particle.speed;
       const depth = Math.cos(angle);
-      const center = delayedCenter(.055 * (i % 7));
+      const center = centers[i % 7];
       const radius = particle.radius * pose.orbitRadius + pose.scatter * (12 + i % 5 * 4);
       const x = Math.sin(angle) * radius;
       const y = depth * radius * .36 - x * .25 + Math.sin(angle * 1.6 + i) * 8;
       const twinkle = .56 + Math.sin(elapsed * 1.5 + particle.phase) * .24;
       particle.element.style.transform = `translate(${(x + center.x) * modelScale}px, ${(y + center.y) * modelScale}px) scale(${(.65 + (depth + 1) * .22) * modelScale})`;
       particle.element.style.opacity = String(twinkle * (.58 + (depth + 1) * .21) * clamp(pose.glow, .6, 1.1));
-      particle.element.style.zIndex = depth > 0 ? '3' : '1';
-    });
+      const front = depth > 0;
+      if (particle.front !== front) {particle.element.style.zIndex = front ? '3' : '1'; particle.front = front;}
+    }
   }
 
   function tick(timestamp) {
+    const interval = 1000 / frameRate(active.id, powerMode === 'eco', active.age);
+    if (lastFrame !== null && timestamp + .2 < nextFrameAt) {frame = requestAnimationFrame(tick); return;}
     if (lastFrame !== null) {
-      const dt = clamp((timestamp - lastFrame) / 1000, 0, .05);
+      const dt = clamp((timestamp - lastFrame) / 1000, 0, .1);
       elapsed += dt;
       advanceMotion(dt);
-      pose = stepRig(rig, sampleMotion(active.id, active.age, elapsed, pointer), dt);
+      sampleMotion(active.id, active.age, elapsed, pointer, targetPose);
+      if (active.id === 'hover' || active.id === 'listen') targetPose.wingSpeed *= .65;
+      pose = stepRig(rig, targetPose, transitionPending ? 0 : dt);
+      transitionPending = false;
       // Phases never reset when changing clips: the wings never snap backwards.
       wingPhase = (wingPhase + dt * TAU * 2.05 * pose.wingSpeed) % TAU;
       orbitPhase += dt * pose.orbitSpeed;
-      trail[trailIndex] = {at: elapsed, x: pose.x, y: pose.y};
+      const point = trail[trailIndex]; point.at = elapsed; point.x = pose.x; point.y = pose.y;
       trailIndex = (trailIndex + 1) % trail.length;
       render();
     }
     lastFrame = timestamp;
+    nextFrameAt = timestamp + interval - Math.max(0, (timestamp - nextFrameAt) % interval);
     frame = requestAnimationFrame(tick);
   }
 
@@ -171,6 +192,9 @@
     cancelAnimationFrame(frame);
     frame = 0;
     lastFrame = null;
+    nextFrameAt = 0;
+    powerToggle.textContent = powerMode === 'eco' ? 'Sparmodus an' : 'Sparmodus aus';
+    powerToggle.setAttribute('aria-pressed', String(powerMode === 'eco'));
     const enabled = animationEnabled && !reducedMotion.matches;
     const visible = hostVisible && !document.hidden;
     scene.dataset.motion = !visible ? 'hidden' : enabled ? 'running' : 'paused';
@@ -193,6 +217,13 @@
     syncMotion();
     vscode.postMessage({type: 'setAnimation', enabled: animationEnabled});
   });
+  powerToggle.addEventListener('click', () => {
+    powerMode = powerMode === 'eco' ? 'balanced' : 'eco';
+    syncMotion(); render();
+    vscode.postMessage({type: 'setPowerMode', eco: powerMode === 'eco'});
+  });
+  document.getElementById('show-overlay').addEventListener('click', () => vscode.postMessage({type:'showOverlay'}));
+  document.getElementById('hide-overlay').addEventListener('click', () => vscode.postMessage({type:'hideOverlay'}));
   choice.addEventListener('change', () => {
     noteInteraction();
     if (choice.value === 'auto') return resumeNaturalMotion();
@@ -250,7 +281,8 @@
     if (!data || typeof data !== 'object') return;
     if (data.type === 'settings' && typeof data.animationEnabled === 'boolean') {
       animationEnabled = data.animationEnabled;
-      syncMotion();
+      if (data.powerMode === 'eco' || data.powerMode === 'balanced') powerMode = data.powerMode;
+      syncMotion(); render();
       return;
     }
     if (data.type === 'visibility' && typeof data.visible === 'boolean') {

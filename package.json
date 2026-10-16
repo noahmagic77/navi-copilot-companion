@@ -2,7 +2,7 @@
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
   "description": "Private local-first VS Code companion with a fairy guide and local prompt insights.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "engines": {
     "vscode": "^1.100.0"
@@ -19,7 +19,8 @@
     "onChatParticipant:navi.chat",
     "onView:navi.companion",
     "onCommand:navi.showStatus",
-    "onCommand:navi.checkPrompt"
+    "onCommand:navi.checkPrompt",
+    "onStartupFinished"
   ],
   "contributes": {
     "chatParticipants": [
@@ -60,6 +61,18 @@
       ]
     },
     "commands": [
+      {
+        "command": "navi.showOverlay",
+        "title": "NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen"
+      },
+      {
+        "command": "navi.hideOverlay",
+        "title": "NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden"
+      },
+      {
+        "command": "navi.openCompanion",
+        "title": "NAVI: Open Companion / Ansicht \u00f6ffnen"
+      },
       {
         "command": "navi.showFairy",
         "title": "NAVI: Show Fairy / Fee anzeigen"
@@ -122,6 +135,26 @@
           "type": "boolean",
           "default": false,
           "description": "Explicit opt-in: save only sanitized NAVI rule codes and metrics in local JSONL and optional SQLite index."
+        },
+        "navi.overlay.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "description": "Show the local native foreground fairy on supported Windows x64 systems. The fairy hides when its VS Code window is inactive. No external service."
+        },
+        "navi.fairy.powerMode": {
+          "type": "string",
+          "enum": [
+            "balanced",
+            "eco"
+          ],
+          "default": "balanced",
+          "scope": "machine",
+          "enumDescriptions": [
+            "Balanced: up to 30 FPS while active, 15 FPS while hovering.",
+            "Eco: fewer sparkles and lower active frame rates."
+          ],
+          "description": "Resource budget for the foreground fairy and the embedded preview."
         }
       }
     }
@@ -131,7 +164,9 @@
     "compile": "tsc -p .",
     "check": "tsc -p . --noEmit",
     "test": "npm run compile && node --test dist/test/*.test.js",
-    "package": "npm run compile && vsce package --no-dependencies"
+    "package": "npm run compile && npm run verify:overlay && vsce package --no-dependencies",
+    "build:overlay": "node scripts/build-overlay.cjs",
+    "verify:overlay": "node scripts/verify-overlay.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

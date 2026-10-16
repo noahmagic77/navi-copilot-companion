@@ -1,14 +1,14 @@
 # NAVI installieren – VSIX aus GitHub
 
-> **Entwicklungsversion 0.4.0** für VS Code Desktop ab Version 1.100. Das GitHub-Repository ist öffentlich, NAVI ist jedoch **nicht** im VS Code Marketplace veröffentlicht.
+> **Entwicklungsversion 0.5.0** für VS Code Desktop ab Version 1.100. Das GitHub-Repository ist öffentlich, NAVI ist jedoch **nicht** im VS Code Marketplace veröffentlicht.
 
 ## Direkt herunterladen (dauerhafter Link)
 
-**[NAVI Copilot Companion v0.4.0 – .vsix direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.4.0.vsix)**
+**[NAVI Copilot Companion v0.5.0 – .vsix direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.0.vsix)**
 
-Dies ist bereits die fertige `.vsix`-Datei, **kein ZIP-Archiv**. Speichere sie auf dem Rechner, auf dem du Visual Studio Code Desktop nutzt. Die Datei gehört zur Version 0.4.0; sie wird bei zukünftigen Versionen nicht automatisch aktualisiert.
+Dies ist bereits die fertige `.vsix`-Datei, **kein ZIP-Archiv**. Speichere sie auf dem Rechner, auf dem du Visual Studio Code Desktop nutzt. Die Datei gehört zur Version 0.5.0; sie wird bei zukünftigen Versionen nicht automatisch aktualisiert.
 
-**SHA-256** (optional zur Integritätsprüfung): [Prüfsummendatei](../downloads/navi-copilot-companion-0.4.0.vsix.sha256).
+**SHA-256** (optional zur Integritätsprüfung): [Prüfsummendatei](../downloads/navi-copilot-companion-0.5.0.vsix.sha256).
 
 Falls der Download im mobilen Browser nicht direkt startet: Link auf deinem Computer öffnen oder über **[downloads/ im Repository](https://github.com/noahmagic77/navi-copilot-companion/tree/main/downloads)** die VSIX auswählen und **Download raw file** verwenden.
 
@@ -17,16 +17,28 @@ Falls der Download im mobilen Browser nicht direkt startet: Link auf deinem Comp
 1. Öffne **Visual Studio Code** am PC/Mac (mindestens Version 1.100).
 2. Öffne **Erweiterungen** mit `Strg + Umschalt + X` (macOS `Cmd + Shift + X`).
 3. Öffne das Menü **…** im Erweiterungsbereich und wähle **Install from VSIX…** / **Aus VSIX installieren…**.
-4. Wähle die heruntergeladene Datei `navi-copilot-companion-0.4.0.vsix`.
-5. Lade VS Code bei Bedarf neu. Öffne die Befehlspalette mit `Strg + Umschalt + P` und starte **NAVI: Show Fairy / Fee anzeigen**. Die weiße Fee erscheint mit zwölf abgestimmten Bewegungen, animierten Flügeln und kreisendem Glitzer.
-6. Öffne **12 Bewegungen entdecken**. Wähle eine Bewegung oder starte **Alle ansehen**. Mit **Vorschau beenden** kehrst du sofort zum natürlichen Verhalten zurück.
-7. Mit **Animation an/aus** pausierst du alle Bewegungen. Optional kannst du darunter einen Prompt lokal prüfen.
+4. Wähle die heruntergeladene Datei `navi-copilot-companion-0.5.0.vsix`.
+5. Lade VS Code bei Bedarf neu. Unter Windows x64 erscheint die aktivierte Fee vor dem aktiven VS-Code-Fenster. Falls nötig: `Strg + Umschalt + P` → **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen**.
+6. Für Einstellungen und die Vorschau: **NAVI: Open Companion / Ansicht öffnen** oder links das NAVI-Symbol wählen.
+7. Öffne **12 Bewegungen entdecken**. Wähle eine Bewegung oder starte **Alle ansehen**. Mit **Vorschau beenden** kehrst du sofort zum natürlichen Verhalten zurück.
+8. Mit **Animation an/aus** pausierst du alle Bewegungen. Optional kannst du darunter einen Prompt lokal prüfen.
 
 **Alternative im Terminal:**
 
 ```bash
-code --install-extension navi-copilot-companion-0.4.0.vsix
+code --install-extension navi-copilot-companion-0.5.0.vsix
 ```
+
+## Vordergrund-Fee steuern
+
+- **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen** startet den nativen Windows-x64-Helfer.
+- **NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden** beendet ihn und deaktiviert den automatischen Start.
+- **Sparmodus an/aus** in der NAVI-Ansicht oder `navi.fairy.powerMode` steuert den Ressourcenmodus.
+- **Animation an/aus** friert beide Darstellungen ein; die statische Fee kann sichtbar bleiben.
+- Bei Fensterwechsel oder Minimierung blendet sich die Vordergrund-Fee automatisch aus.
+- Auf anderen Betriebssystemen und Architekturen ist die eingebettete NAVI-Ansicht verfügbar.
+
+Der native Helfer ist bereits im VSIX enthalten und braucht keine zusätzliche Browser- oder .NET-Laufzeit. [Details und Messgrenzen](OVERLAY.md).
 
 ## Alternative: Automatischer GitHub-Actions-Build
 
@@ -49,13 +61,15 @@ Dafür benötigst du einen verfügbaren Chat-Modellzugang in VS Code (z. B. GitH
 
 ## Schritt 4: Datenschutz und Einstellungen
 
+- Standardmäßig **aktiviert**: `navi.overlay.enabled` für den Vordergrund-Helfer auf unterstützten Windows-x64-Systemen.
+- Standardmäßig **balanced**: `navi.fairy.powerMode`; **eco** reduziert Bildrate und Glitzer.
 - Standardmäßig **aktiviert**: `navi.fairy.animationEnabled`; mit dem Schalter in der Ansicht oder in den Benutzereinstellungen ändern. Die Systemeinstellung für reduzierte Bewegung hat Vorrang.
 - Standardmäßig **deaktiviert**: `navi.history.enabled` (vollständige NAVI-eigene Prompts und Antworten).
 - Standardmäßig **deaktiviert**: `navi.analytics.enabled` (lokale, bereinigte Sitzungsmetadaten).
 - Daten liegen ausschließlich in der lokalen VS-Code-Erweiterungsspeicherung des jeweiligen Nutzers/Profils, wenn Speicherung aktiviert wird.
 - Über die Befehlspalette findest du **NAVI: Show Status**, **NAVI: Open Local Data Folder**, **NAVI: Clear Local History** und die Analyseverwaltung.
 
-NAVI ist noch ein Prototyp. TypeScript, bestehende Tests, das VSIX-Paket und die Animation in Chromium sind geprüft; die Integration im realen VS-Code-Host muss noch separat getestet werden.
+NAVI ist noch ein Prototyp. TypeScript, bestehende Tests, das VSIX-Paket und die Animation in Chromium sind geprüft; native Fensterintegration und lokale Steuer-Pipes sind auf Windows geprüft. Ein vollständiger Live-Test in deiner VS-Code-Umgebung steht noch aus.
 
 ## Probleme beheben
 
@@ -79,7 +93,7 @@ npm test
 npm run package
 ```
 
-Die lokale Paketdatei heißt bei diesem Stand in der Regel `navi-copilot-companion-0.4.0.vsix`. GitHub Actions speichert sein Paket hingegen als temporäres Workflow-Artefakt und legt es **nicht** als Git-Commit oder GitHub Release ab.
+Die lokale Paketdatei heißt bei diesem Stand in der Regel `navi-copilot-companion-0.5.0.vsix`. GitHub Actions speichert sein Paket hingegen als temporäres Workflow-Artefakt und legt es **nicht** als Git-Commit oder GitHub Release ab.
 
 ## Sicherheitshinweis
 

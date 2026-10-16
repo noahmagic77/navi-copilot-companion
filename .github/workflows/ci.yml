@@ -46,7 +46,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile
-          import json
+          import json, hashlib
           vsix_files = list(Path('build').glob('*.vsix'))
           assert len(vsix_files) == 1, f'Expected exactly one VSIX, got {len(vsix_files)}'
           with ZipFile(vsix_files[0]) as package:
@@ -63,9 +63,16 @@ jobs:
                   'extension/media/fairy-motion.js',
                   'extension/media/icon.svg',
                   'extension/media/logo.png',
+                  'extension/bin/win32-x64/navi-overlay.exe',
+                  'extension/bin/win32-x64/navi-overlay.exe.sha256',
+                  'extension/dist/src/overlay/overlayController.js',
+                  'extension/dist/src/overlay/overlayProcess.js',
               }
               assert required.issubset(files), f'Missing: {required - files}'
               manifest = json.loads(package.read('extension/package.json'))
+              helper = package.read('extension/bin/win32-x64/navi-overlay.exe')
+              expected_hash = package.read('extension/bin/win32-x64/navi-overlay.exe.sha256').decode().split()[0]
+              assert hashlib.sha256(helper).hexdigest() == expected_hash
               assert manifest['publisher'] == 'navi-labs'
               assert manifest['version'] == json.loads(Path('package.json').read_text())['version']
           print('VSIX manifest and essential assets verified')

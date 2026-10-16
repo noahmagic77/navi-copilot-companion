@@ -5,6 +5,7 @@ import { SessionJournal } from './storage/sessionJournal';
 import { NaviView } from './ui/naviView';
 import { analyzePrompt, potentialTopicChange } from './core/promptAnalyzer';
 import { parseTokenMetrics } from './core/otelParser';
+import { OverlayController } from './overlay/overlayController';
 
 let journal:SessionJournal|undefined;
 
@@ -14,7 +15,9 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
   await journal.initialize();
   // Reconstruct any stale SQLite cache from sanitized local journals on startup.
   await journal.rebuild();
+  const overlay=new OverlayController(context.extensionUri);
   const view=new NaviView(context.extensionUri);
+  context.subscriptions.push(overlay,view.onMotion(id=>overlay.motion(id)),view.onAnalysis(result=>overlay.motion(result.hints.length?'hint':'celebrate')));
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(NaviView.viewId,view),view);
   const session=journal.newSessionId();
   const workspaceId=journal.workspaceKey(vscode.workspace.workspaceFolders?.[0]?.uri.toString()??'no-workspace');
@@ -24,6 +27,7 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
     const analysis=analyzePrompt(prompt,{topicChanged:!!lastPrompt&&potentialTopicChange(lastPrompt,prompt)});
     lastPrompt=prompt; // in-memory only, discarded at deactivation
     await view.showAnalysis(analysis);
+    overlay.motion(analysis.hints.length?'hint':'celebrate');
     if(vscode.workspace.getConfiguration('navi').get<boolean>('analytics.enabled',false)){
       for(const hint of analysis.hints){
         try{await journal?.record({workspaceId,sessionId:session,type:'hint',code:hint.code});}
@@ -33,9 +37,10 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
   });
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('navi.showFairy',async()=>{
-      await vscode.commands.executeCommand('navi.companion.focus');
-    }),
+    vscode.commands.registerCommand('navi.showFairy',()=>overlay.show()),
+    vscode.commands.registerCommand('navi.showOverlay',()=>overlay.show()),
+    vscode.commands.registerCommand('navi.hideOverlay',()=>overlay.hide()),
+    vscode.commands.registerCommand('navi.openCompanion',async()=>{await vscode.commands.executeCommand('navi.companion.focus');}),
     vscode.commands.registerCommand('navi.showStatus',async()=>{
       const enabled=vscode.workspace.getConfiguration('navi').get<boolean>('analytics.enabled',false);
       await vscode.window.showInformationMessage(`NAVI TypeScript companion active. Sanitized analytics: ${enabled?'enabled':'disabled'}. External Copilot chat history is not accessed.`);
@@ -67,6 +72,7 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
       const text=await vscode.window.showInputBox({title:'NAVI: Check Prompt',prompt:'Local analysis; no model request; text not stored.',ignoreFocusOut:true});
       if(!text)return;
       const a=analyzePrompt(text);await view.showAnalysis(a);
+      overlay.motion(a.hints.length?'hint':'celebrate');
       const msg=a.hints.map(h=>h.text).join(' · ') || 'No obvious issues detected.';
       void vscode.window.showInformationMessage(msg);
     }),
@@ -88,5 +94,6 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
       void vscode.window.showInformationMessage(`Imported ${added} sanitized metric records. Reimporting the same file creates duplicates.`);
     })
   );
+  await overlay.update();
 }
 export function deactivate():void{journal?.close();}

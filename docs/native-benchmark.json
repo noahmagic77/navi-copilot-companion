@@ -1,0 +1,14 @@
+{
+  "canvasPixels": 192,
+  "clickThroughAndNoActivate": true,
+  "frames": 360,
+  "gdiHandlesAfter": 5,
+  "gdiHandlesBefore": 5,
+  "motions": 12,
+  "nativeSelfTest": "passed",
+  "privateBytes": 18276352,
+  "renderP50Ms": 0.525,
+  "renderP95Ms": 0.758,
+  "scope": "hidden renderer microbenchmark; not a live VS Code or end-user CPU benchmark",
+  "workingSetBytes": 15609856
+}

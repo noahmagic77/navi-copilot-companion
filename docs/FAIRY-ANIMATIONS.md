@@ -21,7 +21,7 @@ Diese Reaktionen beziehen sich auf NAVIs eigene Ansicht und lokale Prüfung. Sie
 
 ## Alle Bewegungen ansehen
 
-1. **NAVI: Show Fairy / Fee anzeigen** in der Befehlspalette öffnen.
+1. **NAVI: Open Companion / Ansicht öffnen** in der Befehlspalette öffnen.
 2. **12 Bewegungen entdecken** aufklappen.
 3. Eine Bewegung auswählen oder **Alle ansehen** starten.
 
@@ -34,3 +34,5 @@ Einzelne Vorschauen und die vollständige Folge enden automatisch. **Natürlich 
 Die fünf Bewegungstests prüfen zwölf unterschiedliche Posen, endliche und begrenzte Positionen, die Unabhängigkeit der Federberechnung von 30/60/120 Hz, stetige Zustandswechsel, vollständige Drehungen ohne Richtungswechsel am Winkelübergang und stabile Pausen. Die Webview wurde in Chromium mit ihrer strikten CSP geprüft: alle zwölf Bewegungen in Folge, Ruhemodus, Eingabereaktionen, Vorschau, nur eine Animationsschleife, feste Partikelanzahl, reduzierte Bewegung, ausgeblendete Ansicht sowie helle und dunkle Designs.
 
 Die Browserprüfung ersetzt keinen Live-Test im VS-Code-Extension-Host. Die tatsächliche Bildrate hängt von Bildschirm und Rechner ab.
+
+Ab v0.5.0 werden Bildraten ausdrücklich begrenzt. Neue Zustände erhalten einen kurzen weichen Übergang mit aktiver Bildrate; danach gelten niedrigere Ruhe-Budgets. Der Windows-Helfer unterstützt dieselben zwölf Bewegungszustände. [Vordergrund-Fee](OVERLAY.md).

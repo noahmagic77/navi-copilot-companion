@@ -2,23 +2,33 @@
 
 ## NAVI direkt herunterladen
 
-**[NAVI Copilot Companion v0.4.0 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.4.0.vsix)**
+**[NAVI Copilot Companion v0.5.0 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.0.vsix)**
 
-Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.4.0.vsix`.
+Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.5.0.vsix`.
 
 [Installationsanleitung (Deutsch)](docs/INSTALLATION.md) · [Automatische Build-Ergebnisse](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)
 
-Dies ist die **v0.4.0-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.4.0.vsix.sha256).
+Dies ist die **v0.5.0-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.5.0.vsix.sha256).
 
 TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
 
-**Status:** Public GitHub repository with an experimental v0.4.0 preview on `main`; no VS Code Marketplace release.
+**Status:** Public GitHub repository with an experimental v0.5.0 preview on `main`; no VS Code Marketplace release.
 
-## Die animierte Fee
+## Die Fee im Vordergrund (Windows x64)
+
+NAVI v0.5.0 enthält einen kleinen nativen Windows-Helfer. Die weiße Fee kann vor Editor, Terminal und Seitenleisten des aktiven VS-Code-Fensters fliegen. Ihr transparentes Fenster lässt Mausklicks durch und übernimmt keinen Tastaturfokus. Beim Wechsel zu einem anderen Fenster oder beim Minimieren wird sie ausgeblendet und ihre Animationsuhr angehalten. Der Helfer ist im VSIX enthalten; ein separater Download oder eine zusätzliche Browser-Laufzeit sind nicht erforderlich.
+
+**Öffnen:** `Strg + Umschalt + P` → **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen**. **NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden** beendet den Helfer. **NAVI: Open Companion / Ansicht öffnen** zeigt Einstellungen und die Vorschau der zwölf Bewegungen. Die Erweiterung startet den aktivierten Helfer nach dem VS-Code-Start; `navi.overlay.enabled` steuert dies pro Benutzer. Auf anderen Plattformen bleibt die eingebettete NAVI-Ansicht verfügbar.
+
+Im normalen Modus sind die Bildraten auf 30 FPS beim Fliegen, 15 FPS beim Schweben und 10 FPS beim Ausruhen begrenzt. Kurze Zustandswechsel verwenden zunächst die aktive Bildrate, damit das Absenken keine Sprünge verursacht. Der Sparmodus reduziert Bildrate und Glitzer zusätzlich. Ausgeblendet oder bei deaktivierter Animation werden keine Animationsbilder berechnet. Die Win32-Darstellung verwendet vorbereitete Grafikobjekte; die reine Bewegungsberechnung erzeugt pro Bild keine neuen Speicherobjekte.
+
+[Overlay, Parameter und Messgrenzen](docs/OVERLAY.md)
+
+## Die zwölf Bewegungen und ihre Vorschau
 
 ![NAVI: weiße Fee mit Flügelschlag und kreisendem Glitzer](docs/navi-fairy.gif)
 
-NAVI hat **zwölf aufeinander abgestimmte Bewegungen**: Begrüßen, Schweben, Gleiten, Umsehen, Achterflug, Flügelstrecken, Drehen, Zuhören, Nachdenken, Hinweise geben, Freude und Ausruhen. Körper, Flügel, Licht und Glitzer bewegen sich nach einer gemeinsamen Uhr. Gedämpfte Übergänge erhalten Schwung und Flügelphase, statt Bewegungen bei jedem Wechsel neu zu starten. Die Darstellung folgt der Bildwiederholrate des Bildschirms.
+NAVI hat **zwölf aufeinander abgestimmte Bewegungen**: Begrüßen, Schweben, Gleiten, Umsehen, Achterflug, Flügelstrecken, Drehen, Zuhören, Nachdenken, Hinweise geben, Freude und Ausruhen. Körper, Flügel, Licht und Glitzer bewegen sich nach einer gemeinsamen Uhr. Gedämpfte Übergänge erhalten Schwung und Flügelphase, statt Bewegungen bei jedem Wechsel neu zu starten. Die gemeinsame Animationsuhr verwendet explizite Bildratenlimits, unabhängig von der Bildwiederholrate des Bildschirms.
 
 NAVI reagiert auf Eingaben in ihrer Ansicht, variiert ihre Bewegungen im Leerlauf und ruht nach 90 Sekunden ohne Interaktion in der Webview. Unter **12 Bewegungen entdecken** kannst du jede einzeln auswählen oder mit **Alle ansehen** eine vollständige Vorschau starten. Anschließend kehrt NAVI selbstständig zum natürlichen Verhalten zurück.
 
@@ -26,9 +36,9 @@ NAVI reagiert auf Eingaben in ihrer Ansicht, variiert ihre Bewegungen im Leerlau
 
 Der Schalter **Animation an/aus** speichert deine Einstellung in den VS-Code-Benutzereinstellungen. Die Systemeinstellung für reduzierte Bewegung wird berücksichtigt; ausgeblendete Ansichten pausieren einschließlich der Vorschau. Alle Grafik- und Animationsbestandteile sind enthalten, ohne externe Ressourcen.
 
-**Anzeigen:** `Strg + Umschalt + P` → **NAVI: Show Fairy / Fee anzeigen**, oder auf das NAVI-Symbol in der Activity Bar klicken. Die Companion-Ansicht lässt sich mit den VS-Code-Ansichtsfunktionen neben Copilot verschieben.
+**Vorschau öffnen:** `Strg + Umschalt + P` → **NAVI: Open Companion / Ansicht öffnen**, oder auf das NAVI-Symbol in der Activity Bar klicken. Die Companion-Ansicht lässt sich mit den VS-Code-Ansichtsfunktionen neben Copilot verschieben.
 
-Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft, einschließlich aller zwölf Bewegungen in Folge, stetiger Übergänge, Eingabereaktionen, Ruhemodus, Pausieren, Wiederaufnahme, reduzierter Bewegung, schmaler Ansichten sowie heller und dunkler Darstellung. Ein vollständiger Live-Test im VS-Code-Extension-Host ist weiterhin separat erforderlich.
+Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft, einschließlich aller zwölf Bewegungen in Folge, stetiger Übergänge, Eingabereaktionen, Ruhemodus, Pausieren, Wiederaufnahme, reduzierter Bewegung, schmaler Ansichten sowie heller und dunkler Darstellung. Der native Windows-Helfer wurde zusätzlich mit echten Fenstern auf einem Windows-Runner geprüft: Fokus, Fensterbewegung, Ausblenden, Minimieren/Wiederherstellen, Pipes und Shutdown. Ein vollständiger Live-Test im VS-Code-Extension-Host auf dem Zielrechner ist weiterhin separat erforderlich.
 
 ## Key features
 
@@ -41,11 +51,11 @@ Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft,
 
 ## Installation über GitHub
 
-**[Installierbare VSIX v0.4.0](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.4.0.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
+**[Installierbare VSIX v0.5.0](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.0.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
 
 1. VSIX über den Link herunterladen (keine ZIP-Datei).
 2. VS Code Desktop öffnen und **Erweiterungen → … → Install from VSIX…** auswählen.
-3. Datei `navi-copilot-companion-0.4.0.vsix` auswählen und VS Code bei Bedarf neu laden.
+3. Datei `navi-copilot-companion-0.5.0.vsix` auswählen und VS Code bei Bedarf neu laden.
 
 Die Datei ist im Repository unter `downloads/` versioniert. Bei einer neuen Version muss dieser Download explizit erneuert werden; [GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) stellt weiterhin temporäre Build-Artefakte bereit. Noch kein VS Code Marketplace Release.
 
@@ -59,7 +69,7 @@ npm run check
 npm test
 ```
 
-Press F5 to run the Extension Development Host. Run **NAVI: Show Fairy / Fee anzeigen** to see the fairy immediately. Open NAVI in the Activity Bar, enter a prompt and select **Prompt analysieren**. You can also run **NAVI: Check Prompt** or address `@navi` in VS Code Chat.
+Press F5 to run the Extension Development Host. Run **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen** on Windows x64 or **NAVI: Open Companion / Ansicht öffnen** for the embedded preview. Open NAVI in the Activity Bar, enter a prompt and select **Prompt analysieren**. You can also run **NAVI: Check Prompt** or address `@navi` in VS Code Chat.
 
 ## Privacy and storage
 
@@ -74,6 +84,9 @@ NAVI **does not** access GitHub Copilot's private conversations, intercept its p
 - `src/ui/naviView.ts` — Webview lifecycle, local messages and motion preferences
 - `src/ui/fairyMarkup.ts`, `src/ui/webviewContent.ts`, `media/fairy.*` — original white vector fairy, animation and Webview UI
 - `media/fairy-motion.js` — shared motion catalogue, pose sampling and deterministic spring model
+- `src/overlay/` — verified child-process lifecycle and VS Code overlay controls
+- `native/overlay/` — native Go/Win32 renderer, window event hooks, bounded flight and tests
+- `bin/win32-x64/` — tested Windows helper and SHA-256
 - `media/logo.png` — selected extension icon
 - `src/chat/participant.ts` — existing VS Code Chat Participant, with local analysis callback
 - `src/storage/localHistoryStore.ts` — backwards-compatible, opt-in own-chat history
@@ -82,6 +95,6 @@ NAVI **does not** access GitHub Copilot's private conversations, intercept its p
 
 ## Scope and next milestones
 
-The SQLite backend and official VS Code integration have not yet been validated in a live extension host. Run live E2E tests before claiming support for every OS/remote mode. See [ADR 0002](docs/adr/0002-sanitized-session-storage.md) and [Integration](docs/INTEGRATION.md).
+The SQLite backend and full VS Code integration have not yet been validated in a live extension host. Native rendering, native window integration and local control pipes have passed their Windows-runner tests. Run live E2E tests before claiming support for every OS/remote mode. See [ADR 0002](docs/adr/0002-sanitized-session-storage.md) and [Integration](docs/INTEGRATION.md).
 
 Public GitHub repository for an experimental preview. The repository being public does not imply a VS Code Marketplace publication; consult LICENSE.md for the applicable licensing terms.

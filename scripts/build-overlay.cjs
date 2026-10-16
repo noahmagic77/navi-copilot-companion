@@ -1,0 +1,13 @@
+'use strict';
+const fs=require('node:fs');
+const path=require('node:path');
+const crypto=require('node:crypto');
+const {spawnSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..');
+const out=path.join(root,'bin/win32-x64/navi-overlay.exe');
+fs.mkdirSync(path.dirname(out),{recursive:true});
+const result=spawnSync(process.env.NAVI_GO||'go',['build','-C',path.join(root,'native/overlay'),'-trimpath','-buildvcs=false','-ldflags=-s -w -H=windowsgui','-o',out,'.'],{stdio:'inherit',env:{...process.env,GOOS:'windows',GOARCH:'amd64',CGO_ENABLED:'0'}});
+if(result.error)throw result.error;
+if(result.status!==0)process.exit(result.status||1);
+fs.writeFileSync(out+'.sha256',crypto.createHash('sha256').update(fs.readFileSync(out)).digest('hex')+'  navi-overlay.exe\n');
+require('./verify-overlay.cjs');

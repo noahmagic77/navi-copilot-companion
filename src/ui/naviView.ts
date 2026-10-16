@@ -11,10 +11,12 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
   private readonly emitter = new vscode.EventEmitter<Analysis>();
   private readonly configurationSubscription: vscode.Disposable;
   readonly onAnalysis = this.emitter.event;
+  private readonly motionEmitter = new vscode.EventEmitter<string>();
+  readonly onMotion = this.motionEmitter.event;
 
   constructor(private readonly extensionUri: vscode.Uri) {
     this.configurationSubscription = vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('navi.fairy.animationEnabled')) void this.sendSettings();
+      if (event.affectsConfiguration('navi.fairy.animationEnabled') || event.affectsConfiguration('navi.fairy.powerMode')) void this.sendSettings();
     });
   }
 
@@ -28,8 +30,10 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
       webview.onDidReceiveMessage((message: unknown) => this.receiveMessage(message)),
       view.onDidChangeVisibility(() => {
         void webview.postMessage({type: 'visibility', visible: view.visible});
+        if (!view.visible) this.motionEmitter.fire('hover');
       }),
       view.onDidDispose(() => {
+        this.motionEmitter.fire('hover');
         this.view = undefined;
         this.clearViewSubscriptions();
       })
@@ -40,7 +44,9 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
       styleUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy.css')).toString(),
       motionUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy-motion.js')).toString(),
       scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy.js')).toString(),
-      animationEnabled: this.animationEnabled()
+      animationEnabled: this.animationEnabled(),
+      powerMode: this.powerMode(),
+      overlaySupported: process.platform==='win32' && process.arch==='x64'
     });
   }
 
@@ -52,8 +58,15 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
 
   private async receiveMessage(message: unknown): Promise<void> {
     if (!message || typeof message !== 'object') return;
-    const data = message as {type?: unknown; text?: unknown; enabled?: unknown};
-    if (data.type === 'ready') {
+    const data = message as {type?: unknown; text?: unknown; enabled?: unknown; motion?: unknown; eco?: unknown};
+    if (data.type === 'motion' && typeof data.motion === 'string' && data.motion.length<24) {
+      this.motionEmitter.fire(data.motion);
+    } else if (data.type === 'showOverlay' || data.type === 'hideOverlay') {
+      await vscode.commands.executeCommand(data.type==='showOverlay'?'navi.showOverlay':'navi.hideOverlay');
+    } else if (data.type === 'setPowerMode' && typeof data.eco === 'boolean') {
+      await vscode.workspace.getConfiguration('navi').update('fairy.powerMode',data.eco?'eco':'balanced',vscode.ConfigurationTarget.Global);
+      await this.sendSettings();
+    } else if (data.type === 'ready') {
       await this.sendSettings();
       if (this.view) await this.view.webview.postMessage({type: 'visibility', visible: this.view.visible});
       if (this.lastAnalysis) await this.showAnalysis(this.lastAnalysis);
@@ -75,8 +88,10 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
     return vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled', true);
   }
 
+  private powerMode(): string {return vscode.workspace.getConfiguration('navi').get<string>('fairy.powerMode','balanced');}
+
   private async sendSettings(): Promise<void> {
-    if (this.view) await this.view.webview.postMessage({type: 'settings', animationEnabled: this.animationEnabled()});
+    if (this.view) await this.view.webview.postMessage({type: 'settings', animationEnabled: this.animationEnabled(), powerMode:this.powerMode()});
   }
 
   private clearViewSubscriptions(): void {
@@ -87,6 +102,7 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
     this.clearViewSubscriptions();
     this.configurationSubscription.dispose();
     this.emitter.dispose();
+    this.motionEmitter.dispose();
     this.view = undefined;
     this.lastAnalysis = undefined;
   }

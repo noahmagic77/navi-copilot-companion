@@ -23,12 +23,16 @@
     {id: 'rest', label: 'Ausruhen', duration: 9}
   ].map(Object.freeze));
 
-  function sampleMotion(id, age, elapsed, pointer = {x: 0, y: 0}) {
-    const definition = motions.find(motion => motion.id === id) || motions[1];
+  const byId = new Map(motions.map(motion => [motion.id, motion]));
+  const neutralPointer = Object.freeze({x: 0, y: 0});
+  const rigCache = new WeakMap();
+
+  function sampleMotion(id, age, elapsed, pointer = neutralPointer, output = {}) {
+    const definition = byId.get(id) || motions[1];
     const t = clamp(age / definition.duration, 0, 1);
     const envelope = Math.sin(Math.PI * t) ** 2;
     const angle = t * TAU;
-    const pose = {
+    const pose = Object.assign(output, {
       x: Math.sin(elapsed * .63) * 1.8,
       y: Math.sin(elapsed * 1.25) * 3,
       roll: Math.sin(elapsed * .72) * 1.5,
@@ -38,7 +42,7 @@
       wingSpeed: 1, wingAmplitude: 1, wingFold: 0, wingSpread: 0,
       orbitRadius: 1, orbitSpeed: 1, scatter: 0,
       gazeX: 0, gazeY: 0
-    };
+    });
     switch (definition.id) {
       case 'greet': {
         const wave = Math.sin(age * 5) * Math.exp(-age * .7);
@@ -143,13 +147,17 @@
   }
 
   function stepRig(rig, target, delta) {
-    const dt = clamp(Number.isFinite(delta) ? delta : 0, 0, .05);
-    const result = {};
-    for (const [key, state] of Object.entries(rig)) {
+    const dt = clamp(Number.isFinite(delta) ? delta : 0, 0, .1);
+    let cache = rigCache.get(rig);
+    if (!cache) {cache = {keys: Object.keys(rig), result: {}}; rigCache.set(rig, cache);}
+    const result = cache.result;
+    const positionDecay = Math.exp(-11 * dt), otherDecay = Math.exp(-13 * dt);
+    for (const key of cache.keys) {
+      const state = rig[key];
       const goal = key === 'roll' || key === 'yaw' ? nearestAngle(state.value, target[key]) : target[key];
       const omega = key === 'x' || key === 'y' ? 11 : 13;
       const offset = state.value - goal;
-      const decay = Math.exp(-omega * dt);
+      const decay = key === 'x' || key === 'y' ? positionDecay : otherDecay;
       const temporary = (state.velocity + omega * offset) * dt;
       state.value = goal + (offset + temporary) * decay;
       state.velocity = (state.velocity - omega * temporary) * decay;
@@ -158,5 +166,11 @@
     return result;
   }
 
-  return Object.freeze({motions, sampleMotion, createRig, stepRig, nearestAngle});
+  function frameRate(id, eco = false, age = Infinity) {
+    if (age < .7) return eco ? 24 : 30;
+    if (id === 'rest') return 10;
+    if (id === 'hover' || id === 'listen') return eco ? 12 : 15;
+    return eco ? 24 : 30;
+  }
+  return Object.freeze({motions, sampleMotion, createRig, stepRig, nearestAngle, frameRate});
 });

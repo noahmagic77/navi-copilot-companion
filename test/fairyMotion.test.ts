@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const {motions, sampleMotion, createRig, stepRig, nearestAngle} = require('../../media/fairy-motion.js');
+const {motions, sampleMotion, createRig, stepRig, nearestAngle, frameRate} = require('../../media/fairy-motion.js');
 
 test('the twelve motions produce distinct poses with finite, bounded positions', () => {
   assert.equal(motions.length, 12);
@@ -64,6 +64,26 @@ test('paused and delayed frames cannot jump or destabilize the rig', () => {
   const rig = createRig(start);
   assert.deepEqual(stepRig(rig, target, 0), start);
   const longFrame = stepRig(createRig(start), target, 60);
-  assert.deepEqual(longFrame, stepRig(createRig(start), target, .05));
+  assert.deepEqual(longFrame, stepRig(createRig(start), target, .1));
   for (const value of Object.values(longFrame)) assert(Number.isFinite(value));
+});
+
+
+test('explicit drawing budgets stay low on high-refresh displays', () => {
+  assert.equal(frameRate('hover'), 15);
+  assert.equal(frameRate('listen', true), 12);
+  assert.equal(frameRate('figure8'), 30);
+  assert.equal(frameRate('celebrate', true), 24);
+  assert.equal(frameRate('rest'), 10);
+  assert.equal(frameRate('rest', false, .2), 30);
+  assert.equal(frameRate('rest', false, 1), 10);
+});
+
+test('pose and spring outputs can be reused by the rendering loop', () => {
+  const target = {};
+  assert.equal(sampleMotion('hover', 0, 0, undefined, target), target);
+  const rig = createRig();
+  const first = stepRig(rig, target, 1 / 30);
+  const second = stepRig(rig, sampleMotion('listen', 1, 1, undefined, target), 1 / 30);
+  assert.equal(first, second);
 });
