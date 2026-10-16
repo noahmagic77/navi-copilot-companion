@@ -60,6 +60,7 @@ jobs:
                   'extension/dist/src/storage/sessionJournal.js',
                   'extension/media/fairy.css',
                   'extension/media/fairy.js',
+                  'extension/media/fairy-motion.js',
                   'extension/media/icon.svg',
                   'extension/media/logo.png',
               }

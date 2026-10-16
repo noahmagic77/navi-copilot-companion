@@ -38,6 +38,7 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
       cspSource: webview.cspSource,
       nonce: randomBytes(16).toString('base64'),
       styleUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy.css')).toString(),
+      motionUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy-motion.js')).toString(),
       scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy.js')).toString(),
       animationEnabled: this.animationEnabled()
     });

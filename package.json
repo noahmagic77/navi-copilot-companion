@@ -2,7 +2,7 @@
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
   "description": "Private local-first VS Code companion with a fairy guide and local prompt insights.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "engines": {
     "vscode": "^1.100.0"
@@ -104,7 +104,7 @@
           "type": "boolean",
           "default": true,
           "scope": "window",
-          "description": "Animate NAVI's wings, hovering and orbiting sparkles. Respects the system's reduced-motion preference and pauses while hidden."
+          "description": "Enable NAVI's 12 coordinated movements and reactions. Respects the system's reduced-motion preference and pauses while hidden."
         },
         "navi.history.enabled": {
           "type": "boolean",

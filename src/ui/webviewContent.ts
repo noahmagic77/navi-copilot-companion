@@ -4,6 +4,7 @@ export interface WebviewResources {
   cspSource: string;
   nonce: string;
   styleUri: string;
+  motionUri: string;
   scriptUri: string;
   animationEnabled: boolean;
 }
@@ -40,6 +41,13 @@ export function renderNaviWebview(resources: WebviewResources): string {
           <span id="motion-label">Animation aus</span>
         </button>
       </div>
+      <details class="motion-gallery">
+        <summary>12 Bewegungen entdecken</summary>
+        <label for="motion-choice">Bewegung ansehen</label>
+        <select id="motion-choice"><option value="auto">Natürlich bewegen</option></select>
+        <button class="motion-toggle" id="preview-all" type="button">Alle ansehen</button>
+        <p id="motion-caption" role="status">NAVI bewegt sich von selbst und reagiert auf dich.</p>
+      </details>
     </section>
     <section class="speech" aria-live="polite" aria-atomic="true">
       <strong id="heading">Hey, ich bin NAVI.</strong>
@@ -55,6 +63,7 @@ export function renderNaviWebview(resources: WebviewResources): string {
     </details>
     <p class="status" id="status" role="status">Lokale Analyse · Kein Versand</p>
   </main>
+  <script nonce="${attr(resources.nonce)}" src="${attr(resources.motionUri)}"></script>
   <script nonce="${attr(resources.nonce)}" src="${attr(resources.scriptUri)}"></script>
 </body>
 </html>`;

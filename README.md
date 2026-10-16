@@ -2,32 +2,38 @@
 
 ## NAVI direkt herunterladen
 
-**[NAVI Copilot Companion v0.3.0 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.3.0.vsix)**
+**[NAVI Copilot Companion v0.4.0 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.4.0.vsix)**
 
-Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.3.0.vsix`.
+Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.4.0.vsix`.
 
 [Installationsanleitung (Deutsch)](docs/INSTALLATION.md) · [Automatische Build-Ergebnisse](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)
 
-Dies ist die **v0.3.0-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.3.0.vsix.sha256).
+Dies ist die **v0.4.0-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.4.0.vsix.sha256).
 
 TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
 
-**Status:** Public GitHub repository with an experimental v0.3.0 preview on `main`; no VS Code Marketplace release.
+**Status:** Public GitHub repository with an experimental v0.4.0 preview on `main`; no VS Code Marketplace release.
 
 ## Die animierte Fee
 
 ![NAVI: weiße Fee mit Flügelschlag und kreisendem Glitzer](docs/navi-fairy.gif)
 
-Vier einzeln animierte, weiße Flügel, ein weich leuchtender Kern und 28 Glitzerpartikel, die vor und hinter NAVI kreisen. Die Fee schwebt sanft und pulsiert bei einem lokalen Hinweis. Der Schalter **Animation an/aus** speichert deine Einstellung in den VS-Code-Benutzereinstellungen. Die Systemeinstellung für reduzierte Bewegung wird berücksichtigt; ausgeblendete Ansichten pausieren. Alle Grafik- und Animationsbestandteile sind enthalten, ohne externe Ressourcen.
+NAVI hat **zwölf aufeinander abgestimmte Bewegungen**: Begrüßen, Schweben, Gleiten, Umsehen, Achterflug, Flügelstrecken, Drehen, Zuhören, Nachdenken, Hinweise geben, Freude und Ausruhen. Körper, Flügel, Licht und Glitzer bewegen sich nach einer gemeinsamen Uhr. Gedämpfte Übergänge erhalten Schwung und Flügelphase, statt Bewegungen bei jedem Wechsel neu zu starten. Die Darstellung folgt der Bildwiederholrate des Bildschirms.
+
+NAVI reagiert auf Eingaben in ihrer Ansicht, variiert ihre Bewegungen im Leerlauf und ruht nach 90 Sekunden ohne Interaktion in der Webview. Unter **12 Bewegungen entdecken** kannst du jede einzeln auswählen oder mit **Alle ansehen** eine vollständige Vorschau starten. Anschließend kehrt NAVI selbstständig zum natürlichen Verhalten zurück.
+
+[Alle zwölf Bewegungen im Video ansehen](docs/navi-12-motions.mp4) · [Bewegungen und Auslöser](docs/FAIRY-ANIMATIONS.md)
+
+Der Schalter **Animation an/aus** speichert deine Einstellung in den VS-Code-Benutzereinstellungen. Die Systemeinstellung für reduzierte Bewegung wird berücksichtigt; ausgeblendete Ansichten pausieren einschließlich der Vorschau. Alle Grafik- und Animationsbestandteile sind enthalten, ohne externe Ressourcen.
 
 **Anzeigen:** `Strg + Umschalt + P` → **NAVI: Show Fairy / Fee anzeigen**, oder auf das NAVI-Symbol in der Activity Bar klicken. Die Companion-Ansicht lässt sich mit den VS-Code-Ansichtsfunktionen neben Copilot verschieben.
 
-Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft, einschließlich Pausieren, Wiederaufnahme, reduzierter Bewegung, schmaler Ansichten sowie heller und dunkler Darstellung. Ein vollständiger Live-Test im VS-Code-Extension-Host ist weiterhin separat erforderlich.
+Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft, einschließlich aller zwölf Bewegungen in Folge, stetiger Übergänge, Eingabereaktionen, Ruhemodus, Pausieren, Wiederaufnahme, reduzierter Bewegung, schmaler Ansichten sowie heller und dunkler Darstellung. Ein vollständiger Live-Test im VS-Code-Extension-Host ist weiterhin separat erforderlich.
 
 ## Key features
 
 - `@navi`, `/explain`, and `/summarize` using the model chosen by the user in VS Code Chat.
-- NAVI Activity Bar view with an original white vector fairy, independently animated wings, orbiting sparkles, a motion toggle, accessible speech bubble and local prompt checker. The selected NAVI logo remains the bundled extension icon.
+- NAVI Activity Bar view with an original white vector fairy, 12 coordinated animation states with spring-smoothed transitions, orbiting sparkles, a motion toggle, accessible speech bubble and local prompt checker. The selected NAVI logo remains the bundled extension icon.
 - Offline local prompt rules and a conservative *potential* topic-change suggestion. Tips are guidance, not verified token savings.
 - Per-profile sanitized `JSONL` session journals, salted workspace grouping and a rebuildable **optional** SQLite index (`node:sqlite` when supported).
 - Commands for deleting separate full-text NAVI history or sanitized analytics, export, index rebuilding and explicit local OTel metric-file import.
@@ -35,11 +41,11 @@ Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft,
 
 ## Installation über GitHub
 
-**[Installierbare VSIX v0.3.0](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.3.0.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
+**[Installierbare VSIX v0.4.0](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.4.0.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
 
 1. VSIX über den Link herunterladen (keine ZIP-Datei).
 2. VS Code Desktop öffnen und **Erweiterungen → … → Install from VSIX…** auswählen.
-3. Datei `navi-copilot-companion-0.3.0.vsix` auswählen und VS Code bei Bedarf neu laden.
+3. Datei `navi-copilot-companion-0.4.0.vsix` auswählen und VS Code bei Bedarf neu laden.
 
 Die Datei ist im Repository unter `downloads/` versioniert. Bei einer neuen Version muss dieser Download explizit erneuert werden; [GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) stellt weiterhin temporäre Build-Artefakte bereit. Noch kein VS Code Marketplace Release.
 
@@ -67,6 +73,7 @@ NAVI **does not** access GitHub Copilot's private conversations, intercept its p
 - `src/storage/sessionJournal.ts` — sanitized JSONL primary store and optional SQLite cache
 - `src/ui/naviView.ts` — Webview lifecycle, local messages and motion preferences
 - `src/ui/fairyMarkup.ts`, `src/ui/webviewContent.ts`, `media/fairy.*` — original white vector fairy, animation and Webview UI
+- `media/fairy-motion.js` — shared motion catalogue, pose sampling and deterministic spring model
 - `media/logo.png` — selected extension icon
 - `src/chat/participant.ts` — existing VS Code Chat Participant, with local analysis callback
 - `src/storage/localHistoryStore.ts` — backwards-compatible, opt-in own-chat history
