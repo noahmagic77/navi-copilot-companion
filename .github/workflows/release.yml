@@ -1,0 +1,59 @@
+name: Publish GitHub preview
+
+on:
+  workflow_run:
+    workflows: [CI and VSIX]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: navi-github-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - name: Verify checked-in VSIX and publish preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          TAG="v$VERSION"
+          VSIX="downloads/navi-copilot-companion-$VERSION.vsix"
+          (cd downloads && sha256sum -c "navi-copilot-companion-$VERSION.vsix.sha256")
+          python3 - "$VSIX" "$VERSION" <<'PY'
+          import hashlib, json, sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as archive:
+              manifest = json.loads(archive.read('extension/package.json'))
+              assert manifest['version'] == sys.argv[2]
+              helper = archive.read('extension/bin/win32-x64/navi-overlay.exe')
+              checksum = archive.read('extension/bin/win32-x64/navi-overlay.exe.sha256').decode().split()[0]
+              assert hashlib.sha256(helper).hexdigest() == checksum
+          PY
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+            exit 0
+          fi
+          gh release create "$TAG" "$VSIX" "$VSIX.sha256" \
+            --target "$(git rev-parse HEAD)" --title "NAVI $TAG" \
+            --notes-file CHANGELOG.md --prerelease

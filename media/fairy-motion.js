@@ -8,6 +8,105 @@
 })(globalThis, () => {
   const TAU = Math.PI * 2;
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+  // Eight choreographic families, each with eleven named path/gesture variants.
+  // These parameters are also used to generate the native catalogue.
+  const families = [
+    ['Gleiten', [
+      ['sway-breeze','In einer Brise wiegen'], ['sway-leaf','Wie ein Blatt gleiten'],
+      ['sway-feather','Federleicht pendeln'], ['sway-ribbon','Ein Band nachzeichnen'],
+      ['sway-cloud','Auf einer Wolke wiegen'], ['sway-reed','Wie Schilf schwingen'],
+      ['sway-sail','Mit dem Wind segeln'], ['sway-petal','Wie ein Blütenblatt schweben'],
+      ['sway-cradle','Sich sanft wiegen'], ['sway-tide','Mit der Flut treiben'],
+      ['sway-lullaby','Im Wiegenlied schweben']
+    ]],
+    ['Bögen', [
+      ['arc-sunrise','Einen Sonnenbogen fliegen'], ['arc-moon','Einen Mondbogen fliegen'],
+      ['arc-rainbow','Einen Regenbogen ziehen'], ['arc-bridge','Eine Luftbrücke zeichnen'],
+      ['arc-vault','Unter einem Lichtbogen gleiten'], ['arc-comet','Wie ein Komet vorbeiziehen'],
+      ['arc-dawn','Im Morgenbogen aufsteigen'], ['arc-dusk','Im Abendbogen sinken'],
+      ['arc-leap','Einen weiten Sprung wagen'], ['arc-return','In einem Bogen zurückkehren'],
+      ['arc-crescent','Eine Sichel nachzeichnen']
+    ]],
+    ['Hüpfen', [
+      ['bob-dewdrop','Wie ein Tautropfen hüpfen'], ['bob-pebble','Über Luftsteine hüpfen'],
+      ['bob-skip','Fröhlich springen'], ['bob-spring','Federnd aufsteigen'],
+      ['bob-bubble','Wie eine Blase steigen'], ['bob-dance','Im Takt hüpfen'],
+      ['bob-step','Kleine Luftschritte machen'], ['bob-rain','Regentropfen nachtanzen'],
+      ['bob-heart','Im Herzschlag schweben'], ['bob-jump','Einen Freudensprung machen'],
+      ['bob-tip','Auf Zehenspitzen hüpfen']
+    ]],
+    ['Kreisen', [
+      ['orbit-halo','Einen Halo umrunden'], ['orbit-clock','Im Uhrzeigersinn kreisen'],
+      ['orbit-back','Gegen den Uhrzeigersinn kreisen'], ['orbit-ellipse','Eine Ellipse fliegen'],
+      ['orbit-satellite','Wie ein Satellit kreisen'], ['orbit-pool','Einen Teich umrunden'],
+      ['orbit-wreath','Einen Kranz zeichnen'], ['orbit-wheel','Ein Lichtrad drehen'],
+      ['orbit-pearl','Eine Perle umkreisen'], ['orbit-loop','Eine Luftschlaufe ziehen'],
+      ['orbit-compass','Den Kompass umrunden']
+    ]],
+    ['Spuren', [
+      ['trace-wave','Eine Welle zeichnen'], ['trace-zigzag','Einen weichen Zickzack fliegen'],
+      ['trace-stitch','Eine Lichtnaht ziehen'], ['trace-stream','Einem Bachlauf folgen'],
+      ['trace-lightning','Einen sanften Blitz zeichnen'], ['trace-stairs','Luftstufen nachzeichnen'],
+      ['trace-meander','Durch die Luft mäandern'], ['trace-thread','Einen Faden spinnen'],
+      ['trace-snake','Eine Schlangenlinie fliegen'], ['trace-ripple','Kleine Wellen schlagen'],
+      ['trace-weave','Ein Lichtgewebe weben']
+    ]],
+    ['Spiralen', [
+      ['spiral-shell','Eine Muschelspirale fliegen'], ['spiral-whirl','Einen Wirbel zeichnen'],
+      ['spiral-bloom','Wie eine Blüte aufgehen'], ['spiral-galaxy','Eine Galaxie umtanzen'],
+      ['spiral-vortex','In einem Lichtwirbel kreisen'], ['spiral-unfurl','Sich spiralförmig entfalten'],
+      ['spiral-coil','Eine Feder nachzeichnen'], ['spiral-wisp','Wie ein Irrlicht wirbeln'],
+      ['spiral-rose','Eine Lichtrose zeichnen'], ['spiral-fountain','Eine Lichtfontäne tanzen'],
+      ['spiral-home','Im Wirbel heimkehren']
+    ]],
+    ['Leuchten', [
+      ['light-breathe','Ruhig aufleuchten'], ['light-beacon','Wie ein Leuchtfeuer strahlen'],
+      ['light-firefly','Wie ein Glühwürmchen blinken'], ['light-star','Wie ein Stern funkeln'],
+      ['light-lantern','Wie eine Laterne schwingen'], ['light-heart','Im Herzschlag leuchten'],
+      ['light-shimmer','Sanft schimmern'], ['light-dawn','Wie Morgenlicht erwachen'],
+      ['light-signal','Ein Lichtsignal geben'], ['light-aura','Die Aura ausbreiten'],
+      ['light-goodnight','Zum Abschied glimmen']
+    ]],
+    ['Gesten', [
+      ['gesture-nod','Zustimmend nicken'], ['gesture-bow','Sich verbeugen'],
+      ['gesture-peek','Vorsichtig hervorschauen'], ['gesture-lean','Sich zur Seite neigen'],
+      ['gesture-shake','Den Kopf schütteln'], ['gesture-welcome','Einladend schwingen'],
+      ['gesture-proud','Sich stolz aufrichten'], ['gesture-shy','Schüchtern zurückweichen'],
+      ['gesture-wonder','Staunend aufblicken'], ['gesture-thanks','Sich dankbar verneigen'],
+      ['gesture-wave','Zum Abschied winken']
+    ]]
+  ];
+  const additional = families.flatMap(([category, entries], kind) => entries.map(([id, label], index) => ({
+    id, label, category, duration: 4.4 + (index % 5) * .6 + kind * .15,
+    profile: Object.freeze({kind, ax: 8 + index * 1.35, ay: 6 + (index * 3 % 11),
+      cycles: 1 + index % 3, phase: index * Math.PI / 7,
+      tilt: (index % 2 ? -1 : 1) * (5 + index)})
+  })));
+  const greetings = [
+    ['greet-wave','Mit den Flügeln winken',7], ['greet-bow','Zur Begrüßung verbeugen',7],
+    ['greet-hop','Freudig heranhüpfen',2], ['greet-circle','Einen Willkommenskreis fliegen',3],
+    ['greet-sun','Mit einem Sonnenbogen begrüßen',1], ['greet-spark','Zur Begrüßung funkeln',6],
+    ['greet-spiral','Im Willkommenswirbel erscheinen',5], ['greet-sway','Sanft zur Begrüßung wiegen',0],
+    ['greet-dance','Einen Willkommenstanz machen',4], ['greet-peek','Neugierig zur Begrüßung hervorschauen',7]
+  ].map(([id,label,kind],index)=>({id,label,category:'Begrüßungen',duration:3.4+index*.18,
+    profile:Object.freeze({kind,ax:10+index,ay:8+index*.6,cycles:1+index%3,phase:index*Math.PI/6,tilt:(index%2?-1:1)*(8+index)})}));
+  const greetingMotionIds = Object.freeze(greetings.map(m=>m.id));
+  function createGreetingSelector(random = Math.random) {
+    let bag = greetingMotionIds.slice(0, 0);
+    let previous = '';
+    return () => {
+      if (!bag.length) {
+        bag = greetingMotionIds.slice();
+        for (let i = bag.length - 1; i > 0; i--) {
+          const j = Math.floor(random() * (i + 1));
+          [bag[i], bag[j]] = [bag[j], bag[i]];
+        }
+        if (bag[bag.length - 1] === previous) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+      }
+      previous = bag.pop();
+      return previous;
+    };
+  }
   const motions = Object.freeze([
     {id: 'greet', label: 'Begrüßen', duration: 3.8},
     {id: 'hover', label: 'Ruhig schweben', duration: 10},
@@ -21,9 +120,11 @@
     {id: 'hint', label: 'Einen Hinweis geben', duration: 4.8},
     {id: 'celebrate', label: 'Sich freuen', duration: 4.2},
     {id: 'rest', label: 'Ausruhen', duration: 9}
-  ].map(Object.freeze));
+  ].map(motion => ({...motion, category: 'Grundbewegungen'})).concat(additional,greetings).map(Object.freeze));
 
   const byId = new Map(motions.map(motion => [motion.id, motion]));
+  const idleMotionIds = Object.freeze(['drift','curious','stretch','figure8','twirl',
+    ...additional.filter(motion => ['Gleiten','Bögen','Kreisen'].includes(motion.category)).map(motion => motion.id)]);
   const neutralPointer = Object.freeze({x: 0, y: 0});
   const rigCache = new WeakMap();
 
@@ -134,6 +235,29 @@
         pose.orbitSpeed = .35;
         pose.orbitRadius = .82;
         break;
+      default: {
+        const p = definition.profile;
+        if (!p) break;
+        const a = angle * p.cycles, wave = Math.sin(a + p.phase), cross = Math.cos(a + p.phase);
+        const breathe = (1 - Math.cos(a)) * .5;
+        switch (p.kind) {
+          case 0: pose.x += p.ax * wave * envelope; pose.y += p.ay * Math.sin(a * 2) * envelope * .4; break;
+          case 1: pose.x += p.ax * (2 * t - 1) * envelope; pose.y -= p.ay * envelope; break;
+          case 2: pose.x += p.ax * Math.sin(angle) * envelope * .5; pose.y -= p.ay * breathe * envelope; break;
+          case 3: pose.x += p.ax * cross * envelope; pose.y += p.ay * wave * envelope; break;
+          case 4: pose.x += p.ax * Math.sin(a) * envelope; pose.y += p.ay * Math.sin(a * 2 + p.phase) * envelope; break;
+          case 5: pose.x += p.ax * cross * envelope * t; pose.y += p.ay * wave * envelope * t; break;
+          case 6: pose.x += p.ax * wave * envelope * .15; pose.y -= p.ay * breathe * envelope * .3; pose.glow += breathe * envelope * .4; pose.scatter = breathe * envelope * .65; break;
+          case 7: pose.x += p.ax * wave * envelope * .25; pose.y += p.ay * cross * envelope * .5; pose.gazeX = wave * 2; pose.gazeY = cross * 2; pose.wingSpread = breathe * envelope * .5; break;
+        }
+        pose.roll += p.tilt * wave * envelope;
+        pose.yaw += p.tilt * cross * envelope * .5;
+        pose.scale += .025 * breathe * envelope;
+        pose.wingSpeed = 1 + .18 * wave * envelope;
+        pose.wingAmplitude = 1 - .25 * breathe * envelope;
+        pose.orbitSpeed = 1 + .35 * breathe * envelope;
+        break;
+      }
     }
     return pose;
   }
@@ -172,5 +296,5 @@
     if (id === 'hover' || id === 'listen') return eco ? 12 : 15;
     return eco ? 24 : 30;
   }
-  return Object.freeze({motions, sampleMotion, createRig, stepRig, nearestAngle, frameRate});
+  return Object.freeze({motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, createRig, stepRig, nearestAngle, frameRate});
 });

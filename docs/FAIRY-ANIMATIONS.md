@@ -1,6 +1,24 @@
-# NAVIs zwölf Bewegungen
+# NAVIs 110 Bewegungen
 
-Ab Version 0.4.0 bewegt sich die weiße Fee nach einem gemeinsamen Ablauf. Flügelschlag, Körperbewegung, Licht, Schatten und Glitzer bleiben miteinander verbunden. Lagewechsel werden sanft abgefedert; Flügel und Glitzer behalten beim Wechsel ihre Phase. Beim Ausblenden oder Pausieren bleibt die gesamte Bewegungszeit stehen.
+Die Fee bietet 110 auswählbare Bewegungen: die zwölf bisherigen Grundbewegungen, 88 parametrisierte Choreografien in acht Familien und zehn zusätzliche Begrüßungen. Flügelschlag, Körperbewegung, Licht, Schatten und Glitzer bleiben miteinander verbunden. Lagewechsel werden sanft abgefedert; Flügel und Glitzer behalten beim Wechsel ihre Phase. Beim Ausblenden oder Pausieren bleibt die gesamte Bewegungszeit stehen.
+
+## Zehn zusätzliche Begrüßungen
+
+Flügelwinken, Verbeugen, Heranhüpfen, Willkommenskreis, Sonnenbogen, Funkeln, Willkommenswirbel, Wiegen, Willkommenstanz und Hervorschauen. Beim Erweiterungsstart, Zurückkehren ins VS-Code-Fenster und Wechsel zu einem anderen Texteditor-Tab wählt NAVI zufällig eine Begrüßung aus einem gemischten Zehner-Vorrat; jede kommt vor einer erneuten Mischung einmal vor, ohne direkte Wiederholung an der Rundengrenze; diese Ereignisse teilen eine Sperrzeit von 15 Sekunden. Bei erneutem Sichtbarwerden der NAVI-Ansicht gibt es ebenfalls eine Begrüßung mit 15 Sekunden Sperrzeit. Die Ansicht unterbricht dafür keine Vorschau oder aktive Prompt-Interaktion; der native Helfer schützt seine Zuhören-/Nachdenken-Zustände. Tabs außerhalb von VS Code werden nicht beobachtet.
+
+| Familie | Anzahl | Beispiele |
+| --- | --- | --- |
+| Grundbewegungen | 12 | Begrüßen, Zuhören, Nachdenken, Ausruhen |
+| Gleiten | 11 | Brise, Blatt, Feder, Luftband |
+| Bögen | 11 | Sonnenbogen, Mondbogen, Regenbogen |
+| Hüpfen | 11 | Tautropfen, Luftsteine, Freudensprung |
+| Kreisen | 11 | Halo, Ellipse, Satellit |
+| Spuren | 11 | Welle, Zickzack, Schlangenlinie |
+| Spiralen | 11 | Muschel, Galaxie, Lichtrose |
+| Leuchten | 11 | Glühwürmchen, Stern, Laterne |
+| Gesten | 11 | Nicken, Verbeugen, Winken |
+
+Die neuen Varianten unterscheiden sich in Pfadform, Amplitude, Rhythmus, Phase, Neigung und koordinierten Flügel-/Lichtbewegungen. Es sind prozedurale Animationen derselben Vektorfee. Gleiten, Bögen und Kreisen ergänzen die natürlichen Leerlaufbewegungen; alle 110 sind gezielt in der Vorschau verfügbar. Die semantischen Grundzustände bleiben an die bisherigen Interaktionen gebunden.
 
 | Bewegung | Wann sie erscheint |
 | --- | --- |
@@ -22,17 +40,21 @@ Diese Reaktionen beziehen sich auf NAVIs eigene Ansicht und lokale Prüfung. Sie
 ## Alle Bewegungen ansehen
 
 1. **NAVI: Open Companion / Ansicht öffnen** in der Befehlspalette öffnen.
-2. **12 Bewegungen entdecken** aufklappen.
+2. **110 Bewegungen entdecken** aufklappen.
 3. Eine Bewegung auswählen oder **Alle ansehen** starten.
 
-Einzelne Vorschauen und die vollständige Folge enden automatisch. **Natürlich bewegen** oder **Vorschau beenden** beendet die Vorschau sofort. Eine neue Prompt-Prüfung hat Vorrang vor einer Vorschau. Die Einstellung **Animation an/aus** und die Systemeinstellung für reduzierte Bewegung gelten für alle zwölf Bewegungen.
+Die Auswahl ist nach Familien gruppiert. Einzelne Vorschauen und die vollständige Folge enden automatisch. Die vollständige Folge dauert mehrere Minuten und zeigt ihren Fortschritt an. **Natürlich bewegen** oder **Vorschau beenden** beendet die Vorschau sofort. Eine neue Prompt-Prüfung hat Vorrang vor einer Vorschau. Die Einstellung **Animation an/aus** gilt für alle 110 Bewegungen. Mit `navi.fairy.respectReducedMotion` lässt sich die Betriebssystempräferenz berücksichtigen; standardmäßig ist diese Option aus.
 
-[Video der vollständigen Folge](navi-12-motions.mp4)
+[Früheres Video der zwölf Grundbewegungen](navi-12-motions.mp4)
 
 ## Prüfung
 
-Die fünf Bewegungstests prüfen zwölf unterschiedliche Posen, endliche und begrenzte Positionen, die Unabhängigkeit der Federberechnung von 30/60/120 Hz, stetige Zustandswechsel, vollständige Drehungen ohne Richtungswechsel am Winkelübergang und stabile Pausen. Die Webview wurde in Chromium mit ihrer strikten CSP geprüft: alle zwölf Bewegungen in Folge, Ruhemodus, Eingabereaktionen, Vorschau, nur eine Animationsschleife, feste Partikelanzahl, reduzierte Bewegung, ausgeblendete Ansicht sowie helle und dunkle Designs.
+Automatische Tests prüfen exakt 110 eindeutige IDs und Posen, endliche und begrenzte Positionen, alle 12.100 gerichteten Bewegungskombinationen beim Übergang, vollständige Drehungen, Pausen, Bildraten und wiederverwendbare Pose-Ausgaben. Die native Bewegungsberechnung wird auf Speicherallokationen geprüft. Wahrnehmungs- und Zielflugtests durchlaufen automatisch alle 110 Zustände.
+
+`media/fairy-motion.js` ist die Quelle des Katalogs. `node scripts/native-motion-fixture.cjs` erzeugt den TypeScript-Katalog, native Definitionen und sechs Referenzposen pro Bewegung. `npm run check` und `npm test` erkennen veraltete generierte Dateien. Die Go-Tests vergleichen alle 660 Referenzposen mit der Webview-Berechnung.
+
+Die bisherige Chromium-Prüfung bezog sich auf die zwölf Grundbewegungen. Eine visuelle Live-Prüfung der neuen 110er-Vorschau im Extension-Host steht separat aus.
 
 Die Browserprüfung ersetzt keinen Live-Test im VS-Code-Extension-Host. Die tatsächliche Bildrate hängt von Bildschirm und Rechner ab.
 
-Ab v0.5.0 werden Bildraten ausdrücklich begrenzt. Neue Zustände erhalten einen kurzen weichen Übergang mit aktiver Bildrate; danach gelten niedrigere Ruhe-Budgets. Der Windows-Helfer unterstützt dieselben zwölf Bewegungszustände. [Vordergrund-Fee](OVERLAY.md).
+Ab v0.5.0 werden Bildraten ausdrücklich begrenzt. Neue Zustände erhalten einen kurzen weichen Übergang mit aktiver Bildrate; danach gelten niedrigere Ruhe-Budgets. Der Windows-Helfer unterstützt dieselben 110 Bewegungszustände. [Vordergrund-Fee](OVERLAY.md).

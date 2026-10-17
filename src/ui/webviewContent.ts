@@ -1,4 +1,5 @@
 import {fairyMarkup} from './fairyMarkup';
+import {motionCatalog} from '../core/motionCatalog';
 
 export interface WebviewResources {
   cspSource: string;
@@ -7,6 +8,7 @@ export interface WebviewResources {
   motionUri: string;
   scriptUri: string;
   animationEnabled: boolean;
+  respectReducedMotion?: boolean;
   powerMode?: string;
   overlaySupported?: boolean;
 }
@@ -26,7 +28,7 @@ export function renderNaviWebview(resources: WebviewResources): string {
 <body>
   <main>
     <section class="companion" aria-label="NAVI Fee">
-      <div class="fairy-scene" id="fairy-scene" role="img" aria-label="Weiße leuchtende Fee mit vier Flügeln und kreisendem Sternenstaub" data-mood="idle" data-motion="paused" data-animation-enabled="${resources.animationEnabled}" data-power-mode="${resources.powerMode==='eco'?'eco':'balanced'}">
+      <div class="fairy-scene" id="fairy-scene" role="img" aria-label="Weiße leuchtende Fee mit vier Flügeln und kreisendem Sternenstaub" data-mood="idle" data-motion="paused" data-animation-enabled="${resources.animationEnabled}" data-respect-reduced-motion="${resources.respectReducedMotion===true}" data-power-mode="${resources.powerMode==='eco'?'eco':'balanced'}">
         <div class="aura" aria-hidden="true"></div>
         <div class="ground-glow" aria-hidden="true"></div>
         <div class="sparkle-field" id="sparkles" aria-hidden="true"></div>
@@ -49,7 +51,7 @@ export function renderNaviWebview(resources: WebviewResources): string {
         <button class="motion-toggle" id="hide-overlay" type="button">Ausblenden</button>
       </div>
       <details class="motion-gallery">
-        <summary>12 Bewegungen entdecken</summary>
+        <summary>${motionCatalog.length} Bewegungen entdecken</summary>
         <label for="motion-choice">Bewegung ansehen</label>
         <select id="motion-choice"><option value="auto">Natürlich bewegen</option></select>
         <button class="motion-toggle" id="preview-all" type="button">Alle ansehen</button>

@@ -6,6 +6,7 @@ import { NaviView } from './ui/naviView';
 import { analyzePrompt, potentialTopicChange } from './core/promptAnalyzer';
 import { parseTokenMetrics } from './core/otelParser';
 import { OverlayController } from './overlay/overlayController';
+import { GreetingCycle } from './core/greetingCycle';
 
 let journal:SessionJournal|undefined;
 
@@ -17,6 +18,16 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
   await journal.rebuild();
   const overlay=new OverlayController(context.extensionUri);
   const view=new NaviView(context.extensionUri);
+  const greetings=new GreetingCycle();
+  const greet=()=>{
+    if (!vscode.window.state.focused || !vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled',true)) return;
+    const id=greetings.next(Date.now());
+    if(id){overlay.motion(id);void view.showGreeting(id);}
+  };
+  context.subscriptions.push(
+    vscode.window.onDidChangeWindowState(state=>{if(state.focused) greet();}),
+    vscode.window.onDidChangeActiveTextEditor(editor=>{if(editor) greet();})
+  );
   context.subscriptions.push(overlay,view.onMotion(id=>overlay.motion(id)),view.onAnalysis(result=>overlay.motion(result.hints.length?'hint':'celebrate')));
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(NaviView.viewId,view),view);
   const session=journal.newSessionId();
@@ -40,6 +51,14 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
     vscode.commands.registerCommand('navi.showFairy',()=>overlay.show()),
     vscode.commands.registerCommand('navi.showOverlay',()=>overlay.show()),
     vscode.commands.registerCommand('navi.hideOverlay',()=>overlay.hide()),
+    vscode.commands.registerCommand('navi.flyToPosition',async()=>{
+      const target=await vscode.window.showQuickPick([
+        {label:'Oben links',x:0,y:0}, {label:'Oben rechts',x:1,y:0},
+        {label:'Mitte',x:.5,y:.5}, {label:'Unten links',x:0,y:1}, {label:'Unten rechts',x:1,y:1}
+      ],{title:'NAVI: Flugziel im VS-Code-Fenster',placeHolder:'Die Fee hält Abstand zur Maus und wartet, wenn das Ziel blockiert ist.'});
+      if(target) await overlay.flyTo(target.x,target.y);
+    }),
+    vscode.commands.registerCommand('navi.cancelFlight',()=>overlay.cancelTarget()),
     vscode.commands.registerCommand('navi.openCompanion',async()=>{await vscode.commands.executeCommand('navi.companion.focus');}),
     vscode.commands.registerCommand('navi.showStatus',async()=>{
       const enabled=vscode.workspace.getConfiguration('navi').get<boolean>('analytics.enabled',false);
@@ -95,5 +114,6 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
     })
   );
   await overlay.update();
+  greet();
 }
 export function deactivate():void{journal?.close();}

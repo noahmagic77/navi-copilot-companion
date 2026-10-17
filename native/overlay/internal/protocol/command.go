@@ -8,11 +8,14 @@ import (
 )
 
 type Command struct {
-	Type    string `json:"type"`
-	Enabled bool   `json:"enabled"`
-	Focused bool   `json:"focused"`
-	Eco     bool   `json:"eco"`
-	Motion  string `json:"motion"`
+	Type                 string   `json:"type"`
+	Enabled              bool     `json:"enabled"`
+	Focused              bool     `json:"focused"`
+	Eco                  bool     `json:"eco"`
+	RespectReducedMotion bool     `json:"respectReducedMotion"`
+	Motion               string   `json:"motion"`
+	X                    *float64 `json:"x"`
+	Y                    *float64 `json:"y"`
 }
 
 func Parse(data []byte) (Command, error) {
@@ -24,8 +27,12 @@ func Parse(data []byte) (Command, error) {
 		return c, err
 	}
 	switch c.Type {
-	case "configure", "focus", "stop":
+	case "configure", "focus", "stop", "cancelTarget":
 		return c, nil
+	case "target":
+		if c.X != nil && c.Y != nil && *c.X >= 0 && *c.X <= 1 && *c.Y >= 0 && *c.Y <= 1 {
+			return c, nil
+		}
 	case "motion":
 		if motion.Valid(c.Motion) {
 			return c, nil

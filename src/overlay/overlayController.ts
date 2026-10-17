@@ -2,12 +2,12 @@ import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import * as vscode from 'vscode';
 import {OverlayProcess} from './overlayProcess';
+import {motionIds} from '../core/motionCatalog';
 
-const motionIds = new Set(['greet','hover','drift','curious','figure8','stretch','twirl','listen','think','hint','celebrate','rest']);
 export class OverlayController implements vscode.Disposable {
   readonly supported = process.platform === 'win32' && process.arch === 'x64';
   private readonly output = vscode.window.createOutputChannel('NAVI Overlay');
-  private readonly bridge = new OverlayProcess(error => this.failure(error));
+  private readonly bridge = new OverlayProcess(error => this.failure(error), undefined, message => this.output.appendLine(message));
   private readonly subscriptions: vscode.Disposable[];
   private queue = Promise.resolve();
   private disposed = false;
@@ -18,7 +18,7 @@ export class OverlayController implements vscode.Disposable {
     this.subscriptions = [
       vscode.window.onDidChangeWindowState(state => this.bridge.send({type:'focus', focused:state.focused})),
       vscode.workspace.onDidChangeConfiguration(event => {
-        if (['navi.overlay.enabled','navi.fairy.animationEnabled','navi.fairy.powerMode'].some(key => event.affectsConfiguration(key))) void this.update();
+        if (['navi.overlay.enabled','navi.fairy.animationEnabled','navi.fairy.powerMode','navi.fairy.respectReducedMotion'].some(key => event.affectsConfiguration(key))) void this.update();
       })
     ];
   }
@@ -37,7 +37,7 @@ export class OverlayController implements vscode.Disposable {
       await this.bridge.start(executable, process.pid);
       if (this.disposed) {this.bridge.stop(); return;}
       const current = vscode.workspace.getConfiguration('navi');
-      this.bridge.send({type:'configure', enabled:current.get<boolean>('fairy.animationEnabled',true), eco:current.get<string>('fairy.powerMode','balanced')==='eco'});
+      this.bridge.send({type:'configure', enabled:current.get<boolean>('fairy.animationEnabled',true), eco:current.get<string>('fairy.powerMode','balanced')==='eco', respectReducedMotion:current.get<boolean>('fairy.respectReducedMotion',false)});
       this.bridge.send({type:'focus', focused:vscode.window.state.focused});
     }).catch(error => this.failure(error instanceof Error ? error : new Error(String(error))));
     return this.queue;
@@ -63,6 +63,21 @@ export class OverlayController implements vscode.Disposable {
     this.lastMotion=id;this.lastMotionAt=now;
     this.bridge.send({type:'motion', motion:id});
   }
+  async flyTo(x: number, y: number): Promise<void> {
+    if (![x,y].every(value => Number.isFinite(value) && value >= 0 && value <= 1)) return;
+    if (!this.supported) {
+      void vscode.window.showInformationMessage('Gezielter Flug ist für die Vordergrund-Fee unter Windows x64 verfügbar.');
+      return;
+    }
+    const config = vscode.workspace.getConfiguration('navi');
+    if (!config.get<boolean>('fairy.animationEnabled',true)) {
+      void vscode.window.showInformationMessage('Aktiviere die NAVI-Animation, um die Fee zu einem Ziel fliegen zu lassen.');
+      return;
+    }
+    await this.show();
+    this.bridge.send({type:'target', x, y});
+  }
+  cancelTarget(): void {this.bridge.send({type:'cancelTarget'});}
   private failure(error: Error): void {
     if (this.disposed) return;
     this.output.appendLine(error.message);

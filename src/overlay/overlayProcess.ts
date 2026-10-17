@@ -1,9 +1,11 @@
 import {spawn, type ChildProcessWithoutNullStreams} from 'node:child_process';
 
 export type OverlayCommand =
-  | {type: 'configure'; enabled: boolean; eco: boolean}
+  | {type: 'configure'; enabled: boolean; eco: boolean; respectReducedMotion: boolean}
   | {type: 'focus'; focused: boolean}
   | {type: 'motion'; motion: string}
+  | {type: 'target'; x: number; y: number}
+  | {type: 'cancelTarget'}
   | {type: 'stop'};
 export type SpawnOverlay = (executable: string, args: string[]) => ChildProcessWithoutNullStreams;
 
@@ -15,7 +17,8 @@ export class OverlayProcess {
   private ready = false;
   constructor(
     private readonly onFailure: (error: Error) => void,
-    private readonly launch: SpawnOverlay = (file, args) => spawn(file, args, {windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false})
+    private readonly launch: SpawnOverlay = (file, args) => spawn(file, args, {windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false}),
+    private readonly onDiagnostic: (message: string) => void = () => {}
   ) {}
   get running(): boolean {return !!this.child && this.ready;}
 
@@ -26,7 +29,7 @@ export class OverlayProcess {
     this.child = child;
     this.ready = false;
     const promise = new Promise<void>((resolve, reject) => {
-      let buffer = '', stderr = '', settled = false, startupSucceeded = false;
+      let buffer = '', stderr = '', diagnosticBuffer = '', settled = false, startupSucceeded = false;
       const complete = (error?: Error): void => {
         if (settled) return;
         settled = true;
@@ -52,13 +55,24 @@ export class OverlayProcess {
           } catch { /* Ignore unrelated or malformed helper output. */ }
         }
       });
-      child.stderr.on('data', (chunk: Buffer) => {stderr = (stderr + chunk.toString('utf8')).slice(-2048);});
+      child.stderr.on('data', (chunk: Buffer) => {
+        const text = chunk.toString('utf8');
+        stderr = (stderr + text).slice(-2048);
+        diagnosticBuffer += text;
+        let newline: number;
+        while ((newline = diagnosticBuffer.indexOf('\n')) >= 0) {
+          const line = diagnosticBuffer.slice(0, newline).trim();
+          diagnosticBuffer = diagnosticBuffer.slice(newline + 1);
+          if (line) this.onDiagnostic(line);
+        }
+      });
       child.stdin.on('error', () => { /* A closing child can race with a final control message. */ });
       child.on('error', (error: Error) => {
         if (this.child === child) {this.child = undefined; this.ready = false;}
         complete(error);
       });
       child.on('close', (code: number | null) => {
+        if (diagnosticBuffer.trim()) this.onDiagnostic(diagnosticBuffer.trim());
         const intentional = this.stopping.has(child);
         if (this.child === child) {this.child = undefined; this.ready = false;}
         const error = new Error(stderr.trim() || `NAVI overlay exited (${code ?? 'no exit code'}).`);

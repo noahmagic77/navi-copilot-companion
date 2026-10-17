@@ -15,6 +15,22 @@ NAVI v0.5.0 ergänzt die VS-Code-Ansicht um einen lokalen Windows-x64-Helfer. Ei
 
 ## Startwerte
 
+### Gezielter Flug
+
+Über die Befehlspalette: **NAVI: Fly to Position / Zu Position fliegen** → oben links, oben rechts, Mitte, unten links oder unten rechts. Das Ziel liegt innerhalb der aktiven VS-Code-Fensterfläche mit Platz für die gesamte Fee. **NAVI: Cancel Target Flight / Zielflug abbrechen** beendet den Zielflug; Maus-Ausweichen bleibt aktiv.
+
+Das Ziel wird als relative Koordinate zwischen 0 und 1 übertragen. Die vorhandene weiche Bézier-Flugsteuerung sorgt für Start und Landung. Ausweichen hat Vorrang; anschließend wird der Weg von der neuen Position aus geplant. Befindet sich die Maus näher als 145 DIPs am Ziel, wartet die Fee. Nach Ankunft beginnt frühestens nach 15 aktiven Sekunden ein normaler Flug. Größen- und DPI-Änderungen führen zur Neuberechnung des Ziels. Ausblenden, Fokusverlust und Animationspause verwerfen das Ziel. Ein neuer Zielflug ersetzt den vorherigen. Der Befehl aktiviert bei Bedarf das Overlay, schaltet aber keine deaktivierte Animation oder reduzierte Bewegung ein.
+
+Diese Positionen sind Fensterziele. Eine Zuordnung zu Codezeilen oder Diagnosen ist noch nicht implementiert. Das Steuerprotokoll enthält weiterhin keine Datei- oder Promptinhalte.
+
+### Mathematische Wahrnehmung und Maus-Ausweichen
+
+Der native Helfer liest die aktuelle Mausposition nur während sichtbarer, aktivierter Animation über `GetCursorPos`. Physische Bildschirmkoordinaten werden anhand des Fensterursprungs und der DPI-Skalierung in fensterlokale DIPs umgerechnet. Negative Bildschirmkoordinaten werden unterstützt. Positionen außerhalb des zugeordneten VS-Code-Fensters lösen kein neues Ausweichen aus. Es werden keine Mausverläufe gespeichert oder übertragen und keine Bildschirminhalte gelesen.
+
+Kommt der Zeiger dem Mittelpunkt der Fee näher als 120 DIPs, bewertet die Steuerung 16 mögliche Fluchtrichtungen nach Abstand zum Zeiger und Weglänge. Ein festgehaltenes Ziel verhindert ständiges Neuplanen; nähert sich der Zeiger auch diesem Ziel, wird eine neue Richtung gewählt. Maximaltempo: 160 DIPs/s; maximale Steuerbeschleunigung: 480 DIPs/s². Die Fee bremst am Ziel ab und bleibt mit ihrer gesamten Zeichenfläche innerhalb des Fensters. In sehr kleinen Fenstern kann der gewünschte Abstand nicht erreichbar sein.
+
+Ausweichen unterbricht einen normalen Flug und funktioniert auch beim Ausruhen oder während Zuhören/Nachdenken, ohne den jeweiligen Ausdruck zu ersetzen. Anschließend beginnt frühestens nach 15 aktiven Sekunden wieder ein normaler Flug. Verlässt der Zeiger das Fenster oder kann er nicht gelesen werden, beendet die Fee den bereits begonnenen Ausweichflug. Beim Verbergen, bei Geometrieänderungen oder beim Pausieren wird die Ausweichsteuerung zurückgesetzt. Reduzierte Bewegung und Animation an/aus gelten weiterhin; ausgeblendet findet keine Mausabfrage statt. Die eingebettete Webview erhält diese native Funktion nicht.
+
 | Einstellung | Normal | Sparmodus |
 | --- | --- | --- |
 | Nativer Flug / aktive Bewegung | höchstens 30 FPS | höchstens 24 FPS |
@@ -32,11 +48,11 @@ Die Flügelphase läuft bei Zustandswechseln weiter. Die Federberechnung verwend
 
 ## Geprüft und noch zu messen
 
-- 22 TypeScript-/Prozesstests und 8 native Go-Tests, einschließlich eines gemeinsamen Pose-Vertrags mit den zwölf Webview-Bewegungen.
+- 23 TypeScript-/Prozesstests und 8 native Go-Tests, einschließlich eines gemeinsamen Pose-Vertrags mit den zwölf Webview-Bewegungen.
 - Chromium-Prüfung aller zwölf Bewegungen, Pausen, reduziertem Bewegungsmodus, Sparmodus, schmaler Darstellung und strikter CSP.
 - Bei simulierten 240 Hz: 30 Zeichenaktualisierungen/s aktiv, 15 beim Schweben und 12 beim Schweben im Sparmodus.
 - Windows-Rendering aller zwölf Bewegungen, korrektes vormultipliziertes Alpha, konstante GDI-Handle-Zahl und funktionierende lokale Pipes.
-- Native Fensterprüfung mit einem WinForms-Testfenster: Fokus bleibt beim Besitzer, Bewegung auch bei pausierter Animation, Einhaltung der Fenstergrenzen, Verbergen über anderen Fenstern sowie Minimieren/Wiederherstellen.
+- Native Fensterprüfung mit einem WinForms-Testfenster: aktive Animation erzeugt fortschreitende native Frames; Fokus bleibt beim Besitzer, pausiertes Overlay folgt Fensterbewegungen, Einhaltung der Fenstergrenzen, Verbergen über anderen Fenstern sowie Minimieren/Wiederherstellen.
 
 [Windows-Prüflauf](https://github.com/noahmagic77/navi-copilot-companion/actions/runs/38935451114) · [Renderer-Messwerte](native-benchmark.json) · [Fenster-Prüfbericht](native-window-integration.json)
 
@@ -46,14 +62,13 @@ Eine vollständige Live-Prüfung im VS-Code-Extension-Host und ein Vorher-/Nachh
 
 ## Selbst bauen
 
+Die Wahrnehmungstests laufen mit `go -C native/overlay test ./...`. `internal/motion/perception_test.go` prüft die Mathematik plattformunabhängig. `perception_windows_test.go` prüft unter Windows x64 zusätzlich das Zusammenspiel mit allen zwölf Animationen, den Vorrang vor normalen Flügen, den Erhalt des Ausdrucks und der Bewegung bei Zustandswechseln sowie das Anhalten bei verborgenem Fenster, deaktivierter Animation und reduzierter Bewegung. Diese Tests benötigen kein sichtbares Testfenster; sie ersetzen keine visuelle Prüfung der Darstellung.
+
 Node.js ab 22, Go ab 1.24 und VS Code Desktop ab 1.100:
 
 ```bash
 npm ci
-npm run build:overlay
-npm run check
-npm test
 npm run package
 ```
 
-Der Go-Build erzeugt auch unter Linux einen Windows-x64-Helfer, ohne C-Compiler. Der Windows-Workflow prüft das echte GUI-Programm mit `--self-test`, dem Pipe-Test und dem Fenster-Test. Native Quellen und Tests werden nicht ins VSIX aufgenommen.
+`npm run package` baut den nativen Helfer, kompiliert und testet die Extension, prüft die SHA-256-Prüfsumme und erzeugt anschließend die VSIX. Der Go-Build erzeugt auch unter Linux einen Windows-x64-Helfer, ohne C-Compiler. Der Windows-Workflow prüft das echte GUI-Programm mit `--self-test`, dem Pipe-Test und dem Fenster-Test. Native Quellen und Tests werden nicht ins VSIX aufgenommen.

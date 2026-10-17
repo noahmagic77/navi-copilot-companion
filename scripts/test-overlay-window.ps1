@@ -1,7 +1,8 @@
 param([Parameter(Mandatory=$true)][string]$Executable, [string]$Output = 'build/native-report')
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
-Add-Type @'
+if (-not ('NaviWindowTest' -as [type])) {
+ Add-Type @'
 using System;
 using System.Runtime.InteropServices;
 public static class NaviWindowTest {
@@ -18,11 +19,26 @@ public static class NaviWindowTest {
  public static Rect Bounds(IntPtr hwnd) {Rect r;GetWindowRect(hwnd,out r);return r;}
 }
 '@
+}
 function Pump([int]$Milliseconds) {
  $naviWatch = [Diagnostics.Stopwatch]::StartNew()
  while ($naviWatch.ElapsedMilliseconds -lt $Milliseconds) {[Windows.Forms.Application]::DoEvents();Start-Sleep -Milliseconds 10}
 }
 function Require([bool]$Condition,[string]$Message) {if(-not $Condition){throw $Message}}
+function ReadFrame([Diagnostics.Process]$Process,[int]$TimeoutMs) {
+ $naviWatch = [Diagnostics.Stopwatch]::StartNew()
+ while ($naviWatch.ElapsedMilliseconds -lt $TimeoutMs) {
+  $naviRead = $Process.StandardOutput.ReadLineAsync()
+  $naviRemaining = $TimeoutMs - [int]$naviWatch.ElapsedMilliseconds
+  if (-not $naviRead.Wait($naviRemaining)) {return $null}
+  $naviLine = $naviRead.Result
+  if ($null -eq $naviLine) {return $null}
+  $naviMessage = $naviLine | ConvertFrom-Json
+  if ($naviMessage.type -eq 'frame') {return $naviMessage}
+  if ($naviMessage.type -ne 'attached') {throw "Unexpected native helper message: $naviLine"}
+ }
+ return $null
+}
 $naviOwner = New-Object Windows.Forms.Form
 $naviOwner.Text = 'NAVI native test owner'
 $naviOwner.StartPosition = 'Manual'
@@ -37,7 +53,7 @@ try {
  Require ([NaviWindowTest]::GetForegroundWindow() -eq $naviOwner.Handle) 'Could not activate native test owner'
  $naviInfo = New-Object Diagnostics.ProcessStartInfo
  $naviInfo.FileName = (Resolve-Path $Executable).Path
- $naviInfo.Arguments = "--host-pid $PID"
+ $naviInfo.Arguments = "--host-pid $PID --diagnostics"
  $naviInfo.UseShellExecute = $false
  $naviInfo.CreateNoWindow = $true
  $naviInfo.RedirectStandardInput = $true
@@ -47,7 +63,7 @@ try {
  $naviReady = $naviProcess.StandardOutput.ReadLineAsync()
  Require ($naviReady.Wait(4000)) 'No readiness response'
  Require ($naviReady.Result -match 'ready') 'Unexpected readiness response'
- $naviProcess.StandardInput.WriteLine('{"type":"configure","enabled":false,"eco":true}')
+ $naviProcess.StandardInput.WriteLine('{"type":"configure","enabled":true,"eco":false,"respectReducedMotion":false}')
  $naviProcess.StandardInput.WriteLine('{"type":"focus","focused":true}')
  $naviProcess.StandardInput.Flush()
  Pump 300
@@ -55,6 +71,13 @@ try {
  Require ($naviWindow -ne [IntPtr]::Zero) 'No overlay window found'
  Require ([NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay did not attach to the active owner'
  Require ([NaviWindowTest]::GetForegroundWindow() -eq $naviOwner.Handle) 'Overlay stole focus'
+ $naviFirstFrame = ReadFrame $naviProcess 3000
+ Require ($null -ne $naviFirstFrame) 'Active overlay produced no animation frame diagnostics'
+ $naviSecondFrame = ReadFrame $naviProcess 3000
+ Require ($null -ne $naviSecondFrame -and $naviSecondFrame.count -gt $naviFirstFrame.count) 'Animation frame counter did not advance'
+ $naviProcess.StandardInput.WriteLine('{"type":"configure","enabled":false,"eco":true,"respectReducedMotion":false}')
+ $naviProcess.StandardInput.Flush()
+ Pump 200
  $naviBefore = [NaviWindowTest]::Bounds($naviWindow)
  $naviOwner.SetDesktopLocation(200,160);Pump 300
  $naviAfter = [NaviWindowTest]::Bounds($naviWindow)

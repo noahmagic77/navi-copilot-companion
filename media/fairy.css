@@ -165,11 +165,6 @@ body.vscode-high-contrast-light .fairy-art { filter: drop-shadow(0 0 2px #111); 
   body { padding-inline: 10px; }
   .companion-toolbar { flex-direction: column; gap: 8px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .fairy-scene * { animation: none !important; }
-  .sparkle { will-change: auto; }
-}
-
 .overlay-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; justify-content: center; }
 .overlay-actions[hidden] { display: none; }
 .companion-toolbar { flex-wrap: wrap; }

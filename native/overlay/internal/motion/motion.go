@@ -29,7 +29,7 @@ type Definition struct {
 	Duration float64
 }
 
-var Definitions = [...]Definition{{"greet", 3.8}, {"hover", 10}, {"drift", 8}, {"curious", 5.4}, {"figure8", 9}, {"stretch", 5.2}, {"twirl", 5.6}, {"listen", 6}, {"think", 6}, {"hint", 4.8}, {"celebrate", 4.2}, {"rest", 9}}
+var Definitions = append([]Definition{{"greet", 3.8}, {"hover", 10}, {"drift", 8}, {"curious", 5.4}, {"figure8", 9}, {"stretch", 5.2}, {"twirl", 5.6}, {"listen", 6}, {"think", 6}, {"hint", 4.8}, {"celebrate", 4.2}, {"rest", 9}}, extendedDefinitions...)
 
 func Valid(id string) bool {
 	for _, d := range Definitions {
@@ -129,6 +129,10 @@ func Sample(id string, age, elapsed float64) Pose {
 		p[WingFold] = .72
 		p[OrbitSpeed] = .35
 		p[OrbitRadius] = .82
+	default:
+		if profile, ok := patterns[id]; ok {
+			profile.apply(&p, t, envelope, angle)
+		}
 	}
 	return p
 }

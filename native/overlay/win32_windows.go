@@ -14,6 +14,7 @@ var kernel32 = syscall.NewLazyDLL("kernel32.dll")
 var gdi32 = syscall.NewLazyDLL("gdi32.dll")
 var gdiplus = syscall.NewLazyDLL("gdiplus.dll")
 var (
+	pGetCursorPos     = user32.NewProc("GetCursorPos")
 	pDefWindowProc    = user32.NewProc("DefWindowProcW")
 	pRegisterClass    = user32.NewProc("RegisterClassExW")
 	pCreateWindow     = user32.NewProc("CreateWindowExW")
@@ -68,6 +69,7 @@ const (
 	wmCommandLocal  = 0x8001
 	wmGeometry      = 0x8002
 	wmClose         = 0x0010
+	wmRetryBudget   = 0x8003
 	overlayExStyle  = 0x00080000 | 0x00000020 | 0x00000080 | 0x08000000
 )
 

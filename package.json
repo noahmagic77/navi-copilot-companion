@@ -2,7 +2,7 @@
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
   "description": "Private local-first VS Code companion with a fairy guide and local prompt insights.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "engines": {
     "vscode": "^1.100.0"
@@ -16,10 +16,6 @@
     "ui"
   ],
   "activationEvents": [
-    "onChatParticipant:navi.chat",
-    "onView:navi.companion",
-    "onCommand:navi.showStatus",
-    "onCommand:navi.checkPrompt",
     "onStartupFinished"
   ],
   "contributes": {
@@ -56,11 +52,20 @@
         {
           "id": "navi.companion",
           "name": "NAVI Companion",
-          "type": "webview"
+          "type": "webview",
+          "icon": "media/icon.svg"
         }
       ]
     },
     "commands": [
+      {
+        "command": "navi.flyToPosition",
+        "title": "NAVI: Fly to Position / Zu Position fliegen"
+      },
+      {
+        "command": "navi.cancelFlight",
+        "title": "NAVI: Cancel Target Flight / Zielflug abbrechen"
+      },
       {
         "command": "navi.showOverlay",
         "title": "NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen"
@@ -117,7 +122,13 @@
           "type": "boolean",
           "default": true,
           "scope": "window",
-          "description": "Enable NAVI's 12 coordinated movements and reactions. Respects the system's reduced-motion preference and pauses while hidden."
+          "description": "Enable NAVI's 110 coordinated movements and reactions, including ten additional greetings. Pauses while hidden."
+        },
+        "navi.fairy.respectReducedMotion": {
+          "type": "boolean",
+          "default": false,
+          "scope": "window",
+          "description": "Pause NAVI animations when the operating system requests reduced motion."
         },
         "navi.history.enabled": {
           "type": "boolean",
@@ -161,10 +172,10 @@
   },
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
-    "compile": "tsc -p .",
-    "check": "tsc -p . --noEmit",
+    "compile": "node scripts/native-motion-fixture.cjs --check && tsc -p .",
+    "check": "node scripts/native-motion-fixture.cjs --check && tsc -p . --noEmit",
     "test": "npm run compile && node --test dist/test/*.test.js",
-    "package": "npm run compile && npm run verify:overlay && vsce package --no-dependencies",
+    "package": "npm run build:overlay && npm test && npm run verify:overlay && vsce package --no-dependencies",
     "build:overlay": "node scripts/build-overlay.cjs",
     "verify:overlay": "node scripts/verify-overlay.cjs"
   },

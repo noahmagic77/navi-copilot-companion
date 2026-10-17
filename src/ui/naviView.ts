@@ -2,6 +2,7 @@ import {randomBytes} from 'node:crypto';
 import * as vscode from 'vscode';
 import {analyzePrompt, type Analysis} from '../core/promptAnalyzer';
 import {renderNaviWebview} from './webviewContent';
+import {motionIds} from '../core/motionCatalog';
 
 export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
   public static readonly viewId = 'navi.companion';
@@ -16,7 +17,7 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
 
   constructor(private readonly extensionUri: vscode.Uri) {
     this.configurationSubscription = vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('navi.fairy.animationEnabled') || event.affectsConfiguration('navi.fairy.powerMode')) void this.sendSettings();
+      if (event.affectsConfiguration('navi.fairy.animationEnabled') || event.affectsConfiguration('navi.fairy.powerMode') || event.affectsConfiguration('navi.fairy.respectReducedMotion')) void this.sendSettings();
     });
   }
 
@@ -45,6 +46,7 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
       motionUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy-motion.js')).toString(),
       scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(media, 'fairy.js')).toString(),
       animationEnabled: this.animationEnabled(),
+      respectReducedMotion: this.respectReducedMotion(),
       powerMode: this.powerMode(),
       overlaySupported: process.platform==='win32' && process.arch==='x64'
     });
@@ -56,10 +58,14 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
     await this.view.webview.postMessage({type: 'analysis', hints: result.hints, characterCount: result.characterCount});
   }
 
+  async showGreeting(motion: string): Promise<void> {
+    if (this.view?.visible) await this.view.webview.postMessage({type:'greeting', motion});
+  }
+
   private async receiveMessage(message: unknown): Promise<void> {
     if (!message || typeof message !== 'object') return;
     const data = message as {type?: unknown; text?: unknown; enabled?: unknown; motion?: unknown; eco?: unknown};
-    if (data.type === 'motion' && typeof data.motion === 'string' && data.motion.length<24) {
+    if (data.type === 'motion' && typeof data.motion === 'string' && motionIds.has(data.motion)) {
       this.motionEmitter.fire(data.motion);
     } else if (data.type === 'showOverlay' || data.type === 'hideOverlay') {
       await vscode.commands.executeCommand(data.type==='showOverlay'?'navi.showOverlay':'navi.hideOverlay');
@@ -88,10 +94,14 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
     return vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled', true);
   }
 
+  private respectReducedMotion(): boolean {
+    return vscode.workspace.getConfiguration('navi').get<boolean>('fairy.respectReducedMotion', false);
+  }
+
   private powerMode(): string {return vscode.workspace.getConfiguration('navi').get<string>('fairy.powerMode','balanced');}
 
   private async sendSettings(): Promise<void> {
-    if (this.view) await this.view.webview.postMessage({type: 'settings', animationEnabled: this.animationEnabled(), powerMode:this.powerMode()});
+    if (this.view) await this.view.webview.postMessage({type: 'settings', animationEnabled: this.animationEnabled(), respectReducedMotion: this.respectReducedMotion(), powerMode:this.powerMode()});
   }
 
   private clearViewSubscriptions(): void {

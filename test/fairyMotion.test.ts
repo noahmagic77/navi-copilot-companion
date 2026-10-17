@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const {motions, sampleMotion, createRig, stepRig, nearestAngle, frameRate} = require('../../media/fairy-motion.js');
+import {motionCatalog, motionIds} from '../src/core/motionCatalog';
 
-test('the twelve motions produce distinct poses with finite, bounded positions', () => {
-  assert.equal(motions.length, 12);
-  assert.equal(new Set(motions.map((motion: {id: string}) => motion.id)).size, 12);
+test('all 110 motions produce distinct poses with finite, bounded positions', () => {
+  assert.equal(motions.length, 110);
+  assert.equal(new Set(motions.map((motion: {id: string}) => motion.id)).size, 110);
   const signatures = new Set<string>();
   for (const motion of motions) {
     signatures.add(JSON.stringify(sampleMotion(motion.id, motion.duration * .37, 2)));
@@ -17,7 +18,30 @@ test('the twelve motions produce distinct poses with finite, bounded positions',
       assert(pose.wingSpeed > 0 && pose.wingAmplitude > 0);
     }
   }
-  assert.equal(signatures.size, 12, 'Every motion must have a distinct pose');
+  assert.equal(signatures.size, 110, 'Every motion must have a distinct pose');
+});
+
+test('browser and host share the complete categorized catalogue', () => {
+  assert.deepEqual(motionCatalog, motions.map(({id,label,category,duration}: typeof motionCatalog[number]) => ({id,label,category,duration})));
+  assert.equal(motionIds.size, 110);
+  assert.equal(new Set(motions.map((m: {label:string})=>m.label)).size,110);
+  assert.equal(new Set(motions.map((m: {category:string})=>m.category)).size,10);
+  const idle = require('../../media/fairy-motion.js').idleMotionIds;
+  assert(idle.length > 12);
+  for (const id of idle) assert(motionIds.has(id));
+});
+
+test('all motion pairs transition smoothly without reallocating the rig', () => {
+  for (const from of motions) {
+    const start=sampleMotion(from.id,from.duration*.37,2);
+    for (const to of motions) {
+      const rig=createRig(start);
+      const pose=stepRig(rig,sampleMotion(to.id,to.duration*.63,2),1/60);
+      assert(Math.abs(pose.x-start.x)<1 && Math.abs(pose.y-start.y)<1,`${from.id} -> ${to.id}`);
+      assert(Math.abs(pose.roll-start.roll)<5 && Math.abs(pose.scale-start.scale)<.01);
+      for (const value of Object.values(pose)) assert(Number.isFinite(value));
+    }
+  }
 });
 
 test('spring settling is independent of refresh rate for a fixed target', () => {

@@ -22,6 +22,33 @@ func TestAllMotionsFinite(t *testing.T) {
 		}
 	}
 }
+
+func TestFullMotionCatalogue(t *testing.T) {
+	if len(Definitions) != 110 {
+		t.Fatal("expected 110 motions", len(Definitions))
+	}
+	seen := map[string]bool{}
+	poses := map[Pose]bool{}
+	for _, d := range Definitions {
+		if seen[d.ID] || d.Duration <= 0 || !Valid(d.ID) {
+			t.Fatal("invalid catalogue", d)
+		}
+		seen[d.ID] = true
+		p := Sample(d.ID, d.Duration*.37, 2)
+		if poses[p] {
+			t.Fatal("duplicate pose", d.ID)
+		}
+		poses[p] = true
+		if allocations := testing.AllocsPerRun(100, func() { Sample(d.ID, d.Duration*.37, 2) }); allocations != 0 {
+			t.Fatal("motion allocates", d.ID, allocations)
+		}
+	}
+	for _, id := range IdleMotions {
+		if !seen[id] {
+			t.Fatal("unknown idle motion", id)
+		}
+	}
+}
 func TestSpringRefreshRate(t *testing.T) {
 	target := Sample("listen", 1, 1)
 	var poses []Pose

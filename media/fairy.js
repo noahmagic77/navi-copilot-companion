@@ -2,7 +2,7 @@
 
 (() => {
   const vscode = acquireVsCodeApi();
-  const {motions, sampleMotion, createRig, stepRig, frameRate} = window.NaviMotion;
+  const {motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, createRig, stepRig, frameRate} = window.NaviMotion;
   const scene = document.getElementById('fairy-scene');
   const field = document.getElementById('sparkles');
   const float = scene.querySelector('.fairy-float');
@@ -28,7 +28,10 @@
   const TAU = Math.PI * 2;
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   let animationEnabled = scene.dataset.animationEnabled === 'true';
+  let respectReducedMotion = scene.dataset.respectReducedMotion === 'true';
   let hostVisible = true;
+  let lastGreetingAt = Date.now();
+  const selectGreeting = createGreetingSelector();
   let frame = 0;
   let lastFrame = null;
   let nextFrameAt = 0;
@@ -51,14 +54,21 @@
   let lastParticleCount = 0;
   const trail = Array.from({length: 90}, () => ({at: -1, x: 0, y: 0}));
   let trailIndex = 0;
-  const idleSequence = ['drift', 'curious', 'stretch', 'drift', 'figure8', 'curious', 'twirl'];
+  const idleSequence = idleMotionIds;
   let idleIndex = Math.floor(Math.random() * idleSequence.length);
 
+  const groups = new Map();
   for (const motion of motions) {
+    if (!groups.has(motion.category)) {
+      const group = document.createElement('optgroup');
+      group.label = motion.category;
+      groups.set(motion.category, group);
+      choice.appendChild(group);
+    }
     const option = document.createElement('option');
     option.value = motion.id;
     option.textContent = motion.label;
-    choice.appendChild(option);
+    groups.get(motion.category).appendChild(option);
   }
 
   // One fixed particle pool and one shared clock for the entire character.
@@ -72,7 +82,7 @@
   function updateCaption() {
     const name = motions.find(motion => motion.id === active.id).label;
     caption.textContent = (mode === 'auto' ? 'Gerade: ' : 'Vorschau: ') + name + '. ' +
-      (mode === 'all' ? 'Die zwölf Bewegungen laufen nacheinander.' : mode === 'single' ? 'Danach bewegt sich NAVI wieder von selbst.' : 'NAVI reagiert auf Eingaben und ruht bei längeren Pausen.');
+      (mode === 'all' ? `Alle ${motions.length} Bewegungen laufen nacheinander (${motions.length - previewQueue.length}/${motions.length}).` : mode === 'single' ? 'Danach bewegt sich NAVI wieder von selbst.' : 'NAVI reagiert auf Eingaben und ruht bei längeren Pausen.');
     previewAll.textContent = mode === 'auto' ? 'Alle ansehen' : 'Vorschau beenden';
   }
 
@@ -195,15 +205,16 @@
     nextFrameAt = 0;
     powerToggle.textContent = powerMode === 'eco' ? 'Sparmodus an' : 'Sparmodus aus';
     powerToggle.setAttribute('aria-pressed', String(powerMode === 'eco'));
-    const enabled = animationEnabled && !reducedMotion.matches;
+    const reduced = respectReducedMotion && reducedMotion.matches;
+    const enabled = animationEnabled && !reduced;
     const visible = hostVisible && !document.hidden;
     scene.dataset.motion = !visible ? 'hidden' : enabled ? 'running' : 'paused';
     toggle.setAttribute('aria-pressed', String(enabled));
-    toggle.disabled = reducedMotion.matches;
+    toggle.disabled = reduced;
     choice.disabled = !enabled;
     previewAll.disabled = !enabled;
-    motionLabel.textContent = reducedMotion.matches ? 'Bewegung reduziert' : enabled ? 'Animation an' : 'Animation aus';
-    toggle.title = reducedMotion.matches ? 'Die Systemeinstellung für reduzierte Bewegung ist aktiv.' : enabled ? 'Animation pausieren' : 'Animation einschalten';
+    motionLabel.textContent = reduced ? 'Bewegung reduziert' : enabled ? 'Animation an' : 'Animation aus';
+    toggle.title = reduced ? 'Die Systemeinstellung für reduzierte Bewegung wird berücksichtigt.' : enabled ? 'Animation pausieren' : 'Animation einschalten';
     if (enabled && visible) frame = requestAnimationFrame(tick);
   }
 
@@ -279,14 +290,29 @@
   window.addEventListener('message', event => {
     const data = event.data;
     if (!data || typeof data !== 'object') return;
+    if (data.type === 'greeting' && greetingMotionIds.includes(data.motion)) {
+      if (mode === 'auto' && !checking && document.activeElement !== prompt) {
+        lastGreetingAt = Date.now();
+        lastInteraction = elapsed;
+        enterMotion(data.motion, 'feedback');
+      }
+      return;
+    }
     if (data.type === 'settings' && typeof data.animationEnabled === 'boolean') {
       animationEnabled = data.animationEnabled;
+      if (typeof data.respectReducedMotion === 'boolean') respectReducedMotion = data.respectReducedMotion;
       if (data.powerMode === 'eco' || data.powerMode === 'balanced') powerMode = data.powerMode;
       syncMotion(); render();
       return;
     }
     if (data.type === 'visibility' && typeof data.visible === 'boolean') {
+      const returning = !hostVisible && data.visible;
       hostVisible = data.visible;
+      if (returning && Date.now() - lastGreetingAt >= 15000 && mode === 'auto' && !checking && document.activeElement !== prompt) {
+        lastGreetingAt = Date.now();
+        lastInteraction = elapsed;
+        enterMotion(selectGreeting(), 'feedback');
+      }
       syncMotion();
       return;
     }
@@ -315,7 +341,7 @@
     status.textContent = 'Lokale Analyse · ' + (Number.isSafeInteger(data.characterCount) && data.characterCount >= 0 ? data.characterCount : 0) + ' Zeichen';
   });
 
-  enterMotion('greet');
+  enterMotion(selectGreeting());
   render();
   syncMotion();
   vscode.postMessage({type: 'ready'});
