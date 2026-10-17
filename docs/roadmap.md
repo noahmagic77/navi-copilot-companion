@@ -1,8 +1,10 @@
 # NAVI roadmap
 
-This roadmap separates the current v0.5.1 experimental preview from proposed work. It does not promise release dates.
+This roadmap separates the current v0.5.2 experimental preview from proposed work. It does not promise release dates.
 
-## Current — v0.5.1 preview
+## Current — v0.5.2 preview
+- Implemented speech bubbles: bounded event messages and NAVI-own-chat reply excerpts, native follow/edge placement and click-through, companion chat entry, timed dismissal and visibility setting. Native isolated UI and browser checks pass; actual VS Code chat and foreground integration still need live validation.
+- Implemented sound preview: twelve original synthesized fairy cues, four event families, opt-in/volume/audition controls, native playback and Webview fallback. Automated audio tests pass; listening and live integration validation remain pending.
 - Added ten greeting variants (110 motions total) for startup, returning window focus, text-editor tab changes and reopening the companion view, with cooldowns and greeting rotation. Automated coverage includes the full expanded motion catalogue; live validation of these new triggers remains pending.
 - Expanded source catalogue: 100 selectable procedural animations (12 original states plus 88 variants in eight families), shared browser/native definitions, categorized preview and broader idle variety. Numerical, transition and perception tests cover the expanded catalogue; live visual validation of the new preview remains pending.
 - Public repository, VS Code `@navi` participant, NAVI Webview and Windows x64 foreground overlay.

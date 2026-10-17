@@ -21,6 +21,20 @@ func TestGreetingsDoNotInterruptContext(t *testing.T) {
 	}
 }
 
+func TestNativePreviewStopsAutonomousFlightAndResetsOnNormalMotion(t *testing.T) {
+	a := application{position: motion.Point{X: 400, Y: 300}, id: "hover"}
+	a.flight.Plan(a.position, motion.Point{X: 600, Y: 400}, 800, 600, 96)
+	a.navigation.Request(motion.Point{X: 1, Y: 1})
+	a.apply(protocol.Command{Type: "motion", Motion: "orbit-clock", Preview: true})
+	if !a.preview || a.flight.Active || a.navigation.Pending {
+		t.Fatal("native preview did not take control")
+	}
+	a.apply(protocol.Command{Type: "motion", Motion: "hover"})
+	if a.preview {
+		t.Fatal("preview remained enabled after normal motion")
+	}
+}
+
 func TestPerceptionDuringEveryAnimation(t *testing.T) {
 	for _, definition := range motion.Definitions {
 		t.Run(definition.ID, func(t *testing.T) {

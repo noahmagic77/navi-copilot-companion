@@ -31,6 +31,23 @@ test('browser and host share the complete categorized catalogue', () => {
   for (const id of idle) assert(motionIds.has(id));
 });
 
+test('preview animation has a measurable time course beyond passive hover',()=>{
+  const {samplePreviewMotion}=require('../../media/fairy-motion.js');
+  for(const motion of motions){
+    const channels=['x','y','roll','yaw','wingAmplitude','wingSpread','glow','scatter'];
+    const samples=Array.from({length:61},(_,i)=>samplePreviewMotion(motion.id,motion.duration*i/60,motion.duration*i/60));
+    for(const pose of samples){for(const value of Object.values(pose))assert(Number.isFinite(value));assert(Math.abs(pose.x)<60&&Math.abs(pose.y)<65);}
+    // These two intentionally calm states still have continuous wing animation.
+    if(motion.id==='hover'||motion.id==='rest')continue;
+    const active=samples.map((p:any,i:number)=>{
+      const baseline=samplePreviewMotion('hover',motion.duration*i/60,motion.duration*i/60);
+      return channels.map(key=>p[key]-baseline[key]);
+    });
+    const ranges=channels.map((_,index)=>Math.max(...active.map((p:number[])=>p[index]))-Math.min(...active.map((p:number[])=>p[index])));
+    assert(ranges.some((range,index)=>range>(index<4?3:.1)),`No meaningful choreographic time course: ${motion.id}`);
+  }
+});
+
 test('all motion pairs transition smoothly without reallocating the rig', () => {
   for (const from of motions) {
     const start=sampleMotion(from.id,from.duration*.37,2);

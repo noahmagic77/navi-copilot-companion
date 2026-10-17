@@ -1,14 +1,14 @@
 # NAVI installieren – VSIX aus GitHub
 
-> **Entwicklungsversion 0.5.1** für VS Code Desktop ab Version 1.100. Das GitHub-Repository ist öffentlich, NAVI ist jedoch **nicht** im VS Code Marketplace veröffentlicht.
+> **Entwicklungsversion 0.5.2** für VS Code Desktop ab Version 1.100. Das GitHub-Repository ist öffentlich, NAVI ist jedoch **nicht** im VS Code Marketplace veröffentlicht.
 
 ## Direkt herunterladen (dauerhafter Link)
 
-**[NAVI Copilot Companion v0.5.1 – .vsix direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.1.vsix)**
+**[NAVI Copilot Companion v0.5.2 – .vsix direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.2.vsix)**
 
-Dies ist bereits die fertige `.vsix`-Datei, **kein ZIP-Archiv**. Speichere sie auf dem Rechner, auf dem du Visual Studio Code Desktop nutzt. Die Datei gehört zur Version 0.5.1; sie wird bei zukünftigen Versionen nicht automatisch aktualisiert.
+Dies ist bereits die fertige `.vsix`-Datei, **kein ZIP-Archiv**. Speichere sie auf dem Rechner, auf dem du Visual Studio Code Desktop nutzt. Die Datei gehört zur Version 0.5.2; sie wird bei zukünftigen Versionen nicht automatisch aktualisiert.
 
-**SHA-256** (optional zur Integritätsprüfung): [Prüfsummendatei](../downloads/navi-copilot-companion-0.5.1.vsix.sha256).
+**SHA-256** (optional zur Integritätsprüfung): [Prüfsummendatei](../downloads/navi-copilot-companion-0.5.2.vsix.sha256).
 
 Falls der Download im mobilen Browser nicht direkt startet: Link auf deinem Computer öffnen oder über **[downloads/ im Repository](https://github.com/noahmagic77/navi-copilot-companion/tree/main/downloads)** die VSIX auswählen und **Download raw file** verwenden.
 
@@ -17,16 +17,16 @@ Falls der Download im mobilen Browser nicht direkt startet: Link auf deinem Comp
 1. Öffne **Visual Studio Code** am PC/Mac (mindestens Version 1.100).
 2. Öffne **Erweiterungen** mit `Strg + Umschalt + X` (macOS `Cmd + Shift + X`).
 3. Öffne das Menü **…** im Erweiterungsbereich und wähle **Install from VSIX…** / **Aus VSIX installieren…**.
-4. Wähle die heruntergeladene Datei `navi-copilot-companion-0.5.1.vsix`.
+4. Wähle die heruntergeladene Datei `navi-copilot-companion-0.5.2.vsix`.
 5. Lade VS Code bei Bedarf neu. Unter Windows x64 erscheint die aktivierte Fee vor dem aktiven VS-Code-Fenster. Falls nötig: `Strg + Umschalt + P` → **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen**.
 6. Für Einstellungen und die Vorschau: **NAVI: Open Companion / Ansicht öffnen** oder links das NAVI-Symbol wählen.
-7. Öffne **12 Bewegungen entdecken**. Wähle eine Bewegung oder starte **Alle ansehen**. Mit **Vorschau beenden** kehrst du sofort zum natürlichen Verhalten zurück.
+7. Öffne **110 Bewegungen entdecken**. Wähle eine Bewegung oder starte **Alle ansehen**. Mit **Vorschau beenden** kehrst du sofort zum natürlichen Verhalten zurück.
 8. Mit **Animation an/aus** pausierst du alle Bewegungen. Optional kannst du darunter einen Prompt lokal prüfen.
 
 **Alternative im Terminal:**
 
 ```bash
-code --install-extension navi-copilot-companion-0.5.1.vsix
+code --install-extension navi-copilot-companion-0.5.2.vsix
 ```
 
 ## Vordergrund-Fee steuern

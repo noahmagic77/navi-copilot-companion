@@ -111,6 +111,7 @@ func TestWebviewParity(t *testing.T) {
 	var samples []struct {
 		ID           string `json:"id"`
 		Age, Elapsed float64
+		Preview      bool
 		Pose         Pose
 	}
 	if err = json.Unmarshal(data, &samples); err != nil {
@@ -118,6 +119,9 @@ func TestWebviewParity(t *testing.T) {
 	}
 	for _, sample := range samples {
 		got := Sample(sample.ID, sample.Age, sample.Elapsed)
+		if sample.Preview {
+			got = SamplePreview(sample.ID, sample.Age, sample.Elapsed)
+		}
 		for i := range got {
 			if math.Abs(got[i]-sample.Pose[i]) > 1e-9 {
 				t.Fatalf("%s channel %d: %.12f != %.12f", sample.ID, i, got[i], sample.Pose[i])

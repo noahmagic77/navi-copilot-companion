@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { LocalHistoryStore } from '../storage/localHistoryStore';
 function config():vscode.WorkspaceConfiguration {return vscode.workspace.getConfiguration('navi');}
-export function registerNaviParticipant(context:vscode.ExtensionContext,store:LocalHistoryStore,onPrompt?:(prompt:string)=>Promise<void>):vscode.Disposable {
+export function registerNaviParticipant(context:vscode.ExtensionContext,store:LocalHistoryStore,onPrompt?:(prompt:string)=>Promise<void>,onResponse?:(response:string)=>void):vscode.Disposable {
  const handler:vscode.ChatRequestHandler=async(request,_chatContext,stream,token)=>{
   const text=request.prompt.trim();
   if(!text){stream.markdown('Please enter a question for NAVI.');return;}
@@ -12,6 +12,7 @@ export function registerNaviParticipant(context:vscode.ExtensionContext,store:Lo
   try{
    const result=await request.model.sendRequest(messages,{},token);
    for await(const fragment of result.text){if(token.isCancellationRequested)return;answer+=fragment;stream.markdown(fragment);}
+   if(!token.isCancellationRequested&&onResponse){try{onResponse(answer);}catch(error){console.error('NAVI speech bubble failed',error);}}
    if(!token.isCancellationRequested && config().get<boolean>('history.enabled',false)){
     try{await store.add(text,answer,request.command,config().get<number>('history.maxEntries',200));}
     catch(error){console.error('NAVI history persistence failed',error);void vscode.window.showWarningMessage('NAVI could not save optional local history.');}

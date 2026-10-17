@@ -18,7 +18,7 @@ VS Code Chat -> @navi -> selected VS Code model -> streamed reply
                    +--> optional rebuildable SQLite index
 ```
 
-The native child process receives only typed configuration, focus and motion messages over inherited stdin/stdout pipes. The extension verifies the bundled helper's SHA-256 before starting it. Prompt text and source contents are not sent to the overlay.
+The native child process receives typed configuration, focus, motion, target, sound and bounded speech messages over inherited stdin/stdout pipes. The extension verifies the bundled helper's SHA-256 before starting it. In the local v0.5.2 preview, speech messages can contain up to 160 Unicode characters from NAVI's own completed chat replies, with fenced code blocks replaced by a placeholder. The helper does not read raw prompts, workspace files or other chats. Bubble text is transient, displayed locally and not added to analytics or a separate log.
 
 ## Privacy / threat model
 

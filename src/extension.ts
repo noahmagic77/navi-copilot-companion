@@ -17,7 +17,8 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
   // Reconstruct any stale SQLite cache from sanitized local journals on startup.
   await journal.rebuild();
   const overlay=new OverlayController(context.extensionUri);
-  const view=new NaviView(context.extensionUri);
+  const view=new NaviView(context.extensionUri,()=>overlay.audioActive,cue=>overlay.playSound(cue));
+  context.subscriptions.push(overlay.onSoundFailure(cue=>void view.playSound(cue)));
   const greetings=new GreetingCycle();
   const greet=()=>{
     if (!vscode.window.state.focused || !vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled',true)) return;
@@ -28,7 +29,7 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
     vscode.window.onDidChangeWindowState(state=>{if(state.focused) greet();}),
     vscode.window.onDidChangeActiveTextEditor(editor=>{if(editor) greet();})
   );
-  context.subscriptions.push(overlay,view.onMotion(id=>overlay.motion(id)),view.onAnalysis(result=>overlay.motion(result.hints.length?'hint':'celebrate')));
+  context.subscriptions.push(overlay,view.onMotion(({id,preview})=>overlay.motion(id,preview)),view.onAnalysis(result=>overlay.motion(result.hints.length?'hint':'celebrate')));
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(NaviView.viewId,view),view);
   const session=journal.newSessionId();
   const workspaceId=journal.workspaceKey(vscode.workspace.workspaceFolders?.[0]?.uri.toString()??'no-workspace');
@@ -45,9 +46,17 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
         catch(err){console.error('NAVI sanitized event persistence failed',err);}
       }
     }
-  });
+  },answer=>{overlay.say(answer);void view.showSpeech(answer);});
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('navi.talkToFairy',async()=>{await vscode.commands.executeCommand('workbench.action.chat.open',{query:'@navi ',isPartialQuery:true});}),
+    vscode.commands.registerCommand('navi.showSpeech',async()=>{
+      await vscode.workspace.getConfiguration('navi').update('bubble.enabled',true,vscode.ConfigurationTarget.Global);
+      await overlay.show();overlay.say('Ich bin da. Schreib mir im Chat mit @navi.');void view.showSpeech('Ich bin da. Schreib mir im Chat mit @navi.');
+    }),
+    vscode.commands.registerCommand('navi.hideSpeech',async()=>{
+      overlay.say('');await vscode.workspace.getConfiguration('navi').update('bubble.enabled',false,vscode.ConfigurationTarget.Global);
+    }),
     vscode.commands.registerCommand('navi.showFairy',()=>overlay.show()),
     vscode.commands.registerCommand('navi.showOverlay',()=>overlay.show()),
     vscode.commands.registerCommand('navi.hideOverlay',()=>overlay.hide()),

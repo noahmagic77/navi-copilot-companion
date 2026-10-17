@@ -1,8 +1,8 @@
 'use strict';
 const fs=require('node:fs');
 const path=require('node:path');
-const {motions,idleMotionIds,greetingMotionIds,createGreetingSelector,sampleMotion}=require('../media/fairy-motion.js');
-const samples=motions.flatMap(m=>[0,.15,.37,.5,.85,1].map(fraction=>({id:m.id,age:m.duration*fraction,elapsed:2,pose:Object.values(sampleMotion(m.id,m.duration*fraction,2))})));
+const {motions,idleMotionIds,greetingMotionIds,createGreetingSelector,sampleMotion,samplePreviewMotion}=require('../media/fairy-motion.js');
+const samples=motions.flatMap(m=>[0,.15,.37,.5,.85,1].map(fraction=>({id:m.id,age:m.duration*fraction,elapsed:2,pose:Object.values(sampleMotion(m.id,m.duration*fraction,2))})).concat([.15,.5,.85].map(fraction=>({id:m.id,age:m.duration*fraction,elapsed:2,preview:true,pose:Object.values(samplePreviewMotion(m.id,m.duration*fraction,2))}))));
 const target=path.join(__dirname,'../native/overlay/internal/motion/testdata/poses.json');
 const data=JSON.stringify(samples,null,2)+'\n';
 if(process.argv.includes('--check')){

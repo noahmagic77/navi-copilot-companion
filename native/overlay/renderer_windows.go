@@ -227,7 +227,8 @@ func (r *renderer) Draw(p motion.Pose, wing, orbit, elapsed float64, eco bool) e
 	if err := r.modelTransform(p, 0, 0); err != nil {
 		return err
 	}
-	if err := gdip(gDrawImage, r.graphics, r.core, 75, 70, 170, 170); err != nil {
+	coreSize := int32(math.Round(170 * (1 + (p[motion.Glow]-1)*.35)))
+	if err := gdip(gDrawImage, r.graphics, r.core, uintptr(160-coreSize/2), uintptr(155-coreSize/2), uintptr(coreSize), uintptr(coreSize)); err != nil {
 		return err
 	}
 	if err := gdip(gResetWorld, r.graphics); err != nil {

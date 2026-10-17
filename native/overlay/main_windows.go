@@ -11,6 +11,7 @@ import (
 	"math/rand/v2"
 	"navi/overlay/internal/motion"
 	"navi/overlay/internal/protocol"
+	"navi/overlay/internal/speech"
 	"os"
 	"runtime"
 	"syscall"
@@ -35,10 +36,15 @@ type application struct {
 	rig                                                    motion.Rig
 	elapsed, age, wing, orbit, lastInteraction, nextFlight float64
 	id                                                     string
+	preview                                                bool
 	context                                                bool
 	flight                                                 motion.Flight
 	avoidance                                              motion.Avoidance
 	navigation                                             motion.Navigation
+	sound                                                  *nativeSound
+	bubble                                                 *speechBubble
+	speech                                                 speech.State
+	bubbleEnabled                                          bool
 	position                                               motion.Point
 	frameCount                                             uint64
 	commands                                               chan protocol.Command
@@ -71,6 +77,10 @@ func windowProcedure(hwnd uintptr, msg uint32, wparam, lparam uintptr) uintptr {
 			}
 			return 0
 		case wmTimer:
+			if wparam == 2 {
+				app.hideSpeech()
+				return 0
+			}
 			if wparam == 1 {
 				app.tick()
 			}
@@ -199,6 +209,7 @@ func (a *application) updateGeometry() {
 	}
 }
 func (a *application) enter(id string, context bool) {
+	a.preview = false
 	a.transitionPending = true
 	a.id = id
 	a.age = 0
@@ -210,6 +221,13 @@ func (a *application) apply(c protocol.Command) {
 		pPostMessage.Call(a.hwnd, wmClose, 0, 0)
 		return
 	case "configure":
+		if c.BubbleEnabled != nil {
+			a.bubbleEnabled = *c.BubbleEnabled
+			if !a.bubbleEnabled {
+				a.hideSpeech()
+			}
+		}
+		a.sound.Configure(c.SoundEnabled, c.SoundVolume)
 		a.enabled = c.Enabled
 		a.eco = c.Eco
 		a.respectReducedMotion = c.RespectReducedMotion
@@ -233,6 +251,13 @@ func (a *application) apply(c protocol.Command) {
 		a.navigation.Cancel()
 		a.flight.Active = false
 		a.nextFlight = a.elapsed + 15
+	case "speech":
+		a.refresh()
+		if c.Message == "" {
+			a.hideSpeech()
+		} else {
+			a.say(c.Message, 2)
+		}
 	case "motion":
 		// A welcome must not replace an explicit listening/thinking interaction.
 		if a.context {
@@ -244,8 +269,24 @@ func (a *application) apply(c protocol.Command) {
 		}
 		a.lastInteraction = a.elapsed
 		a.enter(c.Motion, c.Motion == "listen" || c.Motion == "think")
+		a.preview = c.Preview
+		if a.preview {
+			a.flight.Active = false
+			a.navigation.Cancel()
+		}
 	}
 	a.refresh()
+	if c.Type == "motion" && !c.Preview {
+		if text := speechForMotion(c.Motion); text != "" {
+			a.say(text, 1)
+		}
+	}
+	if c.Type == "motion" {
+		a.sound.Cue(soundForMotion(c.Motion), a.visible && a.focused)
+	}
+	if c.Type == "sound" {
+		a.sound.Cue(c.Cue, a.visible && a.focused)
+	}
 }
 func (a *application) stopTimer() {
 	if a.timerFPS != 0 {
@@ -269,6 +310,8 @@ func (a *application) refresh() {
 		show = false
 	}
 	if !show {
+		a.hideSpeech()
+		a.sound.Stop()
 		a.avoidance = motion.Avoidance{}
 		a.navigation.Cancel()
 		a.stopTimer()
@@ -360,12 +403,12 @@ func (a *application) tick() {
 	a.lastFrame = now
 	a.elapsed += dt
 	a.age += dt
-	if a.elapsed-a.lastInteraction > 90 && !a.context && a.id != "rest" {
+	if a.elapsed-a.lastInteraction > 90 && !a.context && !a.preview && a.id != "rest" {
 		a.enter("rest", false)
 		a.flight.Active = false
 	}
 	if a.age >= motion.Duration(a.id) {
-		if a.context || a.id == "rest" {
+		if a.context || a.preview || a.id == "rest" {
 			a.age = motion.Duration(a.id)
 		} else {
 			if a.id == "hover" {
@@ -384,13 +427,16 @@ func (a *application) tick() {
 			motion.Point{X: float64(a.bounds.Left), Y: float64(a.bounds.Top)}, a.dpi, width, height)
 	}
 	a.advancePerception(environment, dt)
-	if a.id != "rest" && !a.context && !a.flight.Active && !a.avoidance.Active && a.elapsed >= a.nextFlight {
+	if a.id != "rest" && !a.context && !a.preview && !a.flight.Active && !a.avoidance.Active && a.elapsed >= a.nextFlight {
 		a.planFlight()
 	}
 	if a.flight.Active {
 		a.position = a.flight.Step(dt)
 	}
 	targetPose := motion.Sample(a.id, a.age, a.elapsed)
+	if a.preview {
+		targetPose = motion.SamplePreview(a.id, a.age, a.elapsed)
+	}
 	if a.id == "hover" || a.id == "listen" {
 		targetPose[motion.WingSpeed] *= .65
 	}
@@ -417,6 +463,9 @@ func (a *application) advancePerception(environment motion.Environment, dt float
 	wasAvoiding := a.avoidance.Active
 	a.position = a.avoidance.Step(a.position, environment, dt)
 	if wasAvoiding || a.avoidance.Active {
+		if !wasAvoiding && a.avoidance.Active {
+			a.say("Ich mache deiner Maus Platz.", 0)
+		}
 		a.flight.Active = false
 		a.nextFlight = a.elapsed + 15
 	}
@@ -444,6 +493,7 @@ func (a *application) paint() {
 		pPostMessage.Call(a.hwnd, wmClose, 0, 0)
 		return
 	}
+	a.paintSpeech()
 
 }
 func run(hostPID uint32, diagnostics bool) error {
@@ -459,7 +509,12 @@ func run(hostPID uint32, diagnostics bool) error {
 		return err
 	}
 	app.hwnd = hwnd
+	app.bubbleEnabled = true
+	app.sound = newNativeSound()
 	defer func() {
+		app.hideSpeech()
+		app.bubble.Close()
+		app.sound.Stop()
 		app.stopTimer()
 		if app.foregroundHook != 0 {
 			pUnhook.Call(app.foregroundHook)

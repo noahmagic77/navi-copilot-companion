@@ -2,23 +2,23 @@
 
 ## NAVI direkt herunterladen
 
-**[NAVI Copilot Companion v0.5.1 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.1.vsix)**
+**[NAVI Copilot Companion v0.5.2 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.2.vsix)**
 
-Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.5.1.vsix`.
+Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.5.2.vsix`.
 
 [Installationsanleitung (Deutsch)](docs/INSTALLATION.md) · [Automatische Build-Ergebnisse](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)
 
-Dies ist die **v0.5.1-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.5.1.vsix.sha256).
+Dies ist die **v0.5.2-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.5.2.vsix.sha256).
 
 TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
 
-**Status:** Public GitHub repository with an experimental v0.5.1 preview on `main`; no VS Code Marketplace release.
+**Status:** Public GitHub repository with an experimental v0.5.2 preview on `main`; no VS Code Marketplace release.
 
 ## Die Fee im Vordergrund (Windows x64)
 
-NAVI v0.5.1 enthält einen kleinen nativen Windows-Helfer. Die weiße Fee kann vor Editor, Terminal und Seitenleisten des aktiven VS-Code-Fensters fliegen. Ihr transparentes Fenster lässt Mausklicks durch und übernimmt keinen Tastaturfokus. Beim Wechsel zu einem anderen Fenster oder beim Minimieren wird sie ausgeblendet und ihre Animationsuhr angehalten. Der Helfer ist im VSIX enthalten; ein separater Download oder eine zusätzliche Browser-Laufzeit sind nicht erforderlich.
+NAVI v0.5.2 enthält einen kleinen nativen Windows-Helfer. Die weiße Fee kann vor Editor, Terminal und Seitenleisten des aktiven VS-Code-Fensters fliegen. Ihr transparentes Fenster lässt Mausklicks durch und übernimmt keinen Tastaturfokus. Beim Wechsel zu einem anderen Fenster oder beim Minimieren wird sie ausgeblendet und ihre Animationsuhr angehalten. Der Helfer ist im VSIX enthalten; ein separater Download oder eine zusätzliche Browser-Laufzeit sind nicht erforderlich.
 
-**Öffnen:** `Strg + Umschalt + P` → **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen**. **NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden** beendet den Helfer. **NAVI: Open Companion / Ansicht öffnen** zeigt Einstellungen und die Vorschau der zwölf Bewegungen. Die Erweiterung startet den aktivierten Helfer nach dem VS-Code-Start; `navi.overlay.enabled` steuert dies pro Benutzer. Auf anderen Plattformen bleibt die eingebettete NAVI-Ansicht verfügbar.
+**Öffnen:** `Strg + Umschalt + P` → **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen**. **NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden** beendet den Helfer. **NAVI: Open Companion / Ansicht öffnen** zeigt Einstellungen und die Vorschau der 110 Bewegungen. Die Erweiterung startet den aktivierten Helfer nach dem VS-Code-Start; `navi.overlay.enabled` steuert dies pro Benutzer. Auf anderen Plattformen bleibt die eingebettete NAVI-Ansicht verfügbar.
 
 Im normalen Modus sind die Bildraten auf 30 FPS beim Fliegen, 15 FPS beim Schweben und 10 FPS beim Ausruhen begrenzt. Kurze Zustandswechsel verwenden zunächst die aktive Bildrate, damit das Absenken keine Sprünge verursacht. Der Sparmodus reduziert Bildrate und Glitzer zusätzlich. Ausgeblendet oder bei deaktivierter Animation werden keine Animationsbilder berechnet. Die Win32-Darstellung verwendet vorbereitete Grafikobjekte; die reine Bewegungsberechnung erzeugt pro Bild keine neuen Speicherobjekte.
 
@@ -28,17 +28,21 @@ Im normalen Modus sind die Bildraten auf 30 FPS beim Fliegen, 15 FPS beim Schweb
 
 ![NAVI: weiße Fee mit Flügelschlag und kreisendem Glitzer](docs/navi-fairy.gif)
 
-Der aktuelle Entwicklungsstand bietet **110 auswählbare Bewegungen**: zwölf Grundzustände und zehn weitere Begrüßungen sowie 88 prozedurale Varianten aus Gleiten, Bögen, Hüpfen, Kreisen, Spuren, Spiralen, Leuchten und Gesten. Körper, Flügel, Licht und Glitzer bewegen sich nach einer gemeinsamen Uhr. Gedämpfte Übergänge erhalten Schwung und Flügelphase, statt Bewegungen bei jedem Wechsel neu zu starten. Die gemeinsame Animationsuhr verwendet explizite Bildratenlimits, unabhängig von der Bildwiederholrate des Bildschirms. Der oben verlinkte ältere Download wird dadurch nicht automatisch erneuert.
+Der aktuelle Entwicklungsstand bietet **110 auswählbare Bewegungen**: zwölf Grundzustände und zehn weitere Begrüßungen sowie 88 prozedurale Varianten aus Gleiten, Bögen, Hüpfen, Kreisen, Spuren, Spiralen, Leuchten und Gesten. Körper, Flügel, Licht und Glitzer bewegen sich nach einer gemeinsamen Uhr. Gedämpfte Übergänge erhalten Schwung und Flügelphase, statt Bewegungen bei jedem Wechsel neu zu starten. Die gemeinsame Animationsuhr verwendet explizite Bildratenlimits, unabhängig von der Bildwiederholrate des Bildschirms. Der oben verlinkte Download enthält diesen Stand.
 
 NAVI reagiert auf Eingaben in ihrer Ansicht, variiert ihre Bewegungen im Leerlauf und ruht nach 90 Sekunden ohne Interaktion in der Webview. Unter **110 Bewegungen entdecken** kannst du jede nach Familie auswählen oder mit **Alle ansehen** eine vollständige Vorschau starten. Anschließend kehrt NAVI selbstständig zum natürlichen Verhalten zurück.
 
-[Alle zwölf Bewegungen im Video ansehen](docs/navi-12-motions.mp4) · [Bewegungen und Auslöser](docs/FAIRY-ANIMATIONS.md)
+[Alle 110 Bewegungen im Video ansehen](docs/navi-12-motions.mp4) · [Bewegungen und Auslöser](docs/FAIRY-ANIMATIONS.md)
 
 Der Schalter **Animation an/aus** speichert deine Einstellung in den VS-Code-Benutzereinstellungen. `navi.fairy.respectReducedMotion` entscheidet, ob NAVI die Systempräferenz für reduzierte Bewegung berücksichtigt; standardmäßig bleibt die Fee animiert. Ausgeblendete Ansichten pausieren einschließlich der Vorschau. Alle Grafik- und Animationsbestandteile sind enthalten, ohne externe Ressourcen.
 
 **Vorschau öffnen:** `Strg + Umschalt + P` → **NAVI: Open Companion / Ansicht öffnen**, oder auf das NAVI-Symbol in der Activity Bar klicken. Die Companion-Ansicht lässt sich mit den VS-Code-Ansichtsfunktionen neben Copilot verschieben.
 
-Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft, einschließlich aller zwölf Bewegungen in Folge, stetiger Übergänge, Eingabereaktionen, Ruhemodus, Pausieren, Wiederaufnahme, reduzierter Bewegung, schmaler Ansichten sowie heller und dunkler Darstellung. Der native Windows-Helfer wurde zusätzlich mit echten Fenstern auf einem Windows-Runner geprüft: Fokus, Fensterbewegung, Ausblenden, Minimieren/Wiederherstellen, Pipes und Shutdown. Ein vollständiger Live-Test im VS-Code-Extension-Host auf dem Zielrechner ist weiterhin separat erforderlich.
+Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft, einschließlich aller 110 Bewegungen in Folge, stetiger Übergänge, Eingabereaktionen, Ruhemodus, Pausieren, Wiederaufnahme, reduzierter Bewegung, schmaler Ansichten sowie heller und dunkler Darstellung. Der native Windows-Helfer wurde zusätzlich mit echten Fenstern auf einem Windows-Runner geprüft: Fokus, Fensterbewegung, Ausblenden, Minimieren/Wiederherstellen, Pipes und Shutdown. Ein vollständiger Live-Test im VS-Code-Extension-Host auf dem Zielrechner ist weiterhin separat erforderlich.
+
+## Sprechblasen und Feenklänge
+
+Die helle Sprechblase zeigt kurze Reaktionen und Auszüge aus NAVIs eigenen Chat-Antworten. Unter **Feenklänge** kannst du mit **Anhören** die zwölf eigenen Klänge testen. Automatische Klänge sind zunächst ausgeschaltet; aktiviere sie bei Bedarf und stelle die Lautstärke über null. [Sprechblasen](docs/SPEECH.md) · [Audio und Fehlerbehebung](docs/SOUND.md).
 
 ## Key features
 
@@ -51,11 +55,11 @@ Die Animation wurde in Chromium mit derselben Webview und strikter CSP geprüft,
 
 ## Installation über GitHub
 
-**[Installierbare VSIX v0.5.1](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.1.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
+**[Installierbare VSIX v0.5.2](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.2.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
 
 1. VSIX über den Link herunterladen (keine ZIP-Datei).
 2. VS Code Desktop öffnen und **Erweiterungen → … → Install from VSIX…** auswählen.
-3. Datei `navi-copilot-companion-0.5.1.vsix` auswählen und VS Code bei Bedarf neu laden.
+3. Datei `navi-copilot-companion-0.5.2.vsix` auswählen und VS Code bei Bedarf neu laden.
 
 Die Datei ist im Repository unter `downloads/` versioniert. Bei einer neuen Version muss dieser Download explizit erneuert werden; [GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) stellt weiterhin temporäre Build-Artefakte bereit. Noch kein VS Code Marketplace Release.
 

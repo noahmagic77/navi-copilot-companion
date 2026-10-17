@@ -53,6 +53,17 @@ test('helper diagnostics are forwarded while the process is running',async()=>{
   await new Promise(resolve=>setImmediate(resolve));
 });
 
+test('native audio failures trigger a bounded fallback only for the live helper',async()=>{
+  const {child,typed}=fakeChild();const sounds:string[]=[];
+  const bridge=new OverlayProcess(()=>{},()=>typed,()=>{},cue=>sounds.push(cue));
+  child.stdout.write('{"type":"soundFailed","cue":"hint"}\n');
+  const start=bridge.start('helper.exe',123);child.stdout.write('{"type":"ready"}\n');await start;
+  child.stdout.write('{"type":"soundFailed","cue":"greeting"}\n{"type":"soundFailed","cue":"../bad"}\n');
+  assert.deepEqual(sounds,['greeting']);bridge.stop();
+  child.stdout.write('{"type":"soundFailed","cue":"hint"}\n');
+  assert.deepEqual(sounds,['greeting']);await new Promise(resolve=>setImmediate(resolve));
+});
+
 test('unexpected exit is reported once and does not restart in a loop',async()=>{
   const {child,typed}=fakeChild();const failures:Error[]=[];let launches=0;
   const bridge=new OverlayProcess(error=>failures.push(error),()=>{launches++;return typed;});

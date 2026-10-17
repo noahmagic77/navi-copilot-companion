@@ -21,6 +21,8 @@ jobs:
           node-version: '22'
       - name: Verify shared motion contract
         run: node scripts/native-motion-fixture.cjs --check
+      - name: Verify original audio resources
+        run: node scripts/generate-audio.cjs --check
       - name: Native unit tests
         working-directory: native/overlay
         run: go test ./...

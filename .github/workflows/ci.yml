@@ -61,6 +61,7 @@ jobs:
                   'extension/media/fairy.css',
                   'extension/media/fairy.js',
                   'extension/media/fairy-motion.js',
+                  'extension/media/fairy-sound.js',
                   'extension/media/icon.svg',
                   'extension/media/logo.png',
                   'extension/bin/win32-x64/navi-overlay.exe',
@@ -68,6 +69,9 @@ jobs:
                   'extension/dist/src/overlay/overlayController.js',
                   'extension/dist/src/overlay/overlayProcess.js',
               }
+              required.update(f'extension/media/sounds/{cue}-{variant}.wav'
+                              for cue in ('greeting', 'discover', 'hint', 'celebrate')
+                              for variant in range(3))
               assert required.issubset(files), f'Missing: {required - files}'
               manifest = json.loads(package.read('extension/package.json'))
               helper = package.read('extension/bin/win32-x64/navi-overlay.exe')

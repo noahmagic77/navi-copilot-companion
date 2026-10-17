@@ -1,9 +1,12 @@
 import {spawn, type ChildProcessWithoutNullStreams} from 'node:child_process';
+import {isSoundCue,type SoundCue} from '../core/soundPolicy';
 
 export type OverlayCommand =
-  | {type: 'configure'; enabled: boolean; eco: boolean; respectReducedMotion: boolean}
+  | {type: 'configure'; enabled: boolean; eco: boolean; respectReducedMotion: boolean; soundEnabled?: boolean; soundVolume?: number; bubbleEnabled?:boolean}
+  | {type:'speech';message:string}
+  | {type: 'sound'; cue: 'greeting' | 'discover' | 'hint' | 'celebrate'}
   | {type: 'focus'; focused: boolean}
-  | {type: 'motion'; motion: string}
+  | {type: 'motion'; motion: string; preview?:boolean}
   | {type: 'target'; x: number; y: number}
   | {type: 'cancelTarget'}
   | {type: 'stop'};
@@ -18,7 +21,8 @@ export class OverlayProcess {
   constructor(
     private readonly onFailure: (error: Error) => void,
     private readonly launch: SpawnOverlay = (file, args) => spawn(file, args, {windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false}),
-    private readonly onDiagnostic: (message: string) => void = () => {}
+    private readonly onDiagnostic: (message: string) => void = () => {},
+    private readonly onSoundFailure:(cue:SoundCue)=>void=()=>{}
   ) {}
   get running(): boolean {return !!this.child && this.ready;}
 
@@ -49,8 +53,13 @@ export class OverlayProcess {
         while ((newline = buffer.indexOf('\n')) >= 0) {
           const line = buffer.slice(0, newline); buffer = buffer.slice(newline + 1);
           try {
-            if ((JSON.parse(line) as {type?: string}).type === 'ready' && this.child === child) {
+            const message=JSON.parse(line) as {type?:string;cue?:unknown};
+            if (message.type === 'ready' && this.child === child) {
               this.ready = true; startupSucceeded = true; complete();
+            }
+            if(message.type==='soundFailed'&&isSoundCue(message.cue)&&this.child===child&&this.ready&&!this.stopping.has(child)){
+              this.onDiagnostic('Native fairy sound could not start; trying visible companion playback.');
+              this.onSoundFailure(message.cue);
             }
           } catch { /* Ignore unrelated or malformed helper output. */ }
         }

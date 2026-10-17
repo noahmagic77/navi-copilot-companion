@@ -43,7 +43,7 @@ Diese Reaktionen beziehen sich auf NAVIs eigene Ansicht und lokale Prüfung. Sie
 2. **110 Bewegungen entdecken** aufklappen.
 3. Eine Bewegung auswählen oder **Alle ansehen** starten.
 
-Die Auswahl ist nach Familien gruppiert. Einzelne Vorschauen und die vollständige Folge enden automatisch. Die vollständige Folge dauert mehrere Minuten und zeigt ihren Fortschritt an. **Natürlich bewegen** oder **Vorschau beenden** beendet die Vorschau sofort. Eine neue Prompt-Prüfung hat Vorrang vor einer Vorschau. Die Einstellung **Animation an/aus** gilt für alle 110 Bewegungen. Mit `navi.fairy.respectReducedMotion` lässt sich die Betriebssystempräferenz berücksichtigen; standardmäßig ist diese Option aus.
+Die Auswahl ist nach Familien gruppiert. Eine ausgewählte Einzelbewegung wird wiederholt, bis die Vorschau beendet wird. **Alle ansehen** spielt die vollständige Folge einmal ab; sie dauert mehrere Minuten. Ein Fortschrittsbalken zeigt die aktuelle Bewegung an. **Natürlich bewegen** oder **Vorschau beenden** beendet die Vorschau sofort. Eine neue Prompt-Prüfung hat Vorrang vor einer Vorschau. Im Vorschaumodus werden Wege, Flügelbewegungen, Drehung und Licht betont; natürliche Leerlaufbewegungen bleiben zurückhaltender. Die native Fee übernimmt den Vorschaumodus und startet dabei keinen eigenen zufälligen Flug. Die Einstellung **Animation an/aus** gilt für alle 110 Bewegungen. Mit `navi.fairy.respectReducedMotion` lässt sich die Betriebssystempräferenz berücksichtigen; standardmäßig ist diese Option aus.
 
 [Früheres Video der zwölf Grundbewegungen](navi-12-motions.mp4)
 
@@ -51,9 +51,9 @@ Die Auswahl ist nach Familien gruppiert. Einzelne Vorschauen und die vollständi
 
 Automatische Tests prüfen exakt 110 eindeutige IDs und Posen, endliche und begrenzte Positionen, alle 12.100 gerichteten Bewegungskombinationen beim Übergang, vollständige Drehungen, Pausen, Bildraten und wiederverwendbare Pose-Ausgaben. Die native Bewegungsberechnung wird auf Speicherallokationen geprüft. Wahrnehmungs- und Zielflugtests durchlaufen automatisch alle 110 Zustände.
 
-`media/fairy-motion.js` ist die Quelle des Katalogs. `node scripts/native-motion-fixture.cjs` erzeugt den TypeScript-Katalog, native Definitionen und sechs Referenzposen pro Bewegung. `npm run check` und `npm test` erkennen veraltete generierte Dateien. Die Go-Tests vergleichen alle 660 Referenzposen mit der Webview-Berechnung.
+`media/fairy-motion.js` ist die Quelle des Katalogs. `node scripts/native-motion-fixture.cjs` erzeugt den TypeScript-Katalog, native Definitionen und neun Referenzposen pro Bewegung (sechs normale, drei verstärkte Vorschauposen). `npm run check` und `npm test` erkennen veraltete generierte Dateien. Die Go-Tests vergleichen alle 990 Referenzposen mit der Webview-Berechnung. Zusätzliche Verlaufstests prüfen bei jeder Bewegung, ob sich die Choreografie über die Zeit ändert; Schweben und Ausruhen bleiben bewusst ruhige Zustände mit kontinuierlichem Flügelschlag.
 
-Die bisherige Chromium-Prüfung bezog sich auf die zwölf Grundbewegungen. Eine visuelle Live-Prüfung der neuen 110er-Vorschau im Extension-Host steht separat aus.
+`node scripts/test-fairy-preview.cjs` prüft die tatsächliche Webview in installiertem Edge/Chromium ohne zusätzliche Bibliotheken (`NAVI_CHROMIUM` kann den Browserpfad vorgeben). Der Lauf prüft den vollständigen Auswahlkatalog, sichtbare Frameänderungen bei Kreisflug, Leuchten und Gesten, Vorschau-Nachrichten an den Helfer, Wiederholung, Pause, Fortsetzen, Sichtbarkeit und Rückkehr zum Automatikmodus. Bericht und Bildschirmfoto liegen unter `build/preview-runtime/`. Eine visuelle Live-Prüfung im Extension-Host steht separat aus.
 
 Die Browserprüfung ersetzt keinen Live-Test im VS-Code-Extension-Host. Die tatsächliche Bildrate hängt von Bildschirm und Rechner ab.
 

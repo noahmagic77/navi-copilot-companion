@@ -5,7 +5,7 @@ This document describes the current public experimental preview. NAVI is an inde
 ## Implemented
 
 - Side-panel fairy UI using `WebviewViewProvider`; CSP limits script loading to bundled assets and there are no external requests.
-- Optional Windows x64 foreground overlay, controlled through typed local pipes and bundled with the extension. The overlay receives motion identifiers and settings, never prompts or source text.
+- Optional Windows x64 foreground overlay, controlled through typed local pipes and bundled with the extension. The local v0.5.2 preview also sends short excerpts of NAVI's own completed replies to its speech bubble (up to 160 Unicode characters, fenced code blocks replaced). No raw prompt, file read or access to another participant's chat is introduced. See [Speech bubbles](SPEECH.md).
 - Pure local prompt checker with nonauthoritative guidance, conservative topic-change heuristic and no implicit model calls.
 - Sanitized JSONL journal in `globalStorageUri/sessions/<salted-workspace-key>/<session-id>.jsonl`, storing only rule codes and selected token counts.
 - Optional `node:sqlite` database index, rebuildable from JSONL. Fallback to JSONL-only when SQLite unavailable.

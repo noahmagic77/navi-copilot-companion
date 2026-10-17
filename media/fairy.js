@@ -2,7 +2,7 @@
 
 (() => {
   const vscode = acquireVsCodeApi();
-  const {motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, createRig, stepRig, frameRate} = window.NaviMotion;
+  const {motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, samplePreviewMotion, createRig, stepRig, frameRate} = window.NaviMotion;
   const scene = document.getElementById('fairy-scene');
   const field = document.getElementById('sparkles');
   const float = scene.querySelector('.fairy-float');
@@ -24,12 +24,58 @@
   const heading = document.getElementById('heading');
   const hint = document.getElementById('hint');
   const status = document.getElementById('status');
+  const speechBubble=document.getElementById('speech-bubble');
+  let bubbleEnabled=document.querySelector('.fairy-stage').dataset.bubbleEnabled==='true';
+  let bubblePriority=0,bubbleUntil=0,bubbleTimer=0;
+  function hideBubble(){clearTimeout(bubbleTimer);speechBubble.hidden=true;bubblePriority=0;bubbleUntil=0;}
+  function showBubble(message,priority=1){
+    if(!bubbleEnabled||!hostVisible||!hostFocused||document.hidden||typeof message!=='string')return;
+    const text=Array.from(message.replace(/[\u0000-\u001f\u007f-\u009f]/g,' ').replace(/\s+/g,' ').trim()).slice(0,160).join('');
+    if(!text){hideBubble();return;}
+    if(Date.now()<bubbleUntil&&bubblePriority>priority)return;
+    document.getElementById('bubble-text').textContent=text;speechBubble.hidden=false;
+    bubblePriority=priority;const duration=Math.min(10000,4000+Array.from(text).length/30*1000);bubbleUntil=Date.now()+duration;
+    clearTimeout(bubbleTimer);bubbleTimer=setTimeout(hideBubble,duration);
+  }
+  document.getElementById('close-bubble').addEventListener('click',()=>{bubbleEnabled=false;hideBubble();vscode.postMessage({type:'hideSpeech'});});
+  document.getElementById('bubble-chat').addEventListener('click',()=>vscode.postMessage({type:'openChat'}));
+  const soundControls=document.querySelector('.sound-controls');
+  const soundToggle=document.getElementById('toggle-sound');
+  const soundVolume=document.getElementById('sound-volume');
+  const soundStatus=document.getElementById('sound-status');
+  let soundEnabled=soundControls.dataset.soundEnabled==='true';
+  let volume=Number(soundControls.dataset.soundVolume);
+  const soundPlayer=window.NaviSound.createPlayer({baseUri:soundControls.dataset.soundBase,onBlocked:error=>{
+    soundStatus.textContent=error?.name==='NotAllowedError'?'Klangwiedergabe noch gesperrt. Bitte direkt auf „Anhören“ klicken.':'Klang konnte nicht abgespielt werden. Prüfe die Audioausgabe von VS Code.';
+  }});
+  function syncSound(){
+    soundToggle.textContent=soundEnabled?'Geräusche an':'Geräusche aus';
+    soundToggle.setAttribute('aria-pressed',String(soundEnabled));
+    soundVolume.value=String(volume);
+    document.getElementById('sound-volume-value').textContent=volume+' %';
+    document.getElementById('preview-sound').disabled=volume===0;
+    soundStatus.textContent=volume===0?'Lautstärke 0 – stumm.':soundEnabled?'Automatische Feenklänge sind an.':'Automatische Feenklänge sind aus. „Anhören“ spielt einen Testton.';
+    soundPlayer.configure({enabled:soundEnabled,volume});
+  }
+  soundToggle.addEventListener('click',()=>{
+    soundEnabled=!soundEnabled;syncSound();vscode.postMessage({type:'setSound',enabled:soundEnabled});
+    if(soundEnabled)void soundPlayer.play('greeting',{audition:true});
+  });
+  soundVolume.addEventListener('input',()=>{volume=Number(soundVolume.value);syncSound();});
+  soundVolume.addEventListener('change',()=>vscode.postMessage({type:'setSoundVolume',volume}));
+  document.getElementById('preview-sound').addEventListener('click',()=>{
+    // Play inside the user gesture; do not lose autoplay permission to an IPC hop.
+    void soundPlayer.play(document.getElementById('sound-choice').value,{audition:true}).then(started=>{
+      if(started)soundStatus.textContent='Testton gestartet. Falls du nichts hörst, prüfe die VS-Code-Lautstärke im Windows-Lautstärkemixer.';
+    });
+  });
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const TAU = Math.PI * 2;
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   let animationEnabled = scene.dataset.animationEnabled === 'true';
   let respectReducedMotion = scene.dataset.respectReducedMotion === 'true';
   let hostVisible = true;
+  let hostFocused = true;
   let lastGreetingAt = Date.now();
   const selectGreeting = createGreetingSelector();
   let frame = 0;
@@ -82,7 +128,7 @@
   function updateCaption() {
     const name = motions.find(motion => motion.id === active.id).label;
     caption.textContent = (mode === 'auto' ? 'Gerade: ' : 'Vorschau: ') + name + '. ' +
-      (mode === 'all' ? `Alle ${motions.length} Bewegungen laufen nacheinander (${motions.length - previewQueue.length}/${motions.length}).` : mode === 'single' ? 'Danach bewegt sich NAVI wieder von selbst.' : 'NAVI reagiert auf Eingaben und ruht bei längeren Pausen.');
+      (mode === 'all' ? `Alle ${motions.length} Bewegungen laufen nacheinander (${motions.length - previewQueue.length}/${motions.length}).` : mode === 'single' ? 'Wird mit verstärkter Bewegung wiederholt, bis du die Vorschau beendest.' : 'NAVI reagiert auf Eingaben und ruht bei längeren Pausen.');
     previewAll.textContent = mode === 'auto' ? 'Alle ansehen' : 'Vorschau beenden';
   }
 
@@ -90,10 +136,16 @@
     const definition = motions.find(motion => motion.id === id);
     if (!definition) return;
     active = {id, age: 0, source, duration: duration || definition.duration};
+    if(source!=='preview'){
+      if(id==='greet'||id.startsWith('greet-'))showBubble('Hallo! Ich bin da. Schreib mir mit @navi.');
+      else if(id==='curious')showBubble('Was möchtest du als Nächstes ausprobieren?');
+      else if(id==='hint')showBubble('Ich habe einen Tipp für deinen Prompt.');
+      else if(id==='celebrate')showBubble('Dein Prompt sieht nach den lokalen Regeln gut aus.');
+    }
     transitionPending = true;
     scene.dataset.animation = id;
     nextFrameAt = 0;
-    vscode.postMessage({type: 'motion', motion: id});
+    vscode.postMessage({type: 'motion', motion: id, preview: source === 'preview'});
     if (source === 'preview') choice.value = id;
     updateCaption();
   }
@@ -112,6 +164,7 @@
     }
     if (active.age < active.duration) return;
     if (active.source === 'preview') {
+      if (mode === 'single') {enterMotion(active.id,'preview');return;}
       const next = previewQueue.shift();
       if (next) enterMotion(next, 'preview');
       else resumeNaturalMotion();
@@ -182,7 +235,9 @@
       const dt = clamp((timestamp - lastFrame) / 1000, 0, .1);
       elapsed += dt;
       advanceMotion(dt);
-      sampleMotion(active.id, active.age, elapsed, pointer, targetPose);
+      const sample=active.source==='preview'?samplePreviewMotion:sampleMotion;
+      sample(active.id, active.age, elapsed, pointer, targetPose);
+      document.getElementById('motion-progress').value=active.source==='preview'?active.age/active.duration:0;
       if (active.id === 'hover' || active.id === 'listen') targetPose.wingSpeed *= .65;
       pose = stepRig(rig, targetPose, transitionPending ? 0 : dt);
       transitionPending = false;
@@ -199,6 +254,8 @@
   }
 
   function syncMotion() {
+    if(!hostVisible||document.hidden)hideBubble();
+    soundPlayer.configure({visible:hostVisible && !document.hidden});
     cancelAnimationFrame(frame);
     frame = 0;
     lastFrame = null;
@@ -290,6 +347,9 @@
   window.addEventListener('message', event => {
     const data = event.data;
     if (!data || typeof data !== 'object') return;
+    if(data.type==='speech'){showBubble(data.message,2);return;}
+    if(data.type==='sound'){void soundPlayer.play(data.cue);return;}
+    if(data.type==='audioFocus'){soundPlayer.configure({focused:data.focused});if(typeof data.focused==='boolean')hostFocused=data.focused;if(!hostFocused)hideBubble();return;}
     if (data.type === 'greeting' && greetingMotionIds.includes(data.motion)) {
       if (mode === 'auto' && !checking && document.activeElement !== prompt) {
         lastGreetingAt = Date.now();
@@ -299,6 +359,11 @@
       return;
     }
     if (data.type === 'settings' && typeof data.animationEnabled === 'boolean') {
+      if(typeof data.bubbleEnabled==='boolean'){bubbleEnabled=data.bubbleEnabled;if(!bubbleEnabled)hideBubble();}
+      if(typeof data.windowFocused==='boolean'){hostFocused=data.windowFocused;if(!hostFocused)hideBubble();}
+      if(typeof data.soundEnabled==='boolean')soundEnabled=data.soundEnabled;
+      if(Number.isFinite(data.soundVolume))volume=Math.max(0,Math.min(100,data.soundVolume));
+      soundPlayer.configure({focused:data.windowFocused});syncSound();
       animationEnabled = data.animationEnabled;
       if (typeof data.respectReducedMotion === 'boolean') respectReducedMotion = data.respectReducedMotion;
       if (data.powerMode === 'eco' || data.powerMode === 'balanced') powerMode = data.powerMode;
@@ -343,6 +408,7 @@
 
   enterMotion(selectGreeting());
   render();
+  syncSound();
   syncMotion();
   vscode.postMessage({type: 'ready'});
 })();

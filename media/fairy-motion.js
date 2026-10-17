@@ -266,6 +266,18 @@
     return Object.fromEntries(Object.entries(pose).map(([key, value]) => [key, {value, velocity: 0}]));
   }
 
+  function samplePreviewMotion(id, age, elapsed, pointer = neutralPointer, output = {}) {
+    const pose=sampleMotion(id,age,elapsed,pointer,output);
+    pose.x*=1.8;pose.y*=1.8;
+    pose.yaw*=1.5;
+    pose.wingAmplitude=Math.min(1.4,pose.wingAmplitude*1.25);
+    pose.wingSpread=Math.min(1,pose.wingSpread*1.6);
+    pose.glow=1+(pose.glow-1)*1.6;
+    pose.orbitRadius=1+(pose.orbitRadius-1)*1.5;
+    if(id==='listen'){pose.roll+=Math.sin(age*2.4)*4;pose.y+=Math.sin(age*2.4)*2;}
+    return pose;
+  }
+
   function nearestAngle(current, target) {
     return current + ((target - current + 180) % 360 + 360) % 360 - 180;
   }
@@ -296,5 +308,5 @@
     if (id === 'hover' || id === 'listen') return eco ? 12 : 15;
     return eco ? 24 : 30;
   }
-  return Object.freeze({motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, createRig, stepRig, nearestAngle, frameRate});
+  return Object.freeze({motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, samplePreviewMotion, createRig, stepRig, nearestAngle, frameRate});
 });

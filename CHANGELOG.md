@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2 — 2026-10-17
+
+- Add white and pale-blue speech bubbles matching the fairy, with native click-through placement, timed dismissal and bounded excerpts of NAVI's own chat responses.
+- Add twelve original synthesized fairy cues, persistent opt-in and volume controls, and direct sound auditions even while automatic sounds are disabled.
+- Normalize cue levels and report native playback failures to the visible Webview fallback. Preserve mute, focus and visibility policies.
+- Make individual animation previews loop, emphasize flight, wing and light changes, and show clip progress in the shared 110-animation catalogue.
+- Extend browser/native motion parity, speech and sound tests; verify real browser animation and WAV playback. Physical listening and full VS Code foreground/chat validation remain pending.
+
 ## 0.5.1 — 2026-10-17
 
 - Expand the shared Webview/Windows fairy catalogue to 110 procedural animations, including ten additional greetings and a categorized preview.

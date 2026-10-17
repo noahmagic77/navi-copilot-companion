@@ -2,7 +2,7 @@
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
   "description": "Private local-first VS Code companion with a fairy guide and local prompt insights.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "engines": {
     "vscode": "^1.100.0"
@@ -58,6 +58,9 @@
       ]
     },
     "commands": [
+      {"command":"navi.showSpeech","title":"NAVI: Show Speech Bubble / Sprechblase anzeigen"},
+      {"command":"navi.hideSpeech","title":"NAVI: Hide Speech Bubble / Sprechblase ausschalten"},
+      {"command":"navi.talkToFairy","title":"NAVI: Talk to Fairy / Mit NAVI sprechen"},
       {
         "command": "navi.flyToPosition",
         "title": "NAVI: Fly to Position / Zu Position fliegen"
@@ -118,6 +121,15 @@
     "configuration": {
       "title": "NAVI",
       "properties": {
+        "navi.bubble.enabled": {"type":"boolean","default":true,"description":"Show transient speech bubbles beside NAVI for interaction events and short excerpts of NAVI's own chat replies."},
+        "navi.sound.enabled": {
+          "type": "boolean", "default": false,
+          "description": "Play original local fairy voice-like cues for greetings, discoveries, hints and celebration. No microphone or cloud service."
+        },
+        "navi.sound.volume": {
+          "type": "integer", "default": 30, "minimum": 0, "maximum": 100,
+          "description": "Fairy sound volume from 0 (silent) to 100."
+        },
         "navi.fairy.animationEnabled": {
           "type": "boolean",
           "default": true,
@@ -172,8 +184,8 @@
   },
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
-    "compile": "node scripts/native-motion-fixture.cjs --check && tsc -p .",
-    "check": "node scripts/native-motion-fixture.cjs --check && tsc -p . --noEmit",
+    "compile": "node scripts/native-motion-fixture.cjs --check && node scripts/generate-audio.cjs --check && tsc -p .",
+    "check": "node scripts/native-motion-fixture.cjs --check && node scripts/generate-audio.cjs --check && tsc -p . --noEmit",
     "test": "npm run compile && node --test dist/test/*.test.js",
     "package": "npm run build:overlay && npm test && npm run verify:overlay && vsce package --no-dependencies",
     "build:overlay": "node scripts/build-overlay.cjs",

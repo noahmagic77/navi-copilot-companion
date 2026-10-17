@@ -139,6 +139,23 @@ func Sample(id string, age, elapsed float64) Pose {
 
 type Rig struct{ Value, Velocity Pose }
 
+// Preview emphasizes choreography without changing normal idle behavior.
+func SamplePreview(id string, age, elapsed float64) Pose {
+	p := Sample(id, age, elapsed)
+	p[X] *= 1.8
+	p[Y] *= 1.8
+	p[Yaw] *= 1.5
+	p[WingAmplitude] = math.Min(1.4, p[WingAmplitude]*1.25)
+	p[WingSpread] = math.Min(1, p[WingSpread]*1.6)
+	p[Glow] = 1 + (p[Glow]-1)*1.6
+	p[OrbitRadius] = 1 + (p[OrbitRadius]-1)*1.5
+	if id == "listen" {
+		p[Roll] += math.Sin(age*2.4) * 4
+		p[Y] += math.Sin(age*2.4) * 2
+	}
+	return p
+}
+
 func NewRig() Rig { return Rig{Value: Sample("hover", 0, 0)} }
 func (r *Rig) Step(target Pose, dt float64) {
 	dt = Clamp(dt, 0, .1)

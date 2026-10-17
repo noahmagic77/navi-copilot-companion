@@ -10,7 +10,7 @@ NAVI v0.5.0 ergänzt die VS-Code-Ansicht um einen lokalen Windows-x64-Helfer. Ei
 - Native Go-/GDI+-Darstellung ohne zusätzliches Electron, Browser- oder .NET-Runtime-Paket.
 - Fensterposition, Fokus und Größenänderungen werden über Windows-Ereignisse verarbeitet. Es gibt kein regelmäßiges Bildschirm-Abtasten und keine Screenshots.
 - Der Helfer prüft die Vorfahren des angegebenen Extension-Host-Prozesses und bindet sich an dessen beim Start aktives Fenster. Auf anderen Betriebssystemen/Architekturen bleibt die Webview verfügbar.
-- Die Erweiterung prüft die SHA-256 des mitgelieferten Helfers und startet ihn mit einem festen Dateipfad ohne Shell. Die Steuerung läuft über geerbte stdin/stdout-Pipes. Nachrichten enthalten nur Fokus, Ressourcenmodus und Bewegungskennungen, keine Prompts oder Dateiinhalte.
+- Die Erweiterung prüft die SHA-256 des mitgelieferten Helfers und startet ihn mit einem festen Dateipfad ohne Shell. Die Steuerung läuft über geerbte stdin/stdout-Pipes. Die lokale v0.5.2-Vorschau ergänzt die Steuerdaten um begrenzte Sprechblasentexte: Statusmeldungen und kurze Auszüge aus NAVIs eigenen Antworten. Sie führt keine Datei- oder Fremdchat-Lesezugriffe ein. [Sprechblase und Datenfluss](SPEECH.md).
 - Beim Ausblenden wird der native Animationstimer entfernt. Beim Beenden der Erweiterung oder Schließen der Steuer-Pipe beendet sich der Helfer; ein begrenzter Kill-Fallback verhindert ein dauerhaft verwaistes Kindprogramm.
 
 ## Startwerte
@@ -21,7 +21,7 @@ NAVI v0.5.0 ergänzt die VS-Code-Ansicht um einen lokalen Windows-x64-Helfer. Ei
 
 Das Ziel wird als relative Koordinate zwischen 0 und 1 übertragen. Die vorhandene weiche Bézier-Flugsteuerung sorgt für Start und Landung. Ausweichen hat Vorrang; anschließend wird der Weg von der neuen Position aus geplant. Befindet sich die Maus näher als 145 DIPs am Ziel, wartet die Fee. Nach Ankunft beginnt frühestens nach 15 aktiven Sekunden ein normaler Flug. Größen- und DPI-Änderungen führen zur Neuberechnung des Ziels. Ausblenden, Fokusverlust und Animationspause verwerfen das Ziel. Ein neuer Zielflug ersetzt den vorherigen. Der Befehl aktiviert bei Bedarf das Overlay, schaltet aber keine deaktivierte Animation oder reduzierte Bewegung ein.
 
-Diese Positionen sind Fensterziele. Eine Zuordnung zu Codezeilen oder Diagnosen ist noch nicht implementiert. Das Steuerprotokoll enthält weiterhin keine Datei- oder Promptinhalte.
+Diese Positionen sind Fensterziele. Eine Zuordnung zu Codezeilen oder Diagnosen ist noch nicht implementiert. Zielnachrichten enthalten ausschließlich relative Koordinaten; separate Sprechblasennachrichten können kurze Antwortauszüge enthalten.
 
 ### Mathematische Wahrnehmung und Maus-Ausweichen
 

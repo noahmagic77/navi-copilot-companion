@@ -15,6 +15,9 @@ public static class NaviWindowTest {
  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd,out Rect rect);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd,System.Text.StringBuilder text,int count);
+ [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd,System.Text.StringBuilder text,int count);
+ [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
+ public static IntPtr FindBubble(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetClassName(h,text,64);if(text.ToString()=="tooltips_class32")found=h;}return true;},IntPtr.Zero);return found;}
  public static IntPtr Find(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetWindowText(h,text,64);if(text.ToString()=="NAVI Fairy")found=h;}return true;},IntPtr.Zero);return found;}
  public static Rect Bounds(IntPtr hwnd) {Rect r;GetWindowRect(hwnd,out r);return r;}
 }
@@ -75,18 +78,28 @@ try {
  Require ($null -ne $naviFirstFrame) 'Active overlay produced no animation frame diagnostics'
  $naviSecondFrame = ReadFrame $naviProcess 3000
  Require ($null -ne $naviSecondFrame -and $naviSecondFrame.count -gt $naviFirstFrame.count) 'Animation frame counter did not advance'
+ $naviProcess.StandardInput.WriteLine('{"type":"speech","message":"Hallo! Ich mache deiner Maus Platz."}')
+ $naviProcess.StandardInput.Flush();Pump 200
+ $naviBubble = [NaviWindowTest]::FindBubble([uint32]$naviProcess.Id)
+ Require ($naviBubble -ne [IntPtr]::Zero -and [NaviWindowTest]::IsWindowVisible($naviBubble)) 'Speech bubble did not appear'
+ Require ([NaviWindowTest]::GetForegroundWindow() -eq $naviOwner.Handle) 'Speech bubble stole focus'
+ Require ([NaviWindowTest]::SendMessage($naviBubble,0x84,[IntPtr]::Zero,[IntPtr]::Zero).ToInt64() -eq -1) 'Speech bubble intercepts clicks'
  $naviProcess.StandardInput.WriteLine('{"type":"configure","enabled":false,"eco":true,"respectReducedMotion":false}')
  $naviProcess.StandardInput.Flush()
  Pump 200
  $naviBefore = [NaviWindowTest]::Bounds($naviWindow)
+ $naviBubbleBefore = [NaviWindowTest]::Bounds($naviBubble)
  $naviOwner.SetDesktopLocation(200,160);Pump 300
  $naviAfter = [NaviWindowTest]::Bounds($naviWindow)
+ $naviBubbleAfter = [NaviWindowTest]::Bounds($naviBubble)
+ Require ([Math]::Abs(($naviBubbleAfter.Left-$naviBubbleBefore.Left)-120) -le 2 -and [Math]::Abs(($naviBubbleAfter.Top-$naviBubbleBefore.Top)-80) -le 2) 'Paused speech bubble did not follow owner movement'
  Require ([Math]::Abs(($naviAfter.Left-$naviBefore.Left)-120) -le 2) 'Paused overlay did not follow horizontal window move'
  Require ([Math]::Abs(($naviAfter.Top-$naviBefore.Top)-80) -le 2) 'Paused overlay did not follow vertical window move'
  $naviOwnerBounds = [NaviWindowTest]::Bounds($naviOwner.Handle)
  Require ($naviAfter.Left -ge $naviOwnerBounds.Left -and $naviAfter.Right -le $naviOwnerBounds.Right -and $naviAfter.Top -ge $naviOwnerBounds.Top -and $naviAfter.Bottom -le $naviOwnerBounds.Bottom) 'Overlay left the owner bounds'
  $naviOther.Show();$naviOther.Activate();[NaviWindowTest]::SetForegroundWindow($naviOther.Handle)|Out-Null;Pump 300
  Require (-not [NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay remained visible over another window'
+ Require (-not [NaviWindowTest]::IsWindowVisible($naviBubble)) 'Speech bubble remained visible over another window'
  $naviOwner.Activate();[NaviWindowTest]::SetForegroundWindow($naviOwner.Handle)|Out-Null;Pump 300
  Require ([NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay did not return to its owner'
  $naviOwner.WindowState = 'Minimized';Pump 300
@@ -97,7 +110,7 @@ try {
  Require ($naviProcess.WaitForExit(4000)) 'Overlay did not stop'
  Require ($naviProcess.ExitCode -eq 0) ($naviProcess.StandardError.ReadToEnd())
  New-Item -ItemType Directory -Force $Output|Out-Null
- @{windowIntegration='passed';ownerTracking=$true;noFocusStealing=$true;pausedWindowMove=$true;staysInBounds=$true;otherWindowHidden=$true;minimizeRestore=$true;cleanShutdown=$true;scope='native WinForms host; not a VS Code end-to-end session'}|ConvertTo-Json|Set-Content (Join-Path $Output 'native-window-integration.json')
+ @{windowIntegration='passed';speechBubble=$true;speechClickThrough=$true;speechOwnerTracking=$true;ownerTracking=$true;noFocusStealing=$true;pausedWindowMove=$true;staysInBounds=$true;otherWindowHidden=$true;minimizeRestore=$true;cleanShutdown=$true;scope='native WinForms host; not a VS Code end-to-end session'}|ConvertTo-Json|Set-Content (Join-Path $Output 'native-window-integration.json')
  Get-Content (Join-Path $Output 'native-window-integration.json')
 } finally {
  if($naviProcess -and -not $naviProcess.HasExited){$naviProcess.Kill()}
