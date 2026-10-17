@@ -7,6 +7,10 @@ import { analyzePrompt, potentialTopicChange } from './core/promptAnalyzer';
 import { parseTokenMetrics } from './core/otelParser';
 import { OverlayController } from './overlay/overlayController';
 import { GreetingCycle } from './core/greetingCycle';
+import {ActivityController,type ActivityEvent} from './integration/activity';
+import {NaviBridge} from './integration/bridge';
+import {join} from 'node:path';
+import {Brain} from './brain/brain';
 
 let journal:SessionJournal|undefined;
 
@@ -18,18 +22,48 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
   await journal.rebuild();
   const overlay=new OverlayController(context.extensionUri);
   const view=new NaviView(context.extensionUri,()=>overlay.audioActive,cue=>overlay.playSound(cue));
+  const brain=new Brain(vscode.window.state.focused);
+  let currentActivity:ActivityEvent|undefined;
+  const activity=new ActivityController(event=>{
+    brain.observe(event);
+    currentActivity=event.state==='busy'?event:undefined;
+    const label=event.source==='codex'?'Codex':'NAVI';
+    const text=event.state==='busy'?`${label}: Ich bearbeite deine Anfrage.`:
+      event.state==='error'?`${label}: Die Anfrage konnte nicht abgeschlossen werden.`:
+      event.state==='cancelled'?`${label}: Anfrage beendet oder abgebrochen.`:
+      `${label}: ${event.message || 'Anfrage abgeschlossen.'}`;
+    overlay.motion(event.state==='busy'?'think':event.state==='error'?'hint':event.state==='completed'?'celebrate':'hover');
+    overlay.say(text);
+    void view.showActivity({...event,message:text});
+  });
+  const activityTimer=setInterval(()=>{activity.expire();if(currentActivity)overlay.motion('think');},4000);
+  activityTimer.unref();context.subscriptions.push({dispose:()=>clearInterval(activityTimer)});
+  let codexBridge:NaviBridge|undefined;
+  let codexConnection:Promise<NaviBridge>|undefined;
+  let integrationDisposed=false;
+  const connectCodex=async()=>{
+    if(codexBridge)return codexBridge;
+    if(!codexConnection)codexConnection=(async()=>{
+      const bridge=new NaviBridge(context.globalStorageUri.fsPath,activity);
+      await bridge.start();
+      if(integrationDisposed){await bridge.dispose();throw new Error('NAVI was closed.');}
+      codexBridge=bridge;return bridge;
+    })().catch(error=>{codexConnection=undefined;throw error;});
+    return codexConnection;
+  };
+  context.subscriptions.push({dispose:()=>{integrationDisposed=true;void codexBridge?.dispose();}});
   context.subscriptions.push(overlay.onSoundFailure(cue=>void view.playSound(cue)));
   const greetings=new GreetingCycle();
   const greet=()=>{
-    if (!vscode.window.state.focused || !vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled',true)) return;
+    if (currentActivity || !vscode.window.state.focused || !vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled',true)) return;
     const id=greetings.next(Date.now());
     if(id){overlay.motion(id);void view.showGreeting(id);}
   };
   context.subscriptions.push(
-    vscode.window.onDidChangeWindowState(state=>{if(state.focused) greet();}),
+    vscode.window.onDidChangeWindowState(state=>{brain.focus(state.focused);if(state.focused) greet();}),
     vscode.window.onDidChangeActiveTextEditor(editor=>{if(editor) greet();})
   );
-  context.subscriptions.push(overlay,view.onMotion(({id,preview})=>overlay.motion(id,preview)),view.onAnalysis(result=>overlay.motion(result.hints.length?'hint':'celebrate')));
+  context.subscriptions.push(overlay,view.onMotion(({id,preview})=>{if(!currentActivity||id==='think')overlay.motion(id,preview);}),view.onAnalysis(result=>{if(!currentActivity)overlay.motion(result.hints.length?'hint':'celebrate');}));
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(NaviView.viewId,view),view);
   const session=journal.newSessionId();
   const workspaceId=journal.workspaceKey(vscode.workspace.workspaceFolders?.[0]?.uri.toString()??'no-workspace');
@@ -46,9 +80,29 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
         catch(err){console.error('NAVI sanitized event persistence failed',err);}
       }
     }
-  },answer=>{overlay.say(answer);void view.showSpeech(answer);});
+  },(id,state,message)=>{activity.update('vscode',id,state,message);});
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('navi.explainState',async()=>{
+      const document=await vscode.workspace.openTextDocument({language:'markdown',content:brain.describe()});
+      await vscode.window.showTextDocument(document,{preview:true,preserveFocus:true});
+    }),
+    vscode.commands.registerCommand('navi.configureCodex',async()=>{
+      try{
+        const bridge=await connectCodex();
+        const quote=(value:string)=>JSON.stringify(value.replace(/\\/g,'/'));
+        const configuration=`# Add this block to your Codex MCP configuration, then restart Codex.\n# This connection targets this NAVI window; regenerate it after reloading NAVI.\n[mcp_servers.navi]\ncommand = ${quote(process.execPath)}\nargs = [${quote(join(context.extensionUri.fsPath,'dist','src','integration','naviMcp.js'))}]\nenv = { ELECTRON_RUN_AS_NODE = "1", NAVI_CONNECTION_FILE = ${quote(bridge.descriptor)} }\n`;
+        const document=await vscode.workspace.openTextDocument({language:'toml',content:configuration});
+        await vscode.window.showTextDocument(document);
+        void vscode.window.showInformationMessage('NAVI-Verbindung bereit. Diesen Block in die MCP-Konfiguration deines Codex-Clients übernehmen und Codex neu starten. Kein neues KI-Modell erforderlich.');
+      }catch{void vscode.window.showErrorMessage('NAVI konnte die lokale Codex-Verbindung nicht starten.');}
+    }),
+    vscode.commands.registerCommand('navi.shareText',async()=>{
+      const editor=vscode.window.activeTextEditor;
+      const selected=editor&&!editor.selection.isEmpty?editor.document.getText(editor.selection):undefined;
+      const message=selected??await vscode.window.showInputBox({title:'NAVI: Ausgewählten Text übergeben',prompt:'Nur diesen Text in der NAVI-Sprechblase anzeigen.',ignoreFocusOut:true});
+      if(message?.trim()&&!activity.message('manual',message))void vscode.window.showInformationMessage('NAVI bearbeitet gerade eine Anfrage. Bitte die Meldung danach erneut übergeben.');
+    }),
     vscode.commands.registerCommand('navi.talkToFairy',async()=>{await vscode.commands.executeCommand('workbench.action.chat.open',{query:'@navi ',isPartialQuery:true});}),
     vscode.commands.registerCommand('navi.showSpeech',async()=>{
       await vscode.workspace.getConfiguration('navi').update('bubble.enabled',true,vscode.ConfigurationTarget.Global);

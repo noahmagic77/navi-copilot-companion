@@ -16,7 +16,7 @@ func TestAllMotionsFinite(t *testing.T) {
 					t.Fatal(d.ID)
 				}
 			}
-			if math.Abs(p[X]) > 30 || math.Abs(p[Y]) > 35 {
+			if math.Abs(p[X]) > 44 || math.Abs(p[Y]) > 51 {
 				t.Fatal("unbounded", d.ID)
 			}
 		}

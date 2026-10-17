@@ -5,10 +5,62 @@ package main
 import (
 	"navi/overlay/internal/protocol"
 	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
 	"unsafe"
 )
+
+func TestBubbleRasterHasTransparentBodyReadableTextAndTrackingTip(t *testing.T) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	b, err := newSpeechBubble(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer b.Close()
+	for _, center := range []point{{200, 300}, {900, 300}, {600, 140}, {600, 650}} {
+		if err := b.draw("Hallo! Ich fliege mit dir. Schreib mir mit @navi.", center, rect{100, 100, 1100, 700}, 1); err != nil {
+			t.Fatal(err)
+		}
+		pixels := unsafe.Slice((*byte)(unsafe.Pointer(b.canvas.bits)), b.canvas.pixels*b.canvas.pixels*4)
+		var clear, translucent, ink int
+		for i := 0; i < len(pixels); i += 4 {
+			a := pixels[i+3]
+			if a == 0 {
+				clear++
+			}
+			if a > 100 && a < 210 {
+				translucent++
+			}
+			if a > 230 && pixels[i] < 120 && pixels[i+1] < 100 && pixels[i+2] < 90 {
+				ink++
+			}
+		}
+		if clear == 0 || translucent < 500 || ink < 30 {
+			t.Fatalf("invalid bubble raster: clear=%d translucent=%d text=%d", clear, translucent, ink)
+		}
+		var area rect
+		pGetWindowRect.Call(b.hwnd, uintptr(unsafe.Pointer(&area)))
+		tx, ty := int(center.X-area.Left), int(center.Y+3-area.Top)
+		nearTip := false
+		for y := ty - 3; y <= ty+3; y++ {
+			for x := tx - 3; x <= tx+3; x++ {
+				if x >= 0 && y >= 0 && x < b.canvas.pixels && y < b.canvas.pixels && pixels[(y*b.canvas.pixels+x)*4+3] > 0 {
+					nearTip = true
+				}
+			}
+		}
+		if !nearTip {
+			t.Fatal("tail does not reach the fairy core", center, area)
+		}
+	}
+	if output := os.Getenv("NAVI_TEST_BUBBLE_IMAGE"); output != "" {
+		if err := b.canvas.PNG(filepath.Clean(output)); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
 
 func TestNativeBubbleVisiblePlacementAndHide(t *testing.T) {
 	if os.Getenv("NAVI_TEST_VISIBLE_BUBBLE") != "1" {
@@ -27,10 +79,8 @@ func TestNativeBubbleVisiblePlacementAndHide(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer b.Close()
-	background, _, _ := pSendMessage.Call(b.hwnd, 0x400+22, 0, 0)
-	foreground, _, _ := pSendMessage.Call(b.hwnd, 0x400+23, 0, 0)
-	if background != 0x00fff7ef || foreground != 0x00463024 {
-		t.Fatal("bubble palette differs from fairy style")
+	if bubbleFill>>24 >= 255 || bubbleInk>>24 != 255 {
+		t.Fatal("bubble body must be translucent with opaque text")
 	}
 	bounds := rect{Left: 100, Top: 100, Right: 1200, Bottom: 800}
 	b.Show("Hallo! Ich mache deiner Maus Platz.", point{600, 400}, bounds, 1)
@@ -87,8 +137,6 @@ func TestNativeBubbleCreatesHiddenClickThroughWithoutFocus(t *testing.T) {
 	if int32(hit) != -1 {
 		t.Fatal("bubble catches clicks")
 	}
-	b.setText("Hallo 🧚")
-	pSendMessage.Call(b.hwnd, 0x400+57, 0, uintptr(unsafe.Pointer(&b.tool)))
 	after, _, _ := pGetForeground.Call()
 	if before != after {
 		t.Fatal("bubble stole focus")

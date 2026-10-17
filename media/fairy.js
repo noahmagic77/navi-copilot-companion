@@ -2,7 +2,7 @@
 
 (() => {
   const vscode = acquireVsCodeApi();
-  const {motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, samplePreviewMotion, createRig, stepRig, frameRate} = window.NaviMotion;
+  const {motions, idleMotionIds, greetingMotionIds, createGreetingSelector, chooseIdleMotion, shouldScheduleIdle, sampleMotion, samplePreviewMotion, createRig, stepRig, frameRate} = window.NaviMotion;
   const scene = document.getElementById('fairy-scene');
   const field = document.getElementById('sparkles');
   const float = scene.querySelector('.fairy-float');
@@ -25,16 +25,37 @@
   const hint = document.getElementById('hint');
   const status = document.getElementById('status');
   const speechBubble=document.getElementById('speech-bubble');
+  const bubbleTail=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  bubbleTail.classList.add('bubble-tail');bubbleTail.setAttribute('aria-hidden','true');
+  const tailPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+  bubbleTail.append(tailPath);document.querySelector('.fairy-stage').prepend(bubbleTail);
+  function positionBubble(){
+    bubbleTail.toggleAttribute('hidden',speechBubble.hidden);
+    if(speechBubble.hidden)return;
+    const stage=document.querySelector('.fairy-stage').getBoundingClientRect();
+    const area=scene.getBoundingClientRect();
+    const x=area.left-stage.left+area.width*.5+pose.x*modelScale;
+    const y=area.top-stage.top+area.height*.4844+(pose.y+3)*modelScale;
+    speechBubble.style.top=Math.max(0,y-speechBubble.offsetHeight-30)+'px';
+    const box=speechBubble.getBoundingClientRect();
+    const baseX=clamp(x,box.left-stage.left+20,box.right-stage.left-20);
+    const baseY=box.bottom-stage.top-1;
+    tailPath.setAttribute('d',`M ${baseX-9} ${baseY} L ${x} ${y} L ${baseX+9} ${baseY} Z`);
+    bubbleTail.setAttribute('viewBox',`0 0 ${stage.width} ${stage.height}`);
+  }
   let bubbleEnabled=document.querySelector('.fairy-stage').dataset.bubbleEnabled==='true';
   let bubblePriority=0,bubbleUntil=0,bubbleTimer=0;
-  function hideBubble(){clearTimeout(bubbleTimer);speechBubble.hidden=true;bubblePriority=0;bubbleUntil=0;}
+  function hideBubble(){clearTimeout(bubbleTimer);speechBubble.hidden=true;bubbleTail.setAttribute('hidden','');bubblePriority=0;bubbleUntil=0;}
   function showBubble(message,priority=1){
     if(!bubbleEnabled||!hostVisible||!hostFocused||document.hidden||typeof message!=='string')return;
     const text=Array.from(message.replace(/[\u0000-\u001f\u007f-\u009f]/g,' ').replace(/\s+/g,' ').trim()).slice(0,160).join('');
     if(!text){hideBubble();return;}
-    if(Date.now()<bubbleUntil&&bubblePriority>priority)return;
+    const now=Date.now();
+    if(!speechBubble.hidden && now < bubbleUntil && bubblePriority >= priority) return;
+    if(!speechBubble.hidden && now < bubbleUntil && bubblePriority > priority) return;
     document.getElementById('bubble-text').textContent=text;speechBubble.hidden=false;
-    bubblePriority=priority;const duration=Math.min(10000,4000+Array.from(text).length/30*1000);bubbleUntil=Date.now()+duration;
+    positionBubble();
+    bubblePriority=priority;const duration=Math.min(10000,4000+Array.from(text).length/30*1000);bubbleUntil=now+duration;
     clearTimeout(bubbleTimer);bubbleTimer=setTimeout(hideBubble,duration);
   }
   document.getElementById('close-bubble').addEventListener('click',()=>{bubbleEnabled=false;hideBubble();vscode.postMessage({type:'hideSpeech'});});
@@ -88,6 +109,7 @@
   let lastInteraction = 0;
   let lastCuriosity = -10;
   let checking = false;
+  let modelBusy = false;
   let mode = 'auto';
   let transitionPending = true;
   let previewQueue = [];
@@ -96,11 +118,17 @@
   let pose = sampleMotion('hover', 0, 0);
   const rig = createRig(pose);
   const targetPose = sampleMotion('hover', 0, 0);
+  let idleCooldownUntil = 0;
+  let lastIdleMotion = 'hover';
   const centers = Array(7).fill(pose);
   let lastParticleCount = 0;
   const trail = Array.from({length: 90}, () => ({at: -1, x: 0, y: 0}));
   let trailIndex = 0;
-  const idleSequence = idleMotionIds;
+  const idleSequence = Object.freeze([
+    'drift','figure8','stretch','curious','twirl',
+    'sway-breeze','arc-sunrise','bob-skip','orbit-halo','light-breathe',
+    'sway-cloud','arc-return','orbit-wreath'
+  ]);
   let idleIndex = Math.floor(Math.random() * idleSequence.length);
 
   const groups = new Map();
@@ -136,7 +164,7 @@
     const definition = motions.find(motion => motion.id === id);
     if (!definition) return;
     active = {id, age: 0, source, duration: duration || definition.duration};
-    if(source!=='preview'){
+    if(source!=='preview'&&source!=='integration'){
       if(id==='greet'||id.startsWith('greet-'))showBubble('Hallo! Ich bin da. Schreib mir mit @navi.');
       else if(id==='curious')showBubble('Was möchtest du als Nächstes ausprobieren?');
       else if(id==='hint')showBubble('Ich habe einen Tipp für deinen Prompt.');
@@ -154,12 +182,38 @@
     mode = 'auto';
     previewQueue = [];
     choice.value = 'auto';
-    enterMotion(checking ? 'think' : document.activeElement === prompt ? 'listen' : 'hover', checking || document.activeElement === prompt ? 'context' : 'auto', 16 + Math.random() * 8);
+    if (checking || document.activeElement === prompt) {
+      enterMotion(checking ? 'think' : 'listen', checking ? 'context' : 'context', 16 + Math.random() * 8);
+      return;
+    }
+    const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
+    lastIdleMotion = nextIdle;
+    enterMotion(nextIdle, 'auto', 8 + Math.random() * 7);
   }
 
   function advanceMotion(dt) {
     active.age += dt;
-    if (mode === 'auto' && !checking && document.activeElement !== prompt && elapsed - lastInteraction > 90 && active.id !== 'rest') {
+    const quietFor = Math.max(0, elapsed - lastInteraction) * 1000;
+    const bubbleWindowOpen = !speechBubble.hidden && Date.now() < bubbleUntil;
+    const canResumeIdle = shouldScheduleIdle({
+      checking,
+      promptFocused: document.activeElement === prompt,
+      bubbleVisible: bubbleWindowOpen,
+      bubblePriority,
+      hostVisible,
+      hostFocused,
+      lastInteractionAt: Math.max(0, lastInteraction * 1000),
+      now: elapsed * 1000,
+      minIdleGapMs: 5000
+    });
+    if (mode === 'auto' && !checking && !modelBusy && document.activeElement !== prompt && bubbleWindowOpen && bubblePriority >= 2) {
+      // Keep a short recovery window when the bubble is active so that reactions remain visible.
+      return;
+    }
+    if (mode === 'auto' && !checking && document.activeElement !== prompt && quietFor > 9000 && active.id !== 'rest' && bubbleWindowOpen && bubblePriority >= 2) {
+      return;
+    }
+    if (mode === 'auto' && !checking && document.activeElement !== prompt && quietFor > 9000 && active.id !== 'rest') {
       enterMotion('rest', 'context');
     }
     if (active.age < active.duration) return;
@@ -172,9 +226,27 @@
       // These poses are driven by the continuous clock, so looping is seamless.
       active.age = active.duration;
     } else if (active.source === 'feedback' || active.id !== 'hover') {
-      resumeNaturalMotion();
+      if (canResumeIdle && !speechBubble.hidden && bubblePriority >= 2) {
+        resumeNaturalMotion();
+        return;
+      }
+      if (canResumeIdle && !checking && !modelBusy && document.activeElement !== prompt) {
+        const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
+        lastIdleMotion = nextIdle;
+        idleCooldownUntil = elapsed * 1000 + 8000;
+        enterMotion(nextIdle, 'auto', 9 + Math.random() * 8);
+      } else {
+        resumeNaturalMotion();
+      }
     } else {
-      enterMotion(idleSequence[idleIndex++ % idleSequence.length]);
+      if (canResumeIdle && !checking && !modelBusy && document.activeElement !== prompt && elapsed * 1000 >= idleCooldownUntil) {
+        const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
+        lastIdleMotion = nextIdle;
+        idleCooldownUntil = elapsed * 1000 + 8000;
+        enterMotion(nextIdle, 'auto', 7 + Math.random() * 7);
+      } else {
+        active.age = 0;
+      }
     }
   }
 
@@ -188,6 +260,7 @@
   }
 
   function render() {
+    positionBubble();
     const recoil = Math.sin(wingPhase * 2) * .25 * pose.wingAmplitude;
     float.style.transform = `translate(${pose.x * modelScale}px, ${(pose.y + recoil) * modelScale}px) rotate(${pose.roll}deg) scale(${pose.scale})`;
     art.style.transform = `perspective(600px) rotateY(${pose.yaw}deg)`;
@@ -202,7 +275,7 @@
     wings[1].style.transform = `perspective(450px) rotateY(${-12 - right * 50 * amplitude - fold + spread * 8}deg) rotate(${3 - right * 9 + spread * 15}deg)`;
     wings[2].style.transform = `perspective(450px) rotateY(${7 + lower * 40 * amplitude + fold}deg) rotate(${-lower * 10 + spread * 18}deg)`;
     wings[3].style.transform = `perspective(450px) rotateY(${-7 - lower * 40 * amplitude - fold}deg) rotate(${lower * 10 - spread * 18}deg)`;
-    core.style.transform = `scale(${.985 + (pose.glow - 1) * .13})`;
+    core.style.transform = `scale(${.985 + (pose.glow - 1) * .35})`;
     core.style.opacity = String(clamp(pose.glow, .65, 1));
     halo.style.transform = `scale(${pose.glow})`;
     halo.style.opacity = String(clamp(.7 + (pose.glow - 1), .35, 1));
@@ -268,8 +341,8 @@
     scene.dataset.motion = !visible ? 'hidden' : enabled ? 'running' : 'paused';
     toggle.setAttribute('aria-pressed', String(enabled));
     toggle.disabled = reduced;
-    choice.disabled = !enabled;
-    previewAll.disabled = !enabled;
+    choice.disabled = !enabled || modelBusy;
+    previewAll.disabled = !enabled || modelBusy;
     motionLabel.textContent = reduced ? 'Bewegung reduziert' : enabled ? 'Animation an' : 'Animation aus';
     toggle.title = reduced ? 'Die Systemeinstellung für reduzierte Bewegung wird berücksichtigt.' : enabled ? 'Animation pausieren' : 'Animation einschalten';
     if (enabled && visible) frame = requestAnimationFrame(tick);
@@ -347,6 +420,12 @@
   window.addEventListener('message', event => {
     const data = event.data;
     if (!data || typeof data !== 'object') return;
+    if(data.type==='activity'&&['busy','completed','cancelled','error','message'].includes(data.state)&&typeof data.message==='string'){
+      modelBusy=data.state==='busy';checking=modelBusy;mode='auto';previewQueue=[];choice.value='auto';lastInteraction=elapsed;
+      enterMotion(checking?'think':data.state==='completed'?'celebrate':data.state==='error'?'hint':'hover',checking?'context':'integration');
+      presence.textContent=checking?(data.source==='codex'?'Codex arbeitet …':'NAVI arbeitet …'):data.state==='error'?'Anfrage fehlgeschlagen':data.state==='cancelled'?'Anfrage beendet':'Ich bin da';
+      showBubble(data.message,2);syncMotion();return;
+    }
     if(data.type==='speech'){showBubble(data.message,2);return;}
     if(data.type==='sound'){void soundPlayer.play(data.cue);return;}
     if(data.type==='audioFocus'){soundPlayer.configure({focused:data.focused});if(typeof data.focused==='boolean')hostFocused=data.focused;if(!hostFocused)hideBubble();return;}
@@ -382,15 +461,15 @@
       return;
     }
     if (data.type !== 'analysis' || !Array.isArray(data.hints)) return;
-    checking = false;
+    checking = modelBusy;
     const hints = data.hints.filter(h => h && typeof h.text === 'string').slice(0, 5);
     scene.dataset.mood = hints.length ? 'hint' : 'idle';
     mode = 'auto';
     previewQueue = [];
     choice.value = 'auto';
     lastInteraction = elapsed;
-    enterMotion(hints.length ? 'hint' : 'celebrate', 'feedback');
-    presence.textContent = hints.length ? 'Ein Tipp für dich' : 'Ich bin da';
+    enterMotion(modelBusy ? 'think' : hints.length ? 'hint' : 'celebrate', modelBusy ? 'context' : 'feedback');
+    if(!modelBusy)presence.textContent = hints.length ? 'Ein Tipp für dich' : 'Ich bin da';
     heading.textContent = hints.length ? 'Ein kleiner Hinweis …' : 'Sieht gut aus.';
     hint.replaceChildren();
     if (!hints.length) hint.textContent = 'Dein Prompt ist nach den aktivierten Heuristiken unauffällig.';

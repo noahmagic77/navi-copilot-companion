@@ -53,7 +53,14 @@ jobs:
               files = set(package.namelist())
               required = {
                   'extension/package.json',
+                  'extension/LICENSE.md',
+                  'extension/THIRD_PARTY_NOTICES.md',
                   'extension/dist/src/extension.js',
+                  'extension/dist/src/brain/brain.js',
+                  'extension/dist/src/integration/naviMcp.js',
+                  'extension/dist/src/integration/bridge.js',
+                  'extension/dist/src/integration/activity.js',
+                  'extension/dist/src/chat/modelTurn.js',
                   'extension/dist/src/ui/naviView.js',
                   'extension/dist/src/ui/fairyMarkup.js',
                   'extension/dist/src/ui/webviewContent.js',
@@ -78,6 +85,7 @@ jobs:
               expected_hash = package.read('extension/bin/win32-x64/navi-overlay.exe.sha256').decode().split()[0]
               assert hashlib.sha256(helper).hexdigest() == expected_hash
               assert manifest['publisher'] == 'navi-labs'
+              assert manifest['license'] == 'MIT'
               assert manifest['version'] == json.loads(Path('package.json').read_text())['version']
           print('VSIX manifest and essential assets verified')
           PY

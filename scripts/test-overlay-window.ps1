@@ -17,7 +17,7 @@ public static class NaviWindowTest {
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd,System.Text.StringBuilder text,int count);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd,System.Text.StringBuilder text,int count);
  [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
- public static IntPtr FindBubble(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetClassName(h,text,64);if(text.ToString()=="tooltips_class32")found=h;}return true;},IntPtr.Zero);return found;}
+ public static IntPtr FindBubble(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetClassName(h,text,64);if(text.ToString()=="STATIC")found=h;}return true;},IntPtr.Zero);return found;}
  public static IntPtr Find(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetWindowText(h,text,64);if(text.ToString()=="NAVI Fairy")found=h;}return true;},IntPtr.Zero);return found;}
  public static Rect Bounds(IntPtr hwnd) {Rect r;GetWindowRect(hwnd,out r);return r;}
 }

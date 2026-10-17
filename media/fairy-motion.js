@@ -126,7 +126,24 @@
   const idleMotionIds = Object.freeze(['drift','curious','stretch','figure8','twirl',
     ...additional.filter(motion => ['Gleiten','Bögen','Kreisen'].includes(motion.category)).map(motion => motion.id)]);
   const neutralPointer = Object.freeze({x: 0, y: 0});
+  const motionPriority = Object.freeze({
+    greet: 95, 'greet-wave': 95, 'greet-bow': 95, 'greet-hop': 95, 'greet-circle': 95, 'greet-sun': 95,
+    'greet-spark': 95, 'greet-spiral': 95, 'greet-sway': 95, 'greet-dance': 95, 'greet-peek': 95,
+    think: 85, listen: 82, hint: 80, celebrate: 76, error: 90, rest: 35, hover: 10, drift: 15, curious: 15,
+    stretch: 15, figure8: 15, twirl: 15
+  });
   const rigCache = new WeakMap();
+
+  function shouldScheduleIdle({checking = false, promptFocused = false, bubbleVisible = false, bubblePriority = 0, hostVisible = true, hostFocused = true, lastInteractionAt = 0, now = Date.now(), minIdleGapMs = 5_000} = {}) {
+    if (!hostVisible || !hostFocused) return false;
+    if (checking || promptFocused || (bubbleVisible && bubblePriority >= 2)) return false;
+    return now - lastInteractionAt >= minIdleGapMs;
+  }
+  function chooseIdleMotion(previousId = '', sequence = idleMotionIds) {
+    const pool = sequence.filter(id => id !== previousId);
+    const next = pool.length ? pool[Math.floor(Math.random() * pool.length)] : sequence[0];
+    return next || 'hover';
+  }
 
   function sampleMotion(id, age, elapsed, pointer = neutralPointer, output = {}) {
     const definition = byId.get(id) || motions[1];
@@ -259,6 +276,8 @@
         break;
       }
     }
+    pose.x*=1.45;pose.y*=1.45;pose.roll*=1.2;pose.yaw*=1.3;
+    pose.glow=1+(pose.glow-1)*1.5;
     return pose;
   }
 
@@ -268,13 +287,14 @@
 
   function samplePreviewMotion(id, age, elapsed, pointer = neutralPointer, output = {}) {
     const pose=sampleMotion(id,age,elapsed,pointer,output);
-    pose.x*=1.8;pose.y*=1.8;
-    pose.yaw*=1.5;
+    pose.x*=2.7;pose.y*=2.7;
+    pose.yaw*=1.8;
+    pose.roll*=1.35;
     pose.wingAmplitude=Math.min(1.4,pose.wingAmplitude*1.25);
     pose.wingSpread=Math.min(1,pose.wingSpread*1.6);
-    pose.glow=1+(pose.glow-1)*1.6;
+    pose.glow=1+(pose.glow-1)*2.4;
     pose.orbitRadius=1+(pose.orbitRadius-1)*1.5;
-    if(id==='listen'){pose.roll+=Math.sin(age*2.4)*4;pose.y+=Math.sin(age*2.4)*2;}
+    if(id==='listen'){pose.roll+=Math.sin(age*2.4)*10;pose.y+=Math.sin(age*2.4)*8;}
     return pose;
   }
 
@@ -308,5 +328,5 @@
     if (id === 'hover' || id === 'listen') return eco ? 12 : 15;
     return eco ? 24 : 30;
   }
-  return Object.freeze({motions, idleMotionIds, greetingMotionIds, createGreetingSelector, sampleMotion, samplePreviewMotion, createRig, stepRig, nearestAngle, frameRate});
+  return Object.freeze({motions, idleMotionIds, greetingMotionIds, createGreetingSelector, chooseIdleMotion, shouldScheduleIdle, motionPriority, sampleMotion, samplePreviewMotion, createRig, stepRig, nearestAngle, frameRate});
 });

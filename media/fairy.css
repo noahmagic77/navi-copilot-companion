@@ -23,14 +23,19 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, summary:focu
 .fairy-bubble .motion-toggle { color: #334b68; border-color: #9fb8d15c; background: #ffffff96; }
 .fairy-bubble .motion-toggle:hover { color: #1d334d; background: #fff; }
 .fairy-bubble[hidden] { display: none; }
-.fairy-bubble::after { content: ''; position: absolute; bottom: -9px; left: 18px; border: 9px solid transparent; border-top-color: #edf7ff; border-bottom: 0; }
+.bubble-tail { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 4; pointer-events: none; }
+.bubble-tail[hidden] { display: none; }
+.bubble-tail path { fill: #d6eaff70; stroke: #eff8ff99; stroke-width: 1; }
+.fairy-bubble { background: linear-gradient(145deg, #e8f4ff99, #c4dfff66); border-color: #eff8ff99; color: var(--vscode-foreground, #eee); backdrop-filter: blur(8px); box-shadow: 0 0 14px #d6eaff22, 0 4px 14px #0002; }
+.fairy-bubble strong { color: inherit; }
+.fairy-bubble .motion-toggle { color: inherit; background: #839fc522; }
 .fairy-bubble p { margin: 7px 0; line-height: 1.45; overflow-wrap: anywhere; }
 .bubble-close { position: absolute; top: 3px; right: 4px; background: transparent; border: 0; color: inherit; font-size: 17px; }
 @media (forced-colors: active) {
  .fairy-bubble, .fairy-bubble .motion-toggle { background: Canvas; color: CanvasText; border-color: CanvasText; box-shadow: none; }
  .fairy-bubble strong { color: CanvasText; }
  .fairy-bubble::before { display: none; }
- .fairy-bubble::after { border-top-color: Canvas; }
+ .bubble-tail path { fill: Canvas; stroke: CanvasText; }
 }
 .fairy-scene {
   position: relative;

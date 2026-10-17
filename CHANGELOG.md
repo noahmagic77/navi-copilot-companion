@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.3 — 2026-10-17
+
+- Release project code, documentation and project-authored assets under MIT; add contribution guidance and bundled Go third-party notices.
+- Add the first local brain state reducer and bounded self-model, observing selected activity and focus without storing message contents or calling another model. Add a state-explanation command and deterministic replay/capability tests.
+- Connect NAVI's existing selected-model requests to busy/completed/cancelled/error activity, preserving streamed chat and opt-in history.
+- Bundle a dependency-free Codex MCP handoff with authenticated per-window local IPC, configuration command, manual text sharing and bounded status arbitration. No additional model or model API call.
+- Add streamed-turn, concurrent-activity and real MCP-to-pipe tests; document client setup and pending live integration validation.
+- Replace native system tooltips with a rounded, per-pixel translucent speech bubble and opaque text. Draw the tail toward the moving fairy core, including flipped edge placements.
+- Make the companion bubble translucent and continuously aim its tail at the fairy; hide the tail together with the message.
+- Refine idle scheduling to wait for quiet periods and avoid interrupting active prompts or important speech bubbles.
+- Increase flight and gesture amplitude in normal animations, emphasize preview trajectories further, and strengthen visible light pulses.
+- Add native raster checks for transparency, readable text and tail placement, plus browser checks for visible motion distances and core alignment.
+- Project owner confirmed that fairy sounds are audible. Full visual validation of these revisions in VS Code remains pending.
+
 ## 0.5.2 — 2026-10-17
 
 - Add white and pale-blue speech bubbles matching the fairy, with native click-through placement, timed dismissal and bounded excerpts of NAVI's own chat responses.

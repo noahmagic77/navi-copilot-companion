@@ -58,3 +58,7 @@ Desktop VS Code >=1.100. Development and packaging require Node.js >=22; buildin
 NAVI does not yet provide a guided, hint-first programming tutor. A future learning mode should ask what the learner has tried, offer graduated hints before a full solution, let the user request explanation or reveal, and keep the learner in control. It must not silently inspect other chats or workspace files. Support for children and adults should avoid age profiling and document model-provider, privacy and guardian considerations before release.
 
 Other hardening includes live Extension Development Host testing, multi-window journal coordination, migration strategy, dependency/security review and performance measurements on target hardware.
+
+## Existing-model activity and explicit Codex handoff (local v0.5.3)
+
+An ActivityController arbitrates per-request leases across NAVI's own VS Code turns, explicitly shared Codex tool calls and manual messages. runModelTurn preserves selected-model streaming and distinguishes successful completion from cancellation/error. A bundled MCP stdio process forwards bounded requests through an authenticated per-window named pipe (Unix socket outside Windows); it does not open a TCP port or call another model. A transient connection descriptor is created only by the setup command and removed on normal shutdown. Shared Codex/manual text can reach the native speech helper through the same 160-character sanitizer as NAVI replies. No workspace scanning or private-chat ingestion occurs. See [AI connection](AI-CONNECTION.md).

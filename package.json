@@ -1,9 +1,10 @@
 {
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
-  "description": "Private local-first VS Code companion with a fairy guide and local prompt insights.",
-  "version": "0.5.2",
+  "description": "Open-source, local-first VS Code companion with a fairy guide and local prompt insights.",
+  "version": "0.5.3",
   "private": true,
+  "license": "MIT",
   "engines": {
     "vscode": "^1.100.0"
   },
@@ -58,6 +59,9 @@
       ]
     },
     "commands": [
+      {"command":"navi.explainState","title":"NAVI: About My State / Eigenen Zustand erklären"},
+      {"command":"navi.configureCodex","title":"NAVI: Configure Codex Connection / Codex-Verbindung einrichten"},
+      {"command":"navi.shareText","title":"NAVI: Share Text / Text an Fee übergeben"},
       {"command":"navi.showSpeech","title":"NAVI: Show Speech Bubble / Sprechblase anzeigen"},
       {"command":"navi.hideSpeech","title":"NAVI: Hide Speech Bubble / Sprechblase ausschalten"},
       {"command":"navi.talkToFairy","title":"NAVI: Talk to Fairy / Mit NAVI sprechen"},

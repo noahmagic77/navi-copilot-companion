@@ -5,11 +5,13 @@ import {renderNaviWebview} from './webviewContent';
 import {motionIds} from '../core/motionCatalog';
 import {isSoundCue,soundForMotion} from '../core/soundPolicy';
 import {speechText} from '../core/speechText';
+import type {ActivityEvent} from '../integration/activity';
 
 export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
   public static readonly viewId = 'navi.companion';
   private view: vscode.WebviewView | undefined;
   private lastAnalysis: Analysis | undefined;
+  private activity: ActivityEvent | undefined;
   private readonly viewSubscriptions: vscode.Disposable[] = [];
   private readonly emitter = new vscode.EventEmitter<Analysis>();
   private readonly configurationSubscription: vscode.Disposable;
@@ -30,10 +32,11 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
     const media = vscode.Uri.joinPath(this.extensionUri, 'media');
     webview.options = {enableScripts: true, localResourceRoots: [media]};
     this.viewSubscriptions.push(
-      vscode.window.onDidChangeWindowState(state=>{void webview.postMessage({type:'audioFocus',focused:state.focused});}),
+      vscode.window.onDidChangeWindowState(state=>{void webview.postMessage({type:'audioFocus',focused:state.focused});if(state.focused&&this.activity)void this.showActivity(this.activity);}),
       webview.onDidReceiveMessage((message: unknown) => this.receiveMessage(message)),
       view.onDidChangeVisibility(() => {
         void webview.postMessage({type: 'visibility', visible: view.visible});
+        if(view.visible&&this.activity)void this.showActivity(this.activity);
         if (!view.visible) this.motionEmitter.fire({id:'hover',preview:false});
       }),
       view.onDidDispose(() => {
@@ -72,6 +75,10 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
   async showSpeech(message:string):Promise<void>{
     if(this.view?.visible) await this.view.webview.postMessage({type:'speech',message:speechText(message)});
   }
+  async showActivity(activity:ActivityEvent):Promise<void>{
+    this.activity=activity.state==='busy'?activity:undefined;
+    if(this.view?.visible)await this.view.webview.postMessage({type:'activity',...activity});
+  }
   async playSound(cue:string):Promise<void>{
     if(isSoundCue(cue)&&this.view?.visible&&vscode.window.state.focused)await this.view.webview.postMessage({type:'sound',cue});
   }
@@ -102,6 +109,7 @@ export class NaviView implements vscode.WebviewViewProvider, vscode.Disposable {
       await this.sendSettings();
       if (this.view) await this.view.webview.postMessage({type: 'visibility', visible: this.view.visible});
       if (this.lastAnalysis) await this.showAnalysis(this.lastAnalysis);
+      if (this.activity) await this.showActivity(this.activity);
     } else if (data.type === 'setAnimation' && typeof data.enabled === 'boolean') {
       try {
         await vscode.workspace.getConfiguration('navi').update('fairy.animationEnabled', data.enabled, vscode.ConfigurationTarget.Global);

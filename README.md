@@ -1,22 +1,24 @@
 # NAVI — Copilot Companion
 
+**[English release overview](docs/releases/v0.5.3.en.md) · [Alle Änderungen auf Deutsch](docs/releases/v0.5.3.de.md)**
+
 ## NAVI direkt herunterladen
 
-**[NAVI Copilot Companion v0.5.2 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.2.vsix)**
+**[NAVI Copilot Companion v0.5.3 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.3.vsix)**
 
-Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.5.2.vsix`.
+Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.5.3.vsix`.
 
 [Installationsanleitung (Deutsch)](docs/INSTALLATION.md) · [Automatische Build-Ergebnisse](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)
 
-Dies ist die **v0.5.2-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.5.2.vsix.sha256).
+Dies ist die **v0.5.3-Entwicklungsversion** mit dem neuen weißen Feenmodell, nicht die VS-Code-Marketplace-Version. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.5.3.vsix.sha256).
 
 TypeScript VS Code companion with an animated fairy guide, an offline deterministic prompt checker and privacy-first analytics.
 
-**Status:** Public GitHub repository with an experimental v0.5.2 preview on `main`; no VS Code Marketplace release.
+**Status:** Public GitHub repository with an experimental v0.5.3 preview on `main`; no VS Code Marketplace release.
 
 ## Die Fee im Vordergrund (Windows x64)
 
-NAVI v0.5.2 enthält einen kleinen nativen Windows-Helfer. Die weiße Fee kann vor Editor, Terminal und Seitenleisten des aktiven VS-Code-Fensters fliegen. Ihr transparentes Fenster lässt Mausklicks durch und übernimmt keinen Tastaturfokus. Beim Wechsel zu einem anderen Fenster oder beim Minimieren wird sie ausgeblendet und ihre Animationsuhr angehalten. Der Helfer ist im VSIX enthalten; ein separater Download oder eine zusätzliche Browser-Laufzeit sind nicht erforderlich.
+NAVI v0.5.3 enthält einen kleinen nativen Windows-Helfer. Die weiße Fee kann vor Editor, Terminal und Seitenleisten des aktiven VS-Code-Fensters fliegen. Ihr transparentes Fenster lässt Mausklicks durch und übernimmt keinen Tastaturfokus. Beim Wechsel zu einem anderen Fenster oder beim Minimieren wird sie ausgeblendet und ihre Animationsuhr angehalten. Der Helfer ist im VSIX enthalten; ein separater Download oder eine zusätzliche Browser-Laufzeit sind nicht erforderlich.
 
 **Öffnen:** `Strg + Umschalt + P` → **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen**. **NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden** beendet den Helfer. **NAVI: Open Companion / Ansicht öffnen** zeigt Einstellungen und die Vorschau der 110 Bewegungen. Die Erweiterung startet den aktivierten Helfer nach dem VS-Code-Start; `navi.overlay.enabled` steuert dies pro Benutzer. Auf anderen Plattformen bleibt die eingebettete NAVI-Ansicht verfügbar.
 
@@ -55,11 +57,11 @@ Die helle Sprechblase zeigt kurze Reaktionen und Auszüge aus NAVIs eigenen Chat
 
 ## Installation über GitHub
 
-**[Installierbare VSIX v0.5.2](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.2.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
+**[Installierbare VSIX v0.5.3](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.5.3.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
 
 1. VSIX über den Link herunterladen (keine ZIP-Datei).
 2. VS Code Desktop öffnen und **Erweiterungen → … → Install from VSIX…** auswählen.
-3. Datei `navi-copilot-companion-0.5.2.vsix` auswählen und VS Code bei Bedarf neu laden.
+3. Datei `navi-copilot-companion-0.5.3.vsix` auswählen und VS Code bei Bedarf neu laden.
 
 Die Datei ist im Repository unter `downloads/` versioniert. Bei einer neuen Version muss dieser Download explizit erneuert werden; [GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) stellt weiterhin temporäre Build-Artefakte bereit. Noch kein VS Code Marketplace Release.
 
@@ -101,8 +103,18 @@ NAVI **does not** access GitHub Copilot's private conversations, intercept its p
 
 ## Scope and next milestones
 
-NAVI currently provides a local prompt checker and a general `@navi` chat participant; it does not yet teach programming through a guided, hint-first workflow. The learning roadmap is to help users reason and try steps themselves before offering a complete solution, while keeping chat boundaries and model-provider use explicit. No age profile is needed. See [Roadmap](docs/roadmap.md), [Architecture](docs/architecture.md) and [Integration](docs/INTEGRATION.md).
+NAVI currently provides a local prompt checker and a general `@navi` chat participant; it does not yet teach programming through a guided, hint-first workflow. The learning roadmap is to help users reason and try steps themselves before offering a complete solution, while keeping chat boundaries and model-provider use explicit. No age profile is needed. See [Roadmap](docs/roadmap.md), [Statusbericht](docs/STATUS.md), [Architecture](docs/architecture.md) and [Integration](docs/INTEGRATION.md).
 
 The SQLite backend and full VS Code integration have not yet been validated in a live extension host. Native rendering, native window integration and local control pipes have passed their Windows-runner tests. Run live E2E tests before claiming support for every OS/remote mode. See [ADR 0002](docs/adr/0002-sanitized-session-storage.md).
 
-Public GitHub repository for an experimental preview. The repository being public does not imply a VS Code Marketplace publication; consult LICENSE.md for the applicable licensing terms.
+NAVI ist Open Source unter der [MIT-Lizenz](LICENSE.md). Quellcode, Dokumentation und projekteigene Assets dürfen unter den Lizenzbedingungen genutzt, verändert und weitergegeben werden, auch kommerziell. Lizenzen von Drittkomponenten bleiben bestehen: [Hinweise](THIRD_PARTY_NOTICES.md). [Mitmachen](CONTRIBUTING.md). Die Veröffentlichung im VS Code Marketplace ist davon unabhängig.
+
+## Vorhandene KI-Zugänge verbinden (lokale v0.5.3-Vorschau)
+
+NAVI reagiert auf ihre eigenen Anfragen an das ausgewählte VS-Code-Modell. Für gezielte Codex-Meldungen ist eine gebündelte MCP-Brücke vorhanden: **NAVI: Configure Codex Connection / Codex-Verbindung einrichten** erzeugt die Konfiguration für den verwendeten Codex-Client. Kein zusätzliches KI-Modell erforderlich. Einrichtung und noch offene Live-Prüfungen: [KI-Verbindung](docs/AI-CONNECTION.md).
+
+Das [Fee-Gehirn-Konzept](docs/FAIRY-BRAIN.md) beschreibt die geplante lokale Entscheidungssteuerung mit mathematischen Formeln, Gedächtnisregeln und nachvollziehbaren Reaktionen. Der erste lokale Zustandskern mit begrenztem Selbstmodell ist umgesetzt; die allgemeine Entscheidungssteuerung bleibt geplant.
+
+[Das Fee-Gehirn bildlich erkunden](docs/fairy-brain.html): interaktive Offline-Konzeptgrafik mit Selbstmodell und sechs Reaktionsszenarien. Die HTML-Datei lokal im Browser öffnen; sie zeigt simulierte Zustände.
+
+Technischer Einstieg: [Spezifikation](docs/FAIRY-BRAIN-TECHNICAL.md) · [Umsetzungsplan](docs/FAIRY-BRAIN-PLAN.md). In der lokalen v0.5.3-Vorschau öffnet **NAVI: About My State / Eigenen Zustand erklären** eine regelbasierte Momentaufnahme ohne zusätzlichen Modellaufruf.

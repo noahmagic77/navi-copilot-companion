@@ -56,4 +56,4 @@ jobs:
           fi
           gh release create "$TAG" "$VSIX" "$VSIX.sha256" \
             --target "$(git rev-parse HEAD)" --title "NAVI $TAG" \
-            --notes-file CHANGELOG.md --prerelease
+            --notes-file "docs/releases/v$VERSION.en.md" --prerelease

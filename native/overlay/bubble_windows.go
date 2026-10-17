@@ -8,37 +8,30 @@ import (
 	"navi/overlay/internal/motion"
 	"navi/overlay/internal/speech"
 	"os"
-	"runtime"
 	"syscall"
 	"time"
+	"unicode/utf8"
 	"unsafe"
 )
 
-var bubbleComctl = syscall.NewLazyDLL("comctl32.dll")
-var pInitControls = bubbleComctl.NewProc("InitCommonControlsEx")
 var pSendMessage = user32.NewProc("SendMessageW")
 var pSetWindowLong = user32.NewProc("SetWindowLongPtrW")
 var pCallWindowProc = user32.NewProc("CallWindowProcW")
 var pGetWindowRect = user32.NewProc("GetWindowRect")
-var pCreateBubbleFont = gdi32.NewProc("CreateFontW")
-var pBubbleTheme = syscall.NewLazyDLL("uxtheme.dll").NewProc("SetWindowTheme")
 var bubbleCallback uintptr
 var bubbleProcedures = map[uintptr]uintptr{}
+var gFontFamily = gdiplus.NewProc("GdipCreateFontFamilyFromName")
+var gDeleteFontFamily = gdiplus.NewProc("GdipDeleteFontFamily")
+var gFont = gdiplus.NewProc("GdipCreateFont")
+var gDeleteFont = gdiplus.NewProc("GdipDeleteFont")
+var gDrawString = gdiplus.NewProc("GdipDrawString")
 
-type tooltipInfo struct {
-	Size, Flags     uint32
-	Window, ID      uintptr
-	Bounds          rect
-	Instance        uintptr
-	Text            *uint16
-	Param, Reserved uintptr
-}
+const bubbleFill = 0xb8eef7ff // Translucent body; text keeps its own opaque alpha.
+const bubbleInk = 0xff20364e
+
 type speechBubble struct {
 	hwnd    uintptr
-	font    uintptr
-	tool    tooltipInfo
-	text    []uint16
-	pin     runtime.Pinner
+	canvas  *renderer
 	active  bool
 	message string
 	scale   float64
@@ -62,63 +55,26 @@ func bubbleProcedure(hwnd uintptr, msg uint32, wparam, lparam uintptr) uintptr {
 	result, _, _ := pDefWindowProc.Call(hwnd, uintptr(msg), wparam, lparam)
 	return result
 }
-func newSpeechBubble(owner uintptr) (b *speechBubble, err error) {
-	init := struct{ Size, Classes uint32 }{8, 0xff}
-	ok, _, callErr := pInitControls.Call(uintptr(unsafe.Pointer(&init)))
-	if ok == 0 {
-		return nil, fmt.Errorf("InitCommonControlsEx: %v", callErr)
-	}
-	hwnd, _, callErr := pCreateWindow.Call(0x08000000|0x80|0x20|0x8, uintptrPointer(utf16("tooltips_class32")), 0, 0x80000000|0x40|0x2|0x1, 0, 0, 0, 0, owner, 0, 0, 0)
+func newSpeechBubble(owner uintptr) (*speechBubble, error) {
+	hwnd, _, callErr := pCreateWindow.Call(0x08000000|0x80000|0x80|0x20|0x8, uintptrPointer(utf16("STATIC")), 0, 0x80000000, 0, 0, 0, 0, owner, 0, 0, 0)
 	if hwnd == 0 {
 		return nil, fmt.Errorf("Create speech bubble: %v", callErr)
 	}
-	b = &speechBubble{hwnd: hwnd}
-	defer func() {
-		if err != nil {
-			b.Close()
-		}
-	}()
+	b := &speechBubble{hwnd: hwnd}
 	if bubbleCallback == 0 {
 		bubbleCallback = syscall.NewCallback(bubbleProcedure)
 	}
 	previous, _, callErr := pSetWindowLong.Call(hwnd, negative(-4), bubbleCallback)
 	if previous == 0 {
-		return b, fmt.Errorf("Subclass speech bubble: %v", callErr)
+		b.Close()
+		return nil, fmt.Errorf("Subclass speech bubble: %v", callErr)
 	}
 	bubbleProcedures[hwnd] = previous
-	b.tool = tooltipInfo{Flags: 0x20 | 0x80 | 0x100, Window: owner, ID: 1}
-	b.tool.Size = uint32(unsafe.Sizeof(b.tool))
-	b.setText("Ich bin da.")
-	added, _, _ := pSendMessage.Call(hwnd, 0x400+50, 0, uintptr(unsafe.Pointer(&b.tool)))
-	// Unmanifested common-controls v5 rejects the v6-only reserved member.
-	if added == 0 {
-		b.tool.Size = uint32(unsafe.Offsetof(b.tool.Reserved))
-		added, _, _ = pSendMessage.Call(hwnd, 0x400+50, 0, uintptr(unsafe.Pointer(&b.tool)))
-	}
-	if added == 0 {
-		return b, fmt.Errorf("Could not register speech bubble")
-	}
-	// Match the fairy's pale light rather than the system's yellow/dark tooltip.
-	if pBubbleTheme.Find() == nil {
-		pBubbleTheme.Call(hwnd, uintptrPointer(utf16("")), uintptrPointer(utf16("")))
-	}
-	pSendMessage.Call(hwnd, 0x400+19, 0x00fff7ef, 0)
-	pSendMessage.Call(hwnd, 0x400+20, 0x00463024, 0)
-	pSendMessage.Call(hwnd, 0x400+33, 0, uintptrPointer(utf16("✦ NAVI")))
 	return b, nil
 }
-func (b *speechBubble) setText(text string) {
-	b.pin.Unpin()
-	b.text, _ = syscall.UTF16FromString(text)
-	b.pin.Pin(&b.text[0])
-	b.tool.Text = &b.text[0]
-}
 func (b *speechBubble) Hide() {
-	if b == nil {
-		return
-	}
-	if b.active {
-		pSendMessage.Call(b.hwnd, 0x400+17, 0, uintptr(unsafe.Pointer(&b.tool)))
+	if b != nil && b.active {
+		pShowWindow.Call(b.hwnd, 0)
 		b.active = false
 	}
 }
@@ -130,39 +86,132 @@ func (b *speechBubble) Close() {
 		pDestroyWindow.Call(b.hwnd)
 		b.hwnd = 0
 	}
-	b.pin.Unpin()
-	if b.font != 0 {
-		pDeleteObject.Call(b.font)
-		b.font = 0
-	}
+	b.canvas.Close()
+	b.canvas = nil
 }
 func (b *speechBubble) Show(text string, center point, bounds rect, scale float64) {
-	if text != b.message {
-		b.setText(text)
-		pSendMessage.Call(b.hwnd, 0x400+57, 0, uintptr(unsafe.Pointer(&b.tool)))
-		b.message = text
+	if err := b.draw(text, center, bounds, scale); err != nil {
+		fmt.Fprintln(os.Stderr, "Speech bubble:", err)
+		b.Hide()
+		return
 	}
-	if scale != b.scale {
-		font, _, _ := pCreateBubbleFont.Call(negative(-int32(math.Round(14*scale))), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, uintptrPointer(utf16("Segoe UI")))
-		if font != 0 {
-			pSendMessage.Call(b.hwnd, 0x30, font, 1)
-			if b.font != 0 {
-				pDeleteObject.Call(b.font)
-			}
-			b.font = font
+	pShowWindow.Call(b.hwnd, 4)
+	b.active = true
+}
+func (b *speechBubble) draw(text string, center point, bounds rect, scale float64) error {
+	pixels := int(math.Ceil(400 * scale))
+	if b.canvas == nil || b.canvas.pixels != pixels {
+		b.canvas.Close()
+		var err error
+		b.canvas, err = newRenderer(pixels)
+		if err != nil {
+			return err
 		}
-		pSendMessage.Call(b.hwnd, 0x400+24, 0, uintptr(math.Min(280*scale, float64(bounds.Right-bounds.Left)-24)))
-		b.scale = scale
 	}
-	if !b.active {
-		pSendMessage.Call(b.hwnd, 0x400+17, 1, uintptr(unsafe.Pointer(&b.tool)))
-		b.active = true
+	r := b.canvas
+	width := math.Min(280*scale, float64(bounds.Right-bounds.Left)-16*scale)
+	lines := math.Ceil(float64(utf8.RuneCountInString(text)+9) / math.Max(8, (width/scale-32)/8))
+	height := math.Min((28+lines*20)*scale, float64(bounds.Bottom-bounds.Top)-16*scale)
+	layout := speech.Place(float64(center.X-bounds.Left), float64(center.Y-bounds.Top), float64(bounds.Right-bounds.Left), float64(bounds.Bottom-bounds.Top), width, height, scale)
+	// Include the tip in the layered surface. Its endpoint follows the luminous core.
+	tipX, tipY := float64(center.X), float64(center.Y)+3*scale
+	bodyX, bodyY := float64(bounds.Left)+layout.X, float64(bounds.Top)+layout.Y
+	originX, originY := math.Min(bodyX, tipX)-2*scale, math.Min(bodyY, tipY)-2*scale
+	x, y := int32(math.Round(bodyX-originX)), int32(math.Round(bodyY-originY))
+	w, h := int32(math.Round(layout.Width)), int32(math.Round(layout.Height))
+	tx, ty := int32(math.Round(tipX-originX)), int32(math.Round(tipY-originY))
+	radius := int32(math.Round(18 * scale))
+	if err := gdip(gClear, r.graphics, 0); err != nil {
+		return err
 	}
-	var area rect
-	pGetWindowRect.Call(b.hwnd, uintptr(unsafe.Pointer(&area)))
-	layout := speech.Place(float64(center.X-bounds.Left), float64(center.Y-bounds.Top), float64(bounds.Right-bounds.Left), float64(bounds.Bottom-bounds.Top), float64(area.Right-area.Left), float64(area.Bottom-area.Top), scale)
-	// SetWindowPos avoids the signed 16-bit coordinate limit of TTM_TRACKPOSITION.
-	pSetWindowPos.Call(b.hwnd, ^uintptr(0), negative(bounds.Left+int32(layout.X)), negative(bounds.Top+int32(layout.Y)), uintptr(layout.Width), uintptr(layout.Height), 0x10)
+	var path, fill, ink, family, font uintptr
+	if err := gdip(gCreatePath, 0, ptr(&path)); err != nil {
+		return err
+	}
+	defer gDeletePath.Call(path)
+	if err := gdip(gSolid, bubbleFill, ptr(&fill)); err != nil {
+		return err
+	}
+	defer gDeleteBrush.Call(fill)
+	if err := gdip(gSolid, bubbleInk, ptr(&ink)); err != nil {
+		return err
+	}
+	defer gDeleteBrush.Call(ink)
+	// Four rounded corners and a tail attached to the edge nearest the fairy.
+	line := func(a, b, c, d int32) { gLine.Call(path, negative(a), negative(b), negative(c), negative(d)) }
+	curve := func(a, b, c, d, e, f, g, h int32) {
+		gBezier.Call(path, negative(a), negative(b), negative(c), negative(d), negative(e), negative(f), negative(g), negative(h))
+	}
+	midX := int32(math.Max(float64(x+radius+10), math.Min(float64(tx), float64(x+w-radius-10))))
+	if ty < y && tx >= x && tx <= x+w {
+		line(x+radius, y, midX-8, y)
+		line(midX-8, y, tx, ty)
+		line(tx, ty, midX+8, y)
+		line(midX+8, y, x+w-radius, y)
+	} else {
+		line(x+radius, y, x+w-radius, y)
+	}
+	curve(x+w-radius, y, x+w, y, x+w, y, x+w, y+radius)
+	mid := int32(math.Max(float64(y+radius+10), math.Min(float64(ty), float64(y+h-radius-10))))
+	if tx > x+w {
+		line(x+w, y+radius, x+w, mid-8)
+		line(x+w, mid-8, tx, ty)
+		line(tx, ty, x+w, mid+8)
+		line(x+w, mid+8, x+w, y+h-radius)
+	} else {
+		line(x+w, y+radius, x+w, y+h-radius)
+	}
+	curve(x+w, y+h-radius, x+w, y+h, x+w, y+h, x+w-radius, y+h)
+	if ty > y+h && tx >= x && tx <= x+w {
+		line(x+w-radius, y+h, midX+8, y+h)
+		line(midX+8, y+h, tx, ty)
+		line(tx, ty, midX-8, y+h)
+		line(midX-8, y+h, x+radius, y+h)
+	} else {
+		line(x+w-radius, y+h, x+radius, y+h)
+	}
+	curve(x+radius, y+h, x, y+h, x, y+h, x, y+h-radius)
+	if tx < x {
+		line(x, y+h-radius, x, mid+8)
+		line(x, mid+8, tx, ty)
+		line(tx, ty, x, mid-8)
+		line(x, mid-8, x, y+radius)
+	} else {
+		line(x, y+h-radius, x, y+radius)
+	}
+	curve(x, y+radius, x, y, x, y, x+radius, y)
+	gClosePath.Call(path)
+	if err := gdip(gFillPath, r.graphics, fill, path); err != nil {
+		return err
+	}
+	if err := gdip(gDrawPath, r.graphics, r.pen, path); err != nil {
+		return err
+	}
+	if err := gdip(gFontFamily, uintptrPointer(utf16("Segoe UI")), 0, ptr(&family)); err != nil {
+		return err
+	}
+	defer gDeleteFontFamily.Call(family)
+	if err := gdip(gFont, family, f32(14*scale), 0, 2, ptr(&font)); err != nil {
+		return err
+	}
+	defer gDeleteFont.Call(font)
+	textArea := [4]float32{float32(x) + float32(16*scale), float32(y) + float32(12*scale), float32(w) - float32(32*scale), float32(h) - float32(20*scale)}
+	content := utf16("NAVI  ·  " + text)
+	if err := gdip(gDrawString, r.graphics, uintptrPointer(content), negative(-1), font, uintptr(unsafe.Pointer(&textArea)), 0, ink); err != nil {
+		return err
+	}
+	if err := gdip(gFlush, r.graphics, 1); err != nil {
+		return err
+	}
+	destination, source := point{int32(math.Floor(originX)), int32(math.Floor(originY))}, point{}
+	dimensions := size{int32(math.Ceil(math.Max(bodyX+layout.Width, tipX) - originX + 2*scale)), int32(math.Ceil(math.Max(bodyY+layout.Height, tipY) - originY + 2*scale))}
+	alpha := blend{Alpha: 255, Format: 1}
+	ok, _, err := pUpdateLayered.Call(b.hwnd, 0, uintptr(unsafe.Pointer(&destination)), uintptr(unsafe.Pointer(&dimensions)), r.DC, uintptr(unsafe.Pointer(&source)), 0, uintptr(unsafe.Pointer(&alpha)), 2)
+	if ok == 0 {
+		return fmt.Errorf("UpdateLayeredWindow: %v", err)
+	}
+	b.message, b.scale = text, scale
+	return nil
 }
 func wallSeconds() float64 { return float64(time.Now().UnixMilli()) / 1000 }
 func (a *application) hideSpeech() {

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NAVIs Fee-Gehirn – interaktives Konzept</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101723;color:#edf5ff}*{box-sizing:border-box}body{margin:0;padding:28px;max-width:1250px;margin-inline:auto}h1{font-weight:550;margin:8px 0}p{line-height:1.6;color:#bacbdc}.badge{color:#9eddf3;font-size:12px;letter-spacing:.13em}button{font:inherit;border:1px solid #53718e;border-radius:12px;background:#20324a;color:#f4f9ff;padding:10px 15px;cursor:pointer}button:hover{background:#304c68}button:focus-visible{outline:3px solid #a2e7ff;outline-offset:3px}.controls{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.canvas{border:1px solid #34475e;border-radius:24px;background:radial-gradient(ellipse at center,#243a54,#121d2c 70%);padding:10px}svg{display:block;width:100%;height:auto}svg text{font-family:system-ui,sans-serif;fill:#e7f3ff;text-anchor:middle;font-size:17px}svg .sub{fill:#afc7db;font-size:13px}.wing{fill:#a6dcff08;stroke:#a6dcff28}.link{fill:none;stroke:#52758e;stroke-width:2;marker-end:url(#arrow)}.node rect{fill:#172a40;stroke:#5a7992;stroke-width:1.5}.node.active rect{fill:#254f64;stroke:#a5efff;stroke-width:3}.node.active{filter:drop-shadow(0 0 9px #8adfff44)}.core{fill:#daefff18;stroke:#c2eeff;stroke-width:2}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:20px 0}.card{background:#182639;border:1px solid #34475e;border-radius:18px;padding:18px}h2{font-size:17px;margin:0 0 10px}dl{margin:0}dt{color:#98bad4;font-size:12px;margin-top:12px}dd{margin:4px 0;font-size:14px;line-height:1.5}.note{font-size:13px}code{color:#b5eaff}a{color:#aee4ff}.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:#afc7db;margin:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#a5efff;margin-right:6px}.dim{background:#52758e}@media(max-width:600px){body{padding:16px}.canvas{overflow:auto}svg{min-width:690px}}@media(prefers-reduced-motion:no-preference){.node rect{transition:fill .2s,stroke .2s}}
+</style>
+</head>
+<body>
+<span class="badge">NAVI · ENTWURF · OFFLINE-DEMO</span>
+<h1>Das Fee-Gehirn sichtbar machen</h1>
+<p>Wahrnehmen → einordnen → entscheiden → handeln → prüfen. Im Zentrum steht ein Selbstmodell: Was kann NAVI, was tut sie gerade und worauf beruht diese Aussage?</p>
+<p class="note">Diese Seite simuliert Szenarien. Sie liest weder VS Code noch Nachrichten, Dateien, Mikrofon oder Hardware aus und sendet keine Netzwerkanfragen. Die Gehirnform ist eine Gestaltungsidee, kein biologisches Modell.</p>
+<div class="controls" aria-label="Szenario auswählen">
+<button data-case="message">Du schreibst NAVI</button>
+<button data-case="diagnostic">Du wählst einen Fehler</button>
+<button data-case="complete">Eine Antwort kommt an</button>
+<button data-case="cancel">Du brichst ab</button>
+<button data-case="hidden">Fenster verliert Fokus</button>
+<button data-case="unknown">„Siehst du meinen Bildschirm?“</button>
+</div>
+<div class="canvas">
+<svg viewBox="0 0 1000 550" role="img" aria-labelledby="title description">
+<title id="title">Konzeptmodell des NAVI-Gehirns mit zentralem Selbstmodell</title>
+<desc id="description">Beobachtungen fließen über Arbeitsgedächtnis und Entscheidungen zu Handlungen und Ergebnisprüfung. Das Selbstmodell erhält Zustandsdaten, überprüft Fähigkeiten und liefert nachvollziehbare Erklärungen. Ein vorhandener KI-Zugang ist separat angebunden.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7197b0"/></marker></defs>
+<path class="wing" d="M490 265 C350 60 85 10 62 130 C40 280 235 325 490 265Z"/>
+<path class="wing" d="M510 265 C650 60 915 10 938 130 C960 280 765 325 510 265Z"/>
+<path class="wing" d="M490 290 C290 285 90 360 160 465 C230 560 425 440 490 290Z"/>
+<path class="wing" d="M510 290 C710 285 910 360 840 465 C770 560 575 440 510 290Z"/>
+<path class="link" d="M270 125 L390 125"/>
+<path class="link" d="M610 125 L730 125"/>
+<path class="link" d="M840 158 L840 365"/>
+<path class="link" d="M730 400 L610 400"/>
+<path class="link" d="M390 400 L270 400"/>
+<path class="link" d="M160 365 L160 158"/>
+<path class="link" d="M500 158 L500 205"/>
+<path class="link" d="M500 340 L500 365"/>
+<path class="link" d="M730 148 L570 235"/>
+<path class="link" d="M270 378 L430 315"/>
+<g class="node" id="perception"><rect x="50" y="90" width="220" height="68" rx="17"/><text x="160" y="117">Wahrnehmung</text><text class="sub" x="160" y="141">Quelle · Ereignis · Zeitpunkt</text></g>
+<g class="node" id="memory"><rect x="390" y="90" width="220" height="68" rx="17"/><text x="500" y="117">Arbeitsgedächtnis</text><text class="sub" x="500" y="141">Aufgabe · gültiger Kontext</text></g>
+<g class="node" id="decision"><rect x="730" y="90" width="220" height="68" rx="17"/><text x="840" y="117">Entscheidung</text><text class="sub" x="840" y="141">Relevanz · Rechte · Ruhe</text></g>
+<g class="node" id="action"><rect x="730" y="365" width="220" height="68" rx="17"/><text x="840" y="392">Handlung</text><text class="sub" x="840" y="416">Geste · Blase · Editor-Ziel</text></g>
+<g class="node" id="result"><rect x="390" y="365" width="220" height="68" rx="17"/><text x="500" y="392">Ergebnis prüfen</text><text class="sub" x="500" y="416">Bestätigt · Fehler · unbekannt</text></g>
+<g class="node" id="learning"><rect x="50" y="365" width="220" height="68" rx="17"/><text x="160" y="392">Erlaubte Erinnerung</text><text class="sub" x="160" y="416">Vorliebe · Quelle · Ablauf</text></g>
+<g class="node" id="self"><rect class="core" x="375" y="210" width="250" height="125" rx="45"/><text x="500" y="245">Selbstmodell</text><text class="sub" x="500" y="271">Was kann ich?</text><text class="sub" x="500" y="293">Was mache ich – und warum?</text><text class="sub" x="500" y="315">Was weiß ich nicht?</text></g>
+<text class="sub" x="500" y="35">Lokale Entscheidungssteuerung – Konzept, noch kein aktives Fee-Gehirn</text>
+<text class="sub" x="500" y="491">Vorhandenes VS-Code-Modell / ausdrückliche Codex-Übergabe</text>
+<text class="sub" x="500" y="514">Sprachliche Hilfe bei Bedarf · kein zusätzlicher Modellserver vorausgesetzt</text>
+</svg>
+</div>
+<div class="legend"><span><i class="dot"></i>Im gewählten Szenario beteiligt</span><span><i class="dot dim"></i>Teil des geplanten Gesamtsystems</span></div>
+<section class="cards" aria-live="polite" aria-atomic="true">
+<article class="card"><h2>Beobachtung → Entscheidung</h2><dl><dt>Ereignis</dt><dd id="event"></dd><dt>Gewählte Handlung</dt><dd id="actionText"></dd><dt>Begründung</dt><dd id="reason"></dd></dl></article>
+<article class="card"><h2>NAVIs Selbstmodell</h2><dl><dt>Aktueller Zustand</dt><dd id="state"></dd><dt>Beleg / Quelle</dt><dd id="evidence"></dd><dt>Grenze oder Unsicherheit</dt><dd id="limit"></dd></dl></article>
+<article class="card"><h2>Was NAVI sagen könnte</h2><p id="speech"></p><p class="note">Beispielsatz aus der Simulation. Eine spätere Selbstauskunft muss aus echten Zustandsdaten entstehen.</p></article>
+</section>
+<p class="note">„Selbst verstehen“ bedeutet hier: eigene Fähigkeiten und Grenzen korrekt benennen, den aktuellen Zustand kennen, Entscheidungen erklären und Vorhersagen an Ergebnissen prüfen. Das belegt kein subjektives Erleben. <a href="FAIRY-BRAIN.md">Mathematisches Konzept</a> · <a href="STATUS.md">Tatsächlicher Umsetzungsstand</a></p>
+<script>
+'use strict';
+const scenarios={
+message:{nodes:['perception','memory','self','decision','action'],event:'Eine ausdrücklich an NAVI gesendete Nachricht ist eingetroffen.',actionText:'Empfang bestätigen und sich kurz zuwenden.',reason:'Direkter Nutzerauftrag; eine lokale Empfangsgeste braucht keinen Modellaufruf.',state:'acknowledging → working, sobald die Modellanfrage tatsächlich läuft',evidence:'Simuliertes Empfangsereignis mit Anfrage-ID; noch keine fertige Antwort.',limit:'Der Text ist angekommen. Fachliches Verständnis und Antwortqualität sind damit noch nicht belegt.',speech:'Deine Nachricht ist angekommen. Ich kann dir mit dem verbundenen Modell helfen.'},
+diagnostic:{nodes:['perception','memory','self','decision','action'],event:'Du wählst eine Diagnose und bittest NAVI, sie zu zeigen.',actionText:'Gültigen Dateibereich öffnen und hervorheben; passende Fensterposition wählen.',reason:'Der Zielbereich ist ausgewählt; vor dem Öffnen werden Version und Berechtigung geprüft.',state:'pointing – falls der Editor die Aktion bestätigt',evidence:'Simulierte Auswahl und Diagnosekennung. Die Editor-Aktion ist in diesem Konzept noch geplant.',limit:'Ein Dateibereich ist bekannt, seine exakte Bildschirm-Pixelposition ist nicht gegeben.',speech:'Ich kann dir die ausgewählte Stelle zeigen. Für ihre Erklärung brauche ich den freigegebenen Kontext.'},
+complete:{nodes:['perception','self','decision','action','result'],event:'Das Modell meldet den Abschluss der richtigen Anfrage-ID.',actionText:'Kurze Abschlussgeste und begrenzten Antwortauszug anzeigen.',reason:'Die Anfrage ist abgeschlossen. Veraltete oder abgebrochene Antworten dürfen keinen Erfolg melden.',state:'completed',evidence:'Simuliertes Abschlussereignis; keine Test- oder Compilerbestätigung.',limit:'Eine abgeschlossene Antwort kann fachlich falsch sein. „Tests bestanden“ benötigt ein echtes Testergebnis.',speech:'Die Antwort ist da. Ob der vorgeschlagene Code funktioniert, müssen wir gesondert prüfen.'},
+cancel:{nodes:['perception','self','decision','action','result'],event:'Du brichst die laufende Anfrage ab.',actionText:'Arbeitsanzeige beenden; keine fertige Antwort oder Erfolgsgeste ausgeben.',reason:'Der Abbruch hat Vorrang. Späte Antwortfragmente werden für diese Anfrage verworfen.',state:'cancelled → idle',evidence:'Simuliertes Abbruchereignis mit passender Anfrage-ID.',limit:'Ein Abbruch macht bereits ausgeführte Dateiaktionen nicht automatisch rückgängig.',speech:'Abgebrochen. Ich zeige diese Anfrage nicht als erfolgreich abgeschlossen an.'},
+hidden:{nodes:['perception','self','decision','action'],event:'Das VS-Code-Fenster verliert den Fokus.',actionText:'Sichtbare Reaktionen und Klänge unterdrücken.',reason:'Die Fokusregel hat Vorrang vor dem Wunsch, Aufmerksamkeit zu zeigen.',state:'quiet für die Darstellung; eine Modellanfrage kann unabhängig weiterlaufen',evidence:'Simuliertes Fokusereignis.',limit:'Kein Fokus bedeutet nicht, dass der Nutzer abwesend ist oder eine Aufgabe beendet hat.',speech:'[Keine Sprechblase und kein Klang bei fehlendem Fokus.]'},
+unknown:{nodes:['perception','self','decision','action'],event:'Du fragst: „Siehst du meinen Bildschirm?“',actionText:'Die Grenze der verfügbaren Wahrnehmung erklären.',reason:'Das Selbstmodell muss Fähigkeiten aus tatsächlichen Schnittstellen ableiten.',state:'Antwort mit expliziter Wahrnehmungsgrenze',evidence:'Konzeptannahme: Geometrie und freigegebene Editor-Ereignisse vorhanden, kein Bildanalysekanal.',limit:'Keine allgemeine Screenshot-Wahrnehmung und kein automatischer Zugriff auf fremde Chats.',speech:'Ich kann freigegebene Editor-Ereignisse und Mausgeometrie nutzen. Deinen gesamten Bildschirm verstehe ich dadurch nicht.'}
+};
+function show(name){const value=scenarios[name];for(const node of document.querySelectorAll('.node'))node.classList.toggle('active',value.nodes.includes(node.id));for(const key of ['event','actionText','reason','state','evidence','limit','speech'])document.getElementById(key).textContent=value[key];for(const button of document.querySelectorAll('[data-case]'))button.setAttribute('aria-pressed',String(button.dataset.case===name));}
+for(const button of document.querySelectorAll('[data-case]'))button.addEventListener('click',()=>show(button.dataset.case));
+show('message');
+</script>
+</body>
+</html>

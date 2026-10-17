@@ -13,7 +13,7 @@ test('all 110 motions produce distinct poses with finite, bounded positions', ()
     for (let step = 0; step <= 100; step++) {
       const pose = sampleMotion(motion.id, motion.duration * step / 100, step / 10);
       for (const value of Object.values(pose)) assert(Number.isFinite(value));
-      assert(Math.abs(pose.x) < 30 && Math.abs(pose.y) < 35);
+      assert(Math.abs(pose.x) < 44 && Math.abs(pose.y) < 51);
       assert(pose.scale > .9 && pose.scale < 1.1);
       assert(pose.wingSpeed > 0 && pose.wingAmplitude > 0);
     }
@@ -36,7 +36,7 @@ test('preview animation has a measurable time course beyond passive hover',()=>{
   for(const motion of motions){
     const channels=['x','y','roll','yaw','wingAmplitude','wingSpread','glow','scatter'];
     const samples=Array.from({length:61},(_,i)=>samplePreviewMotion(motion.id,motion.duration*i/60,motion.duration*i/60));
-    for(const pose of samples){for(const value of Object.values(pose))assert(Number.isFinite(value));assert(Math.abs(pose.x)<60&&Math.abs(pose.y)<65);}
+    for(const pose of samples){for(const value of Object.values(pose))assert(Number.isFinite(value));assert(Math.abs(pose.x)<115&&Math.abs(pose.y)<125);}
     // These two intentionally calm states still have continuous wing animation.
     if(motion.id==='hover'||motion.id==='rest')continue;
     const active=samples.map((p:any,i:number)=>{
@@ -118,6 +118,14 @@ test('explicit drawing budgets stay low on high-refresh displays', () => {
   assert.equal(frameRate('rest'), 10);
   assert.equal(frameRate('rest', false, .2), 30);
   assert.equal(frameRate('rest', false, 1), 10);
+});
+
+test('idle scheduling waits for quiet periods and blocks while prompts or bubbles are active', () => {
+  const {shouldScheduleIdle, chooseIdleMotion} = require('../../media/fairy-motion.js');
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, checking:false, promptFocused:false, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), true);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, checking:false, promptFocused:true, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), false);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, checking:false, promptFocused:false, bubbleVisible:true, bubblePriority:2, lastInteractionAt:0, now:10000}), false);
+  assert.equal(chooseIdleMotion('drift', ['drift','curious','stretch']).includes('drift') || chooseIdleMotion('drift', ['drift','curious','stretch']) === 'curious' || chooseIdleMotion('drift', ['drift','curious','stretch']) === 'stretch', true);
 });
 
 test('pose and spring outputs can be reused by the rendering loop', () => {

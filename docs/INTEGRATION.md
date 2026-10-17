@@ -1,6 +1,6 @@
-# NAVI integration and limits – v0.5.0 preview
+# NAVI integration and limits – local v0.5.3 preview
 
-This document describes the current public experimental preview. NAVI is an independent VS Code extension, not a fork or replacement for Copilot Chat. It deliberately does not inspect private Copilot conversations or rely on undocumented APIs.
+This document describes the local experimental v0.5.3 implementation; the published GitHub preview is v0.5.2. NAVI is an independent VS Code extension, not a fork or replacement for Copilot Chat. It deliberately does not inspect private Copilot conversations or rely on undocumented APIs.
 
 ## Implemented
 
@@ -40,4 +40,8 @@ This document describes the current public experimental preview. NAVI is an inde
 6. Run `NAVI: Rebuild Analytics Index` and `NAVI: Export Sanitized Analytics`.
 7. Test `NAVI: Delete Sanitized Analytics`, `NAVI: Clear Local History` separately.
 
-The repository is public, but the extension remains an experimental preview and is not published in the VS Code Marketplace. A public repository does not imply Marketplace approval or a change to the repository license.
+The repository is public, but the extension remains an experimental preview and is not published in the VS Code Marketplace. NAVI project code is licensed under MIT; third-party components retain their own licenses. Open-source licensing does not imply Marketplace approval.
+
+## Existing AI connections (local v0.5.3)
+
+Selected-model turns now drive busy, completed, cancelled and error activity. A bundled stdio MCP adapter accepts explicitly shared Codex messages and status through authenticated per-window IPC. The configuration command generates a host-specific block; it does not edit Codex settings or load tools into this chat. Manual text sharing is also available. These paths add no model request and do not read external conversation history. The bridge stores only a transient connection descriptor/token, not message history. See [setup, tests and live-check limits](AI-CONNECTION.md).

@@ -134,6 +134,11 @@ func Sample(id string, age, elapsed float64) Pose {
 			profile.apply(&p, t, envelope, angle)
 		}
 	}
+	p[X] *= 1.45
+	p[Y] *= 1.45
+	p[Roll] *= 1.2
+	p[Yaw] *= 1.3
+	p[Glow] = 1 + (p[Glow]-1)*1.5
 	return p
 }
 
@@ -142,16 +147,17 @@ type Rig struct{ Value, Velocity Pose }
 // Preview emphasizes choreography without changing normal idle behavior.
 func SamplePreview(id string, age, elapsed float64) Pose {
 	p := Sample(id, age, elapsed)
-	p[X] *= 1.8
-	p[Y] *= 1.8
-	p[Yaw] *= 1.5
+	p[X] *= 2.7
+	p[Y] *= 2.7
+	p[Yaw] *= 1.8
+	p[Roll] *= 1.35
 	p[WingAmplitude] = math.Min(1.4, p[WingAmplitude]*1.25)
 	p[WingSpread] = math.Min(1, p[WingSpread]*1.6)
-	p[Glow] = 1 + (p[Glow]-1)*1.6
+	p[Glow] = 1 + (p[Glow]-1)*2.4
 	p[OrbitRadius] = 1 + (p[OrbitRadius]-1)*1.5
 	if id == "listen" {
-		p[Roll] += math.Sin(age*2.4) * 4
-		p[Y] += math.Sin(age*2.4) * 2
+		p[Roll] += math.Sin(age*2.4) * 10
+		p[Y] += math.Sin(age*2.4) * 8
 	}
 	return p
 }
