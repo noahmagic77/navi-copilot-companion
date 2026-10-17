@@ -1,0 +1,17 @@
+digraph CLASSES {
+  graph [label="NAVI · Klassendiagramm (v0.2)",labelloc=t,fontname="DejaVu Sans",fontsize=23,fontcolor="#edf6ff",bgcolor="#091120",pad=0.4,nodesep=0.45,ranksep=0.7];
+  node [shape=record,style="rounded,filled",fontname="DejaVu Sans Mono",fontsize=10,color="#6390b7",fillcolor="#17344c",fontcolor="#ecf8ff",margin="0.23,0.15"];
+  edge [color="#72abc9",arrowsize=0.75];
+  App [label="{NaviController|+start()\l+consumeHook()\l+consumeOtel()\l+refreshUI()\l}",fillcolor="#155471"];
+  Core [label="{AnalysisEngine|+analyzeManual()\l+fromHook()\l}"];
+  Prompt [label="{PromptChecker|+analyze()\l+proposeTemplate()\l}"];
+  Session [label="{SessionManager|+registerPrompt()\l+reset()\l}"];
+  Rules [label="{RecommendationEngine|+recommend()\l}"];
+  Token [label="{TokenMetricsParser|+parse()\l+reset()\l}"];
+  UI [label="{NaviViewProvider|+resolveWebviewView()\l+post()\l}"];
+  Storage [label="{JsonEventStore|+load()\l+save()\l+clear()\l}"];
+  Hooks [label="{CopilotHookManager|+install()\l+status()\l+remove()\l}"];
+  Tele [label="{TelemetrySettingsManager|+enable()\l+disable()\l+status()\l}"];
+  App -> Core; App -> Token; App -> UI; App -> Storage; App -> Hooks; App -> Tele;
+  Core -> Prompt; Core -> Session; Core -> Rules;
+}

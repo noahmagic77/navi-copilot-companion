@@ -1,0 +1,32 @@
+# Dependencies, editor/runtime caches
+node_modules/
+.vscode-test/
+.vscode/
+.idea/
+coverage/
+.nyc_output/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# Release binaries and generated artifacts
+/dist/
+*.vsix
+*.vsixmanifest
+*.log
+
+# Never commit local user data, Copilot telemetry or configuration secrets
+sessions/
+hook-events.jsonl
+copilot-otel.jsonl
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key

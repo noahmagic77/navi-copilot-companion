@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible NAVI defect.
+title: '[Bug] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: 'Do not paste prompts, source code, GitHub tokens, raw OpenTelemetry exports, or corporate files.'
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed behavior
+      description: Describe the issue without sensitive information.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: NAVI version, VS Code version and OS
+    validations:
+      required: true
+  - type: dropdown
+    id: harness
+    attributes:
+      label: Copilot integration mode (if relevant)
+      options: ['Not relevant / offline prompt check', 'Agent hooks enabled', 'OpenTelemetry enabled', 'Unknown']

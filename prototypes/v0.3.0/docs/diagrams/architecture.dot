@@ -1,0 +1,28 @@
+digraph NAVI {
+  graph [label="NAVI · Systemarchitektur v0.2",labelloc=t,labeljust=l,fontname="DejaVu Sans",fontsize=24,fontcolor="#edf4ff",bgcolor="#091120",pad=0.35,splines=ortho,ranksep=0.75,nodesep=0.36];
+  node [fontname="DejaVu Sans",fontsize=11,shape=box,style="rounded,filled",color="#4d719b",fillcolor="#14283e",fontcolor="#e6f4ff",margin="0.25,0.18"];
+  edge [color="#6a93b8",arrowsize=0.7,penwidth=1.5];
+  subgraph cluster_external { label="COPILOT-QUELLEN"; color="#284059"; fontcolor="#9eb9d3"; style="rounded";
+    chat[label="GitHub Copilot\nAgent-Harness",fillcolor="#153651"];
+    hooks[label="Hook-Prozess\nOpt-in",fillcolor="#153651"];
+    otel[label="OpenTelemetry\nJSONL Export",fillcolor="#153651"];
+    chat -> hooks; chat -> otel;
+  }
+  subgraph cluster_host { label="NAVI · VS CODE EXTENSION HOST"; color="#3a80bb"; fontcolor="#b4e6ff"; style="rounded";
+    adapters[label="Integrations Layer\nHook Reader · OTel Reader",fillcolor="#14314d"];
+    controller[label="Application\nNaviController",fillcolor="#17557a",color="#20b8de",penwidth=2];
+    core[label="Core Layer\nAnalysis · Sessions · Rules · Tokens",fillcolor="#183b63"];
+    storage[label="Data Layer\nJsonEventStore · Settings",fillcolor="#193759"];
+    ui[label="UI Layer\nNAVI Fee · Webview · Speech Bubbles",fillcolor="#155d66",color="#47cadb",penwidth=2];
+    adapters -> controller; controller -> core; core -> controller [color="#5bb8d8"];
+    controller -> storage; controller -> ui;
+  }
+  subgraph cluster_files { label="LOKALE LAUFZEITDATEN"; color="#284059"; fontcolor="#9eb9d3"; style="rounded";
+    events[label="hook-events.jsonl",shape=cylinder];
+    spans[label="copilot-otel.jsonl",shape=cylinder];
+    state[label="navi-state-v1.json",shape=cylinder];
+  }
+  hooks -> events; otel -> spans;
+  events -> adapters; spans -> adapters;
+  storage -> state;
+}

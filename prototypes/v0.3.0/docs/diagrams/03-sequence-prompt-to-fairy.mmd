@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    actor U as Entwickler
+    participant C as VS Code Copilot Harness
+    participant H as Hook Observer (Node)
+    participant L as Local JSONL
+    participant R as NAVI Reader
+    participant A as AnalysisEngine
+    participant S as JsonEventStore
+    participant V as NAVI Webview
+    U->>C: Copilot-Prompt absenden
+    opt Hooks für unterstützten Harness aktiviert
+      C->>H: userPromptSubmitted (temporärer Prompt)
+      Note over H: Prompt nur im Prozessspeicher
+      H->>H: Lokale Regeln; Session-ID pseudonymisieren
+      H->>L: {kind, sessionHash, category, flags, words}
+      H-->>C: {} (nicht blockieren / verändern)
+      R->>L: Neue JSONL-Daten lesen
+      L-->>R: Sanitisiertes Event
+      R->>A: fromHook(event)
+      A->>A: Topics + Regeln + Cooldown
+      alt Relevanter neuer Hinweis
+        A-->>S: Empfehlung persistieren (ohne Prompt)
+        A-->>V: State + Sprechblase
+        V-->>U: Dezenter NAVI-Hinweis
+      else Kein relevanter Hinweis
+        A-->>V: Optional Status aktualisieren
+      end
+    end
