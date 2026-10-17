@@ -61,6 +61,8 @@ Die Datei ist im Repository unter `downloads/` versioniert. Bei einer neuen Vers
 
 ## Installation for development
 
+[Entwicklungsumgebung einrichten (Deutsch)](docs/DEVELOPMENT.md) — Installationen, erster Start, Vordergrund-Fee und VSIX-Build.
+
 VS Code Desktop >= 1.100, Node.js >= 22 and npm.
 
 ```bash
