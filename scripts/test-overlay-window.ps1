@@ -1,6 +1,7 @@
 param([Parameter(Mandatory=$true)][string]$Executable, [string]$Output = 'build/native-report')
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
@@ -13,6 +14,7 @@ public static class NaviWindowTest {
  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd,out Rect rect);
+ [DllImport("user32.dll",SetLastError=true)] public static extern bool SystemParametersInfo(uint action,uint param,ref int value,uint flags);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd,System.Text.StringBuilder text,int count);
  public static IntPtr Find(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetWindowText(h,text,64);if(text.ToString()=="NAVI Fairy")found=h;}return true;},IntPtr.Zero);return found;}
  public static Rect Bounds(IntPtr hwnd) {Rect r;GetWindowRect(hwnd,out r);return r;}
@@ -23,8 +25,19 @@ function Pump([int]$Milliseconds) {
  while ($naviWatch.ElapsedMilliseconds -lt $Milliseconds) {[Windows.Forms.Application]::DoEvents();Start-Sleep -Milliseconds 10}
 }
 function Require([bool]$Condition,[string]$Message) {if(-not $Condition){throw $Message}}
+function Capture($Rect) {
+ $naviBitmap = [Drawing.Bitmap]::new($Rect.Right-$Rect.Left,$Rect.Bottom-$Rect.Top)
+ $naviGraphics = [Drawing.Graphics]::FromImage($naviBitmap)
+ $naviStream = [IO.MemoryStream]::new()
+ try {
+  $naviGraphics.CopyFromScreen($Rect.Left,$Rect.Top,0,0,$naviBitmap.Size)
+  $naviBitmap.Save($naviStream,[Drawing.Imaging.ImageFormat]::Png)
+  return [Convert]::ToBase64String([Security.Cryptography.SHA256]::HashData($naviStream.ToArray()))
+ } finally {$naviGraphics.Dispose();$naviBitmap.Dispose();$naviStream.Dispose()}
+}
 $naviOwner = New-Object Windows.Forms.Form
 $naviOwner.Text = 'NAVI native test owner'
+$naviOwner.BackColor = [Drawing.Color]::FromArgb(30,30,30)
 $naviOwner.StartPosition = 'Manual'
 $naviOwner.SetBounds(80,80,1000,700)
 $naviOther = New-Object Windows.Forms.Form
@@ -32,7 +45,11 @@ $naviOther.Text = 'NAVI native test other window'
 $naviOther.StartPosition = 'Manual'
 $naviOther.SetBounds(180,180,600,400)
 $naviProcess = $null
+$naviAnimationSetting = 1
+$naviAnimationRead = [NaviWindowTest]::SystemParametersInfo(0x1042,0,[ref]$naviAnimationSetting,0)
 try {
+ $naviAnimationsOn = 1
+ Require ([NaviWindowTest]::SystemParametersInfo(0x1043,0,[ref]$naviAnimationsOn,2)) 'Could not enable animations for the native animation test'
  $naviOwner.Show();$naviOwner.Activate();[NaviWindowTest]::SetForegroundWindow($naviOwner.Handle)|Out-Null;Pump 200
  Require ([NaviWindowTest]::GetForegroundWindow() -eq $naviOwner.Handle) 'Could not activate native test owner'
  $naviInfo = New-Object Diagnostics.ProcessStartInfo
@@ -70,13 +87,32 @@ try {
  Require (-not [NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay remained visible while minimized'
  $naviOwner.WindowState = 'Normal';$naviOwner.Activate();[NaviWindowTest]::SetForegroundWindow($naviOwner.Handle)|Out-Null;Pump 300
  Require ([NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay did not return after restore'
+ # Exercise the real message-loop timer, not only direct renderer calls.
+ Write-Host 'Checking live fairy animation and autonomous flight'
+ $naviProcess.StandardInput.WriteLine('{"type":"configure","enabled":true,"eco":false}')
+ $naviProcess.StandardInput.Flush()
+ Pump 300
+ $naviAnimatedBefore = [NaviWindowTest]::Bounds($naviWindow)
+ $naviImageBefore = Capture $naviAnimatedBefore
+ Pump 500
+ $naviImageAfter = Capture ([NaviWindowTest]::Bounds($naviWindow))
+ Require ($naviImageBefore -ne $naviImageAfter) 'Fairy pixels remained static with animation enabled'
+ $naviFlightStarted = $false
+ $naviFlightWatch = [Diagnostics.Stopwatch]::StartNew()
+ while($naviFlightWatch.ElapsedMilliseconds -lt 12000 -and -not $naviFlightStarted) {
+  Pump 200
+  $naviFlying = [NaviWindowTest]::Bounds($naviWindow)
+  $naviFlightStarted = [Math]::Abs($naviFlying.Left-$naviAnimatedBefore.Left) -gt 3 -or [Math]::Abs($naviFlying.Top-$naviAnimatedBefore.Top) -gt 3
+ }
+ Require $naviFlightStarted 'Fairy did not fly within twelve seconds with animation enabled'
  $naviProcess.StandardInput.WriteLine('{"type":"stop"}');$naviProcess.StandardInput.Close()
  Require ($naviProcess.WaitForExit(4000)) 'Overlay did not stop'
  Require ($naviProcess.ExitCode -eq 0) ($naviProcess.StandardError.ReadToEnd())
  New-Item -ItemType Directory -Force $Output|Out-Null
- @{windowIntegration='passed';ownerTracking=$true;noFocusStealing=$true;pausedWindowMove=$true;staysInBounds=$true;otherWindowHidden=$true;minimizeRestore=$true;cleanShutdown=$true;scope='native WinForms host; not a VS Code end-to-end session'}|ConvertTo-Json|Set-Content (Join-Path $Output 'native-window-integration.json')
+ @{windowIntegration='passed';ownerTracking=$true;noFocusStealing=$true;pausedWindowMove=$true;staysInBounds=$true;otherWindowHidden=$true;minimizeRestore=$true;liveAnimation=$true;autonomousFlight=$true;cleanShutdown=$true;scope='native WinForms host; not a VS Code end-to-end session'}|ConvertTo-Json|Set-Content (Join-Path $Output 'native-window-integration.json')
  Get-Content (Join-Path $Output 'native-window-integration.json')
 } finally {
+ if($naviAnimationRead){[NaviWindowTest]::SystemParametersInfo(0x1043,0,[ref]$naviAnimationSetting,2)|Out-Null}
  if($naviProcess -and -not $naviProcess.HasExited){$naviProcess.Kill()}
  $naviOwner.Dispose();$naviOther.Dispose()
 }
