@@ -1,7 +1,7 @@
 name: Native Windows Overlay
 on:
   push:
-    branches: [main, feat/windows-fairy-overlay]
+    branches: [main, feat/windows-fairy-overlay, 'fix/editor-anchor-*']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -44,6 +44,7 @@ jobs:
       - name: Native control-pipe smoke test
         run: node scripts/test-overlay-ipc.cjs build/native/navi-overlay.exe
       - name: Native foreground and window tracking test
+        timeout-minutes: 2
         shell: pwsh
         run: ./scripts/test-overlay-window.ps1 -Executable build/native/navi-overlay.exe -Output build/native-report
       - uses: actions/upload-artifact@v4

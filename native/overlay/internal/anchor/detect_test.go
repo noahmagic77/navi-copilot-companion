@@ -2,6 +2,24 @@ package anchor
 
 import "testing"
 
+func TestLocateReportsWhyThereIsNoUniqueTarget(t *testing.T) {
+	p := make([]byte, 200*120*4)
+	if _, reason := Locate(p[:20], 200, 120, 0x5868ae); reason != "invalid-buffer" {
+		t.Fatal(reason)
+	}
+	if _, reason := Locate(p, 200, 120, 0x5868ae); reason != "marker-not-found" {
+		t.Fatal(reason)
+	}
+	beacon(p, 200, 30, 20, 10, 0x5868ae)
+	if _, reason := Locate(p, 200, 120, 0x5868ae); reason != "" {
+		t.Fatal(reason)
+	}
+	beacon(p, 200, 90, 20, 10, 0x5868ae)
+	if _, reason := Locate(p, 200, 120, 0x5868ae); reason != "marker-ambiguous" {
+		t.Fatal(reason)
+	}
+}
+
 func beacon(p []byte, w, x, y, size int, c uint32) {
 	for row := y - 2; row < y+size+2; row++ {
 		for col := x - 2; col < x+size+2; col++ {

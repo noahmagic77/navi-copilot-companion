@@ -50,6 +50,7 @@ function ReadFrame([Diagnostics.Process]$Process,[int]$TimeoutMs) {
   if ($naviMessage.type -eq 'frame') {return $naviMessage}
   if ($naviMessage.type -eq 'actions') {$script:naviActionsSeen=$true}
   if ($naviMessage.type -eq 'editorAnchor') {$script:naviAnchorState=$naviMessage}
+  if ($naviMessage.type -eq 'editorAnchor') {$script:naviAnchorHistory.Add($naviMessage)}
   if ($naviMessage.type -notin @('attached','pointer','pointerLost','gameStarted','gameStopped','interaction','actions','editorAnchor')) {throw "Unexpected native helper message: $naviLine"}
  }
  return $null
@@ -70,6 +71,8 @@ $naviOther.Text = 'NAVI native test other window'
 $naviOther.StartPosition = 'Manual'
 $naviOther.SetBounds(180,180,600,400)
 $naviProcess = $null
+$script:naviAnchorHistory=New-Object 'System.Collections.Generic.List[object]'
+New-Item -ItemType Directory -Force $Output|Out-Null
 try {
  $naviOwner.TopMost=$true;$naviOwner.Show();$naviOwner.Activate();[NaviWindowTest]::ActivateOwner($naviOwner.Handle)|Out-Null;Pump 200
  Require ([NaviWindowTest]::GetForegroundWindow() -eq $naviOwner.Handle) 'Could not activate native test owner'
@@ -109,7 +112,7 @@ try {
  $naviProcess.StandardInput.WriteLine('{"type":"editorAnchor","id":17,"token":"5868ae"}');$naviProcess.StandardInput.Flush()
  $script:naviAnchorState=$null;$naviAnchorWatch=[Diagnostics.Stopwatch]::StartNew()
  while($naviAnchorWatch.ElapsedMilliseconds -lt 9000 -and $script:naviAnchorState.status -ne 'arrived'){ReadFrame $naviProcess 1500|Out-Null;Pump 30}
- Require ($script:naviAnchorState.status -eq 'arrived') 'Native helper did not locate and reach the actual painted beacon'
+ Require ($script:naviAnchorState.status -eq 'arrived') ('Native helper did not locate and reach the actual painted beacon: '+($script:naviAnchorState|ConvertTo-Json -Compress))
  $naviAnchor=$script:naviAnchorState;$naviFairyRect=[NaviWindowTest]::Bounds($naviWindow)
  $naviExpected=$naviBeacon.PointToScreen([Drawing.Point]::new(10,10))
  Require ([Math]::Abs(($naviFairyRect.Top+$naviFairyRect.Bottom)/2-$naviExpected.Y) -le 1) 'Actual fairy window missed the painted line height'
@@ -149,6 +152,10 @@ try {
  New-Item -ItemType Directory -Force $Output|Out-Null
  @{windowIntegration='passed';pixelAnchorFlight=$true;nativeRightClickActions=$true;speechBubble=$true;speechClickThrough=$true;speechOwnerTracking=$true;ownerTracking=$true;noFocusStealing=$true;pausedWindowMove=$true;staysInBounds=$true;otherWindowHidden=$true;minimizeRestore=$true;cleanShutdown=$true;scope='native WinForms host; not a VS Code end-to-end session'}|ConvertTo-Json|Set-Content (Join-Path $Output 'native-window-integration.json')
  Get-Content (Join-Path $Output 'native-window-integration.json')
+} catch {
+ @{windowIntegration='failed';error=$_.Exception.Message;anchor=$script:naviAnchorState;anchorHistory=@($script:naviAnchorHistory.ToArray());scope='native WinForms fixture; no captured pixels saved'}|ConvertTo-Json -Depth 6|Set-Content (Join-Path $Output 'native-window-integration.json')
+ Get-Content (Join-Path $Output 'native-window-integration.json')
+ throw
 } finally {
  [NaviWindowTest]::SetCursorPos($naviSavedPointer.X,$naviSavedPointer.Y)|Out-Null
  if($naviProcess -and -not $naviProcess.HasExited){$naviProcess.Kill()}

@@ -18,8 +18,14 @@ func Colour(token string) (uint32, bool) {
 // Find accepts one unambiguous, solid rectangle enclosed by the known border.
 // No text, OCR or approximate line-height calculation participates in the lookup.
 func Find(pixels []byte, width, height int, colour uint32) (Rect, bool) {
+	r, reason := Locate(pixels, width, height, colour)
+	return r, reason == ""
+}
+
+// Locate distinguishes an absent beacon from an ambiguous or invalid capture.
+func Locate(pixels []byte, width, height int, colour uint32) (Rect, string) {
 	if width < 8 || height < 8 || width > 16384 || height > 16384 || len(pixels) != width*height*4 {
-		return Rect{}, false
+		return Rect{}, "invalid-buffer"
 	}
 	match := func(x, y int, c uint32) bool {
 		if x < 0 || y < 0 || x >= width || y >= height {
@@ -73,10 +79,13 @@ func Find(pixels []byte, width, height int, colour uint32) (Rect, bool) {
 				continue
 			}
 			if found {
-				return Rect{}, false
+				return Rect{}, "marker-ambiguous"
 			}
 			result, found = Rect{x, y, r, b}, true
 		}
 	}
-	return result, found
+	if !found {
+		return Rect{}, "marker-not-found"
+	}
+	return result, ""
 }
