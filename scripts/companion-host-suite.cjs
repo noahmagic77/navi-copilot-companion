@@ -157,6 +157,15 @@ exports.run=async()=>{
         arrivals.push(state);
       };
       await visit();
+      if(!renderOnly){
+        const before=api.getEditorAnchorState();
+        await vscode.commands.executeCommand('editorScroll',{to:'down',by:'line',value:3,revealCursor:false});
+        await until(()=>{const state=api.getEditorAnchorState();return state?.id===before.id&&state.status==='arrived'&&Math.abs(state.y-before.y)>1;},12000);
+        const after=api.getEditorAnchorState();
+        assert(Math.hypot(after.x-after.coreX,after.y-after.coreY)<=1);
+        report.anchorScrollTracking={before,after};
+        report.checks.push('native anchor reacquires the changed physical line height after editor scrolling');
+      }
       const originalColumn=vscode.window.activeTextEditor.viewColumn;
       await vscode.commands.executeCommand('workbench.action.zoomIn');
       try{await delay(600);await visit();}finally{await vscode.commands.executeCommand('workbench.action.zoomOut');await delay(600);}
@@ -165,6 +174,11 @@ exports.run=async()=>{
       await visit();
       if(renderOnly){report.editorAnchorRendering=arrivals;report.limitations.push('Renderer-only anchor run: native VS Code-to-overlay arrival is not accepted; Windows foreground activation was denied in the full run.');report.checks.push('actual editor beacon rendering remains unique through zoom, word wrapping and duplicate-document split editors');}
       else {report.pixelAnchorArrivals=arrivals;report.checks.push('actual VS Code decoration → screen detection → native arrival, including zoom, wrapped lines and duplicate-document split editors');}
+      if(!renderOnly){
+        collection.set(anchorUri,[]);
+        await until(()=>api.getEditorAnchorState()?.status==='stopped');
+        report.checks.push('removing the selected diagnostic stops native tracking and clears its marker');
+      }
       await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
     }
     // A controlled existing-provider fixture exercises the actual VS Code code-action

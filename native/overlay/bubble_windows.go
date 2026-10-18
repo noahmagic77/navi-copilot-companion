@@ -30,11 +30,23 @@ const bubbleFill = 0xb8eef7ff // Translucent body; text keeps its own opaque alp
 const bubbleInk = 0xff20364e
 
 type speechBubble struct {
-	hwnd    uintptr
-	canvas  *renderer
-	active  bool
-	message string
-	scale   float64
+	hwnd            uintptr
+	canvas          *renderer
+	active          bool
+	message         string
+	scale           float64
+	captureExcluded bool
+}
+
+func (b *speechBubble) excludeFromCapture(excluded bool) bool {
+	if b == nil || b.captureExcluded == excluded {
+		return true
+	}
+	if !setCaptureExcluded(b.hwnd, excluded) {
+		return false
+	}
+	b.captureExcluded = excluded
+	return true
 }
 
 func bubbleProcedure(hwnd uintptr, msg uint32, wparam, lparam uintptr) uintptr {
@@ -252,6 +264,10 @@ func (a *application) paintSpeech() {
 			a.speech.Clear()
 			return
 		}
+	}
+	if !a.bubble.excludeFromCapture(a.anchor.captureExcluded) {
+		a.hideSpeech()
+		return
 	}
 	center := a.speechAnchor()
 	a.bubble.Show(a.speech.Message, center, a.bounds, a.dpi)

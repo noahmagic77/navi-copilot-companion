@@ -260,6 +260,10 @@ func (a *application) apply(c protocol.Command) {
 			a.cancelAnchor(fmt.Sprintf("request unavailable: enabled=%t motion=%t focused=%t visible=%t owner=%t", a.enabled, a.systemMotion, a.focused, a.visible, a.target != 0))
 			return
 		}
+		if !a.excludeAnchorOverlay() {
+			a.cancelAnchor("capture-self-exclusion-unavailable")
+			return
+		}
 		a.lastInteraction = a.elapsed
 		a.nextFlight = a.elapsed + 25
 		a.anchorStatus("searching")

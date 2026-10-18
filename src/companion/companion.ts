@@ -11,7 +11,7 @@ import {BrainView} from '../ui/brainView';
 import {brainDisplayData} from '../brain/inspection';
 import {nextProblem,problemAtPosition,problemKey,problemSetKey,sortedProblems,validProblemRange,type Problem} from './problems';
 import {PresenceController,type PresenceEvent} from '../brain/presence';
-import {editorAnchorToken} from '../overlay/editorAnchor';
+import {editorAnchorToken,editorAnchorDescription} from '../overlay/editorAnchor';
 
 export class Companion implements vscode.Disposable {
   private readonly engine=new DecisionEngine();
@@ -62,8 +62,7 @@ export class Companion implements vscode.Disposable {
     this.disposables.push(this.inspector,this.microphone,this.problemMarker,
       vscode.languages.onDidChangeDiagnostics(event=>{if(this.markedProblem&&event.uris.some(uri=>uri.toString()===this.markedProblem?.uri))this.refreshProblemMarker();}),
       overlay.onEditorAnchor(state=>{
-        const descriptions={searching:'Pixelziel wird gesucht.',found:'Gerendertes Pixelziel erkannt.',arrived:'Am gemessenen Pixelziel angekommen.',blocked:'Maus-Ausweichen hat Vorrang.',unavailable:'Pixelziel nicht eindeutig sichtbar; nur die Fehlermarkierung bleibt.',stopped:'Pixelnavigation beendet.'};
-        this.markerStatus=state.status==='stopped'&&state.reason?.startsWith('request unavailable')?'Kein aktives sichtbares VS-Code-Fenster für den Flug verfügbar.':descriptions[state.status];this.refreshProblemMarker();
+        this.markerStatus=editorAnchorDescription(state);this.refreshProblemMarker();
       }),
       vscode.window.onDidChangeVisibleTextEditors(()=>this.refreshProblemMarker()),
       vscode.workspace.onDidChangeTextDocument(event=>{if(event.contentChanges.length&&event.document.uri.toString()===this.markedProblem?.uri){this.markedProblem=undefined;this.refreshProblemMarker();}}),

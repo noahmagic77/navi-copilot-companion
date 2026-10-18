@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	pBitBlt   = gdi32.NewProc("BitBlt")
-	pGdiFlush = gdi32.NewProc("GdiFlush")
+	pBitBlt          = gdi32.NewProc("BitBlt")
+	pGdiFlush        = gdi32.NewProc("GdiFlush")
+	pCaptureAffinity = user32.NewProc("SetWindowDisplayAffinity")
 )
 
 type editorAnchor struct {
@@ -27,6 +28,28 @@ type editorAnchor struct {
 	goal, core       motion.Point // window-local physical pixels
 	found, rendering bool
 	flight           motion.Flight
+	captureExcluded  bool
+}
+
+func setCaptureExcluded(hwnd uintptr, excluded bool) bool {
+	affinity := uintptr(0)
+	if excluded {
+		affinity = 0x11
+	} // WDA_EXCLUDEFROMCAPTURE (Windows 10 2004+).
+	ok, _, _ := pCaptureAffinity.Call(hwnd, affinity)
+	return ok != 0
+}
+
+func (a *application) excludeAnchorOverlay() bool {
+	if !setCaptureExcluded(a.hwnd, true) {
+		return false
+	}
+	a.anchor.captureExcluded = true
+	if !a.bubble.excludeFromCapture(true) {
+		a.cancelAnchor("capture-self-exclusion-unavailable")
+		return false
+	}
+	return true
 }
 
 func (a *application) anchorStatus(status string) {
@@ -38,6 +61,10 @@ func (a *application) anchorStatus(status string) {
 }
 
 func (a *application) cancelAnchor(reason ...string) {
+	if a.anchor.captureExcluded {
+		setCaptureExcluded(a.hwnd, false)
+		a.bubble.excludeFromCapture(false)
+	}
 	if len(reason) > 0 {
 		a.anchor.reason = reason[0]
 	}
@@ -86,6 +113,8 @@ func captureAnchor(bounds rect, colour uint32, dpi float64, diagnostics bool) (m
 	defer pSelectObject.Call(dc, previous)
 	pixels := unsafe.Slice((*byte)(unsafe.Pointer(bits)), w*h*4)
 	defer clear(pixels)
+	// Desktop composition includes Chromium's GPU surface; only NAVI's own HWNDs
+	// are excluded for the lifetime of this bounded navigation request.
 	ok, _, callErr := pBitBlt.Call(dc, 0, 0, uintptr(w), uintptr(h), desktop, negative(bounds.Left), negative(bounds.Top), 0x00cc0020|0x40000000)
 	if ok == 0 {
 		return motion.Point{}, fmt.Sprintf("capture-copy-failed: %v", callErr)
@@ -122,6 +151,11 @@ func (a *application) scanAnchor() {
 	now := time.Now()
 	if !now.Before(a.anchor.until) {
 		a.cancelAnchor("target-expired")
+		return
+	}
+	foreground, _, _ := pGetForeground.Call()
+	if !a.visible || !a.focused || a.target == 0 || rootWindow(foreground) != a.target {
+		a.cancelAnchor("owner hidden or unfocused")
 		return
 	}
 	if now.Before(a.anchor.nextScan) {
