@@ -2,12 +2,13 @@ param([Parameter(Mandatory=$true)][string]$Executable, [string]$Output = 'build/
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 if (-not ('NaviWindowTest' -as [type])) {
- Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+ Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
 public static class NaviWindowTest {
  public delegate bool EnumProc(IntPtr hwnd, IntPtr state);
  [StructLayout(LayoutKind.Sequential)] public struct Rect {public int Left, Top, Right, Bottom;}
+ [StructLayout(LayoutKind.Sequential)] public struct Point {public int X, Y;}
  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumProc callback, IntPtr state);
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hwnd);
@@ -17,7 +18,7 @@ public static class NaviWindowTest {
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd,System.Text.StringBuilder text,int count);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd,System.Text.StringBuilder text,int count);
  [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
- [DllImport("user32.dll")] public static extern bool GetCursorPos(out System.Drawing.Point point);
+ [DllImport("user32.dll")] public static extern bool GetCursorPos(out Point point);
  [DllImport("user32.dll")] public static extern bool SetCursorPos(int x,int y);
  [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
  [DllImport("user32.dll")] static extern bool AttachThreadInput(uint first,uint second,bool attach);
@@ -62,7 +63,7 @@ $naviBeacon.SetBounds(420,220,20,20);$naviBeacon.BackColor=[Drawing.Color]::From
 $naviBeaconFill = New-Object Windows.Forms.Panel
 $naviBeaconFill.SetBounds(3,3,14,14);$naviBeaconFill.BackColor=[Drawing.Color]::FromArgb(88,104,174)
 $naviBeacon.Controls.Add($naviBeaconFill);$naviOwner.Controls.Add($naviBeacon)
-$naviSavedPointer=New-Object Drawing.Point
+$naviSavedPointer=New-Object NaviWindowTest+Point
 [NaviWindowTest]::GetCursorPos([ref]$naviSavedPointer)|Out-Null
 $naviOther = New-Object Windows.Forms.Form
 $naviOther.Text = 'NAVI native test other window'
