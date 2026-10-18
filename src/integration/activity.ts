@@ -1,35 +1,38 @@
 import {speechText} from '../core/speechText';
 
 export type ActivitySource = 'vscode' | 'codex' | 'manual';
-export type ActivityState = 'busy' | 'completed' | 'cancelled' | 'error';
-export interface ActivityEvent {source: ActivitySource; state: ActivityState | 'message'; message: string}
+export type ActivityState = 'received' | 'waiting' | 'busy' | 'completed' | 'cancelled' | 'error';
+export type ActivityEvent =
+  | {source: ActivitySource; state: ActivityState; message: string; requestId: string}
+  | {source: ActivitySource; state: 'message'; message: string; requestId?: never};
 
 /** Only the active owner can change the fairy; late results cannot replace another turn. */
 export class ActivityController {
-  private readonly active = new Map<string, {source: ActivitySource; until: number}>();
+  private readonly active = new Map<string, {source: ActivitySource; requestId: string; state:ActivityState; until: number}>();
   constructor(private readonly emit: (event: ActivityEvent) => void, private readonly now = Date.now) {}
 
   expire(): void {
     const owner = this.owner();
     for (const [key, value] of this.active) if (value.until <= this.now()) this.active.delete(key);
-    if (owner && !this.active.has(owner[0])) this.restore(owner[1].source);
+    if (owner && !this.active.has(owner[0])) this.restore(owner[1]);
   }
 
   update(source: ActivitySource, id: string, state: ActivityState, message = ''): boolean {
     this.expire();
     const key = source + ':' + id;
-    if (state === 'busy') {
+    if (state === 'busy'||state==='received'||state==='waiting') {
       if (!this.active.has(key) && this.active.size >= 32) throw new Error('Too many active NAVI requests.');
       const wasOwner = this.owner()?.[0] === key;
-      this.active.set(key, {source, until: this.now() + 120_000});
+      const previousState=this.active.get(key)?.state;
+      this.active.set(key, {source, requestId:id, state, until: this.now() + 120_000});
       if (this.owner()?.[0] !== key) return false;
-      if (!wasOwner) this.emit({source, state, message: ''});
+      if (!wasOwner||previousState!==state) this.emit({source, requestId:id, state, message: ''});
       return true;
     }
     const wasOwner = this.owner()?.[0] === key;
     if (!this.active.delete(key) || !wasOwner) return false;
-    if (this.active.size) { this.restore(source); return false; }
-    this.emit({source, state, message: speechText(message)});
+    if (this.active.size) { this.restore({source, requestId:id}); return false; }
+    this.emit({source, requestId:id, state, message: speechText(message)});
     return true;
   }
 
@@ -40,9 +43,10 @@ export class ActivityController {
     return true;
   }
 
-  private owner() { return this.active.entries().next().value as [string, {source: ActivitySource; until: number}] | undefined; }
-  private restore(source: ActivitySource): void {
+  private owner() { return this.active.entries().next().value as [string, {source: ActivitySource; requestId: string; state:ActivityState; until: number}] | undefined; }
+  private restore(fallback: {source: ActivitySource; requestId: string}): void {
     const next = this.owner();
-    this.emit({source: next?.[1].source ?? source, state: next ? 'busy' : 'cancelled', message: ''});
+    const task = next?.[1] ?? fallback;
+    this.emit({source:task.source, requestId:task.requestId, state:next?next[1].state:'cancelled', message:''});
   }
 }

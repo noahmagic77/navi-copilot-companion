@@ -123,8 +123,7 @@
   ].map(motion => ({...motion, category: 'Grundbewegungen'})).concat(additional,greetings).map(Object.freeze));
 
   const byId = new Map(motions.map(motion => [motion.id, motion]));
-  const idleMotionIds = Object.freeze(['drift','curious','stretch','figure8','twirl',
-    ...additional.filter(motion => ['Gleiten','Bögen','Kreisen'].includes(motion.category)).map(motion => motion.id)]);
+  const idleMotionIds = Object.freeze(['hover','drift','curious','figure8','stretch','twirl',...additional.map(motion => motion.id)]);
   const neutralPointer = Object.freeze({x: 0, y: 0});
   const motionPriority = Object.freeze({
     greet: 95, 'greet-wave': 95, 'greet-bow': 95, 'greet-hop': 95, 'greet-circle': 95, 'greet-sun': 95,
@@ -134,9 +133,9 @@
   });
   const rigCache = new WeakMap();
 
-  function shouldScheduleIdle({checking = false, promptFocused = false, bubbleVisible = false, bubblePriority = 0, hostVisible = true, hostFocused = true, lastInteractionAt = 0, now = Date.now(), minIdleGapMs = 5_000} = {}) {
+  function shouldScheduleIdle({busy = false, bubbleVisible = false, bubblePriority = 0, hostVisible = true, hostFocused = true, lastInteractionAt = 0, now = Date.now(), minIdleGapMs = 5_000} = {}) {
     if (!hostVisible || !hostFocused) return false;
-    if (checking || promptFocused || (bubbleVisible && bubblePriority >= 2)) return false;
+    if (busy || (bubbleVisible && bubblePriority >= 2)) return false;
     return now - lastInteractionAt >= minIdleGapMs;
   }
   function chooseIdleMotion(previousId = '', sequence = idleMotionIds) {
@@ -287,6 +286,11 @@
 
   function samplePreviewMotion(id, age, elapsed, pointer = neutralPointer, output = {}) {
     const pose=sampleMotion(id,age,elapsed,pointer,output);
+    if(id!=='curious'){
+      pose.yaw+=clamp(pointer.x,-1,1)*4.5;
+      pose.gazeX+=clamp(pointer.x,-1,1)*3;
+      pose.gazeY+=clamp(pointer.y,-1,1)*2;
+    }
     pose.x*=2.7;pose.y*=2.7;
     pose.yaw*=1.8;
     pose.roll*=1.35;

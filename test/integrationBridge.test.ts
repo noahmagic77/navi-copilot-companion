@@ -47,13 +47,14 @@ test('real MCP stdio client negotiates, lists tools and hands status and text to
     assert.equal(initialized.result.protocolVersion,'2025-06-18');
     child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');
     assert.equal((await call('tools/list')).result.tools.length,2);
-    for(const state of ['busy','completed']) {
+    for(const state of ['received','waiting','busy','completed']) {
       const reply=await call('tools/call',{name:'navi_set_status',arguments:{requestId:'test-turn',state,message:state==='completed'?'Fertig aus Codex':undefined}});
       assert.equal(reply.result.isError,undefined);
       assert.equal(JSON.parse(reply.result.content[0].text).displayed,true);
     }
     await call('tools/call',{name:'navi_show_message',arguments:{message:'Gezielte Übergabe'}});
-    assert.deepEqual(events.map(event=>event.state),['busy','completed','message']);
+    assert.deepEqual(events.map(event=>event.state),['received','waiting','busy','completed','message']);
+    assert.deepEqual(events.slice(0,2).map(event=>event.requestId),['test-turn','test-turn']);
     assert.equal(events.at(-1)?.message,'Gezielte Übergabe');assert.equal(stderr,'');
     const bad=await call('tools/call',{name:'navi_set_status',arguments:{requestId:'test',state:'invented'}});
     assert.equal(bad.result.isError,true);

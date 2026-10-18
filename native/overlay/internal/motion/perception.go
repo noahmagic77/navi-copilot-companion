@@ -26,6 +26,7 @@ func (e Environment) bound(p Point) Point {
 type Avoidance struct {
 	Velocity, Target Point
 	Active           bool
+	SpeedMultiplier  float64
 }
 
 func (a *Avoidance) Step(position Point, e Environment, dt float64) Point {
@@ -33,6 +34,11 @@ func (a *Avoidance) Step(position Point, e Environment, dt float64) Point {
 	if dt == 0 {
 		return position
 	}
+	speedMultiplier := a.SpeedMultiplier
+	if math.IsNaN(speedMultiplier) || math.IsInf(speedMultiplier, 0) || speedMultiplier < 1 {
+		speedMultiplier = 1
+	}
+	speedMultiplier = math.Min(speedMultiplier, 3)
 	distance := math.Hypot(position.X-e.Pointer.X, position.Y-e.Pointer.Y)
 	if e.PointerValid && distance < 120 && (!a.Active || math.Hypot(a.Target.X-e.Pointer.X, a.Target.Y-e.Pointer.Y) < 145) {
 		// Sample bounded escape directions. Reward clearance, then shorter travel.
@@ -59,13 +65,14 @@ func (a *Avoidance) Step(position Point, e Environment, dt float64) Point {
 	remaining := math.Hypot(dx, dy)
 	desired := Point{}
 	if remaining > .5 {
-		speed := math.Min(160, remaining*3)
+		speed := math.Min(160*speedMultiplier, remaining*3*speedMultiplier)
 		desired = Point{dx / remaining * speed, dy / remaining * speed}
 	}
 	dvx, dvy := desired.X-a.Velocity.X, desired.Y-a.Velocity.Y
 	delta := math.Hypot(dvx, dvy)
-	if delta > 480*dt {
-		factor := 480 * dt / delta
+	acceleration := 480 * speedMultiplier
+	if delta > acceleration*dt {
+		factor := acceleration * dt / delta
 		dvx *= factor
 		dvy *= factor
 	}

@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const {motions, sampleMotion, createRig, stepRig, nearestAngle, frameRate} = require('../../media/fairy-motion.js');
+const {motions, sampleMotion, samplePreviewMotion, createRig, stepRig, nearestAngle, frameRate} = require('../../media/fairy-motion.js');
 import {motionCatalog, motionIds} from '../src/core/motionCatalog';
+import {renderNaviWebview} from '../src/ui/webviewContent';
 
 test('all 110 motions produce distinct poses with finite, bounded positions', () => {
   assert.equal(motions.length, 110);
@@ -27,12 +28,14 @@ test('browser and host share the complete categorized catalogue', () => {
   assert.equal(new Set(motions.map((m: {label:string})=>m.label)).size,110);
   assert.equal(new Set(motions.map((m: {category:string})=>m.category)).size,10);
   const idle = require('../../media/fairy-motion.js').idleMotionIds;
-  assert(idle.length > 12);
+  const contextual=new Set(['greet','listen','think','hint','celebrate','rest',...motions.filter((motion:{category:string})=>motion.category==='Begrüßungen').map((motion:{id:string})=>motion.id)]);
+  const expected=motions.filter((motion:{id:string})=>!contextual.has(motion.id)).map((motion:{id:string})=>motion.id);
+  assert.equal(idle.length,94);
+  assert.deepEqual(idle,expected);
   for (const id of idle) assert(motionIds.has(id));
 });
 
 test('preview animation has a measurable time course beyond passive hover',()=>{
-  const {samplePreviewMotion}=require('../../media/fairy-motion.js');
   for(const motion of motions){
     const channels=['x','y','roll','yaw','wingAmplitude','wingSpread','glow','scatter'];
     const samples=Array.from({length:61},(_,i)=>samplePreviewMotion(motion.id,motion.duration*i/60,motion.duration*i/60));
@@ -46,6 +49,28 @@ test('preview animation has a measurable time course beyond passive hover',()=>{
     const ranges=channels.map((_,index)=>Math.max(...active.map((p:number[])=>p[index]))-Math.min(...active.map((p:number[])=>p[index])));
     assert(ranges.some((range,index)=>range>(index<4?3:.1)),`No meaningful choreographic time course: ${motion.id}`);
   }
+});
+
+test('pointer motion remains visible throughout selected animation previews',()=>{
+  for(const id of ['hover','rest','figure8','curious']){
+    const motion=motions.find((item:{id:string})=>item.id===id)!;
+    const age=motion.duration*.4,elapsed=3.2;
+    const center=samplePreviewMotion(id,age,elapsed,{x:0,y:0});
+    const pointer=samplePreviewMotion(id,age,elapsed,{x:1,y:-1});
+    assert.notEqual(pointer.yaw,center.yaw,`${id} should follow horizontal pointer motion`);
+    assert.notEqual(pointer.gazeX,center.gazeX,`${id} should follow horizontal pointer motion`);
+    assert.notEqual(pointer.gazeY,center.gazeY,`${id} should follow vertical pointer motion`);
+  }
+});
+
+test('companion keeps direct game controls visible and explains native platform requirements',()=>{
+  const resources={cspSource:'vscode-resource:',nonce:'test',styleUri:'style.css',motionUri:'motion.js',scriptUri:'fairy.js',animationEnabled:true,overlaySupported:true};
+  const html=renderNaviWebview(resources);
+  for(const mode of ['catch','chase','hide'])assert(html.includes(`data-game-mode="${mode}"`));
+  assert(html.includes('id="stop-game"'));
+  const unsupported=renderNaviWebview({...resources,overlaySupported:false});
+  assert.match(unsupported,/<section class="game-controls"[^>]*>/);
+  assert.match(unsupported,/<p class="game-support"[^>]*>Mausspiele benötigen das Windows-x64/);
 });
 
 test('all motion pairs transition smoothly without reallocating the rig', () => {
@@ -120,12 +145,28 @@ test('explicit drawing budgets stay low on high-refresh displays', () => {
   assert.equal(frameRate('rest', false, 1), 10);
 });
 
-test('idle scheduling waits for quiet periods and blocks while prompts or bubbles are active', () => {
+test('idle scheduling waits for quiet periods and blocks while requests or bubbles are active', () => {
   const {shouldScheduleIdle, chooseIdleMotion} = require('../../media/fairy-motion.js');
-  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, checking:false, promptFocused:false, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), true);
-  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, checking:false, promptFocused:true, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), false);
-  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, checking:false, promptFocused:false, bubbleVisible:true, bubblePriority:2, lastInteractionAt:0, now:10000}), false);
-  assert.equal(chooseIdleMotion('drift', ['drift','curious','stretch']).includes('drift') || chooseIdleMotion('drift', ['drift','curious','stretch']) === 'curious' || chooseIdleMotion('drift', ['drift','curious','stretch']) === 'stretch', true);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, busy:false, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), true);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, busy:true, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), false);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, busy:false, bubbleVisible:true, bubblePriority:2, lastInteractionAt:0, now:10000}), false);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, busy:false, bubbleVisible:true, bubblePriority:1, lastInteractionAt:0, now:10000}), true);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, busy:false, bubbleVisible:false, bubblePriority:0, lastInteractionAt:7000, now:10000}), false);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:true, busy:false, bubbleVisible:false, bubblePriority:0, lastInteractionAt:5000, now:10000, minIdleGapMs:5000}), true);
+  assert.equal(shouldScheduleIdle({hostVisible:false, hostFocused:true, busy:false, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), false);
+  assert.equal(shouldScheduleIdle({hostVisible:true, hostFocused:false, busy:false, bubbleVisible:false, bubblePriority:0, lastInteractionAt:0, now:10000}), false);
+  const choice = chooseIdleMotion('drift', ['drift','curious','stretch']);
+  assert.notEqual(choice, 'drift');
+  assert(['curious','stretch'].includes(choice));
+  assert.equal(chooseIdleMotion('curious', ['curious']), 'curious');
+});
+
+test('idle priorities prefer active motion over passive resting states', () => {
+  const {motionPriority} = require('../../media/fairy-motion.js');
+  assert(motionPriority.greet > motionPriority.listen);
+  assert(motionPriority.listen > motionPriority.rest);
+  assert(motionPriority.rest > motionPriority.hover);
+  assert(motionPriority.drift > motionPriority.hover);
 });
 
 test('pose and spring outputs can be reused by the rendering loop', () => {

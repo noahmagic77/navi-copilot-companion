@@ -7,15 +7,17 @@ export async function runModelTurn(options: {
   state: (state: ActivityState, message?: string) => void;
 }): Promise<string | undefined> {
   if (options.cancelled()) return;
-  options.state('busy');
+  options.state('received');
   let answer = '';
   try {
+    if(options.cancelled()){options.state('cancelled');return;}
+    options.state('waiting');
     const result = await options.request();
     for await (const fragment of result) {
       if (options.cancelled()) { options.state('cancelled'); return; }
       answer += fragment;
+      options.state('busy');
       options.fragment(fragment);
-      options.state('busy'); // Renew the lease without redrawing the activity.
     }
     if (options.cancelled()) { options.state('cancelled'); return; }
     options.state('completed', answer);

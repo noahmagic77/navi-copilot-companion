@@ -1,15 +1,25 @@
 import {spawn, type ChildProcessWithoutNullStreams} from 'node:child_process';
 import {isSoundCue,type SoundCue} from '../core/soundPolicy';
+import type {ExpressionState} from '../brain/expression';
+import type {PresenceValues} from '../brain/presence';
+import {isEditorAnchorState,type EditorAnchorState} from './editorAnchor';
 
 export type OverlayCommand =
+  | ({type:'presence';enabled:boolean}&PresenceValues)
+  | {type:'expression';state:ExpressionState;age:number}
   | {type: 'configure'; enabled: boolean; eco: boolean; respectReducedMotion: boolean; soundEnabled?: boolean; soundVolume?: number; bubbleEnabled?:boolean}
   | {type:'speech';message:string}
   | {type: 'sound'; cue: 'greeting' | 'discover' | 'hint' | 'celebrate'}
   | {type: 'focus'; focused: boolean}
   | {type: 'motion'; motion: string; preview?:boolean}
   | {type: 'target'; x: number; y: number}
+  | {type:'editorAnchor';id:number;token:string}
+  | {type:'startGame';mode:GameMode}
+  | {type:'stopGame'}
   | {type: 'cancelTarget'}
   | {type: 'stop'};
+export type GameMode = 'catch'|'chase'|'hide';
+export interface OverlayPointer {x:number;y:number}
 export type SpawnOverlay = (executable: string, args: string[]) => ChildProcessWithoutNullStreams;
 
 /** The child receives only typed control messages over inherited pipes. */
@@ -22,7 +32,11 @@ export class OverlayProcess {
     private readonly onFailure: (error: Error) => void,
     private readonly launch: SpawnOverlay = (file, args) => spawn(file, args, {windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false}),
     private readonly onDiagnostic: (message: string) => void = () => {},
-    private readonly onSoundFailure:(cue:SoundCue)=>void=()=>{}
+    private readonly onSoundFailure:(cue:SoundCue)=>void=()=>{},
+    private readonly onGameInvite:()=>void=()=>{},
+    private readonly onPointer:(point:OverlayPointer|null)=>void=()=>{},
+    private readonly onInteraction:(state:'gameStarted'|'gameStopped'|'interaction'|'actions')=>void=()=>{},
+    private readonly onEditorAnchor:(state:EditorAnchorState)=>void=()=>{}
   ) {}
   get running(): boolean {return !!this.child && this.ready;}
 
@@ -53,13 +67,21 @@ export class OverlayProcess {
         while ((newline = buffer.indexOf('\n')) >= 0) {
           const line = buffer.slice(0, newline); buffer = buffer.slice(newline + 1);
           try {
-            const message=JSON.parse(line) as {type?:string;cue?:unknown};
+            const message=JSON.parse(line) as {type?:string;cue?:unknown;x?:unknown;y?:unknown};
             if (message.type === 'ready' && this.child === child) {
               this.ready = true; startupSucceeded = true; complete();
             }
             if(message.type==='soundFailed'&&isSoundCue(message.cue)&&this.child===child&&this.ready&&!this.stopping.has(child)){
               this.onDiagnostic('Native fairy sound could not start; trying visible companion playback.');
               this.onSoundFailure(message.cue);
+            }
+            if(message.type==='gameInvite'&&this.child===child&&this.ready&&!this.stopping.has(child)) this.onGameInvite();
+            if(message.type==='pointer'&&Number.isFinite(message.x)&&Number.isFinite(message.y)&&this.child===child&&this.ready&&!this.stopping.has(child)) this.onPointer({x:message.x as number,y:message.y as number});
+            if(message.type==='pointerLost'&&this.child===child&&this.ready&&!this.stopping.has(child)) this.onPointer(null);
+            if((message.type==='gameStarted'||message.type==='gameStopped'||message.type==='interaction'||message.type==='actions')&&this.child===child&&this.ready&&!this.stopping.has(child))this.onInteraction(message.type);
+            if(message.type==='editorAnchor'&&isEditorAnchorState(message)&&this.child===child&&this.ready&&!this.stopping.has(child)){
+              const {id,status,x,y,coreX,coreY}=message;
+              this.onEditorAnchor({id,status,x,y,coreX,coreY,...(typeof message.reason==='string'?{reason:message.reason.slice(0,200)}:{})});
             }
           } catch { /* Ignore unrelated or malformed helper output. */ }
         }

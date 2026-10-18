@@ -2,7 +2,7 @@ param([Parameter(Mandatory=$true)][string]$Executable, [string]$Output = 'build/
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 if (-not ('NaviWindowTest' -as [type])) {
- Add-Type @'
+ Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
 public static class NaviWindowTest {
@@ -17,6 +17,15 @@ public static class NaviWindowTest {
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd,System.Text.StringBuilder text,int count);
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd,System.Text.StringBuilder text,int count);
  [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr hwnd,uint message,IntPtr wparam,IntPtr lparam);
+ [DllImport("user32.dll")] public static extern bool GetCursorPos(out System.Drawing.Point point);
+ [DllImport("user32.dll")] public static extern bool SetCursorPos(int x,int y);
+ [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
+ [DllImport("user32.dll")] static extern bool AttachThreadInput(uint first,uint second,bool attach);
+ public static bool ActivateOwner(IntPtr hwnd) {
+  uint ignored;uint current=GetCurrentThreadId(),foreground=GetWindowThreadProcessId(GetForegroundWindow(),out ignored);
+  bool attached=foreground!=0&&foreground!=current&&AttachThreadInput(current,foreground,true);
+  try{return SetForegroundWindow(hwnd);}finally{if(attached)AttachThreadInput(current,foreground,false);}
+ }
  public static IntPtr FindBubble(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetClassName(h,text,64);if(String.Equals(text.ToString(),"STATIC",StringComparison.OrdinalIgnoreCase))found=h;}return true;},IntPtr.Zero);return found;}
  public static IntPtr Find(uint pid) {IntPtr found=IntPtr.Zero;EnumWindows((h,s)=>{uint owner;GetWindowThreadProcessId(h,out owner);if(owner==pid){var text=new System.Text.StringBuilder(64);GetWindowText(h,text,64);if(text.ToString()=="NAVI Fairy")found=h;}return true;},IntPtr.Zero);return found;}
  public static Rect Bounds(IntPtr hwnd) {Rect r;GetWindowRect(hwnd,out r);return r;}
@@ -38,7 +47,9 @@ function ReadFrame([Diagnostics.Process]$Process,[int]$TimeoutMs) {
   if ($null -eq $naviLine) {return $null}
   $naviMessage = $naviLine | ConvertFrom-Json
   if ($naviMessage.type -eq 'frame') {return $naviMessage}
-  if ($naviMessage.type -ne 'attached') {throw "Unexpected native helper message: $naviLine"}
+  if ($naviMessage.type -eq 'actions') {$script:naviActionsSeen=$true}
+  if ($naviMessage.type -eq 'editorAnchor') {$script:naviAnchorState=$naviMessage}
+  if ($naviMessage.type -notin @('attached','pointer','pointerLost','gameStarted','gameStopped','interaction','actions','editorAnchor')) {throw "Unexpected native helper message: $naviLine"}
  }
  return $null
 }
@@ -46,14 +57,22 @@ $naviOwner = New-Object Windows.Forms.Form
 $naviOwner.Text = 'NAVI native test owner'
 $naviOwner.StartPosition = 'Manual'
 $naviOwner.SetBounds(80,80,1000,700)
+$naviBeacon = New-Object Windows.Forms.Panel
+$naviBeacon.SetBounds(420,220,20,20);$naviBeacon.BackColor=[Drawing.Color]::FromArgb(179,234,255)
+$naviBeaconFill = New-Object Windows.Forms.Panel
+$naviBeaconFill.SetBounds(3,3,14,14);$naviBeaconFill.BackColor=[Drawing.Color]::FromArgb(88,104,174)
+$naviBeacon.Controls.Add($naviBeaconFill);$naviOwner.Controls.Add($naviBeacon)
+$naviSavedPointer=New-Object Drawing.Point
+[NaviWindowTest]::GetCursorPos([ref]$naviSavedPointer)|Out-Null
 $naviOther = New-Object Windows.Forms.Form
 $naviOther.Text = 'NAVI native test other window'
 $naviOther.StartPosition = 'Manual'
 $naviOther.SetBounds(180,180,600,400)
 $naviProcess = $null
 try {
- $naviOwner.Show();$naviOwner.Activate();[NaviWindowTest]::SetForegroundWindow($naviOwner.Handle)|Out-Null;Pump 200
+ $naviOwner.TopMost=$true;$naviOwner.Show();$naviOwner.Activate();[NaviWindowTest]::ActivateOwner($naviOwner.Handle)|Out-Null;Pump 200
  Require ([NaviWindowTest]::GetForegroundWindow() -eq $naviOwner.Handle) 'Could not activate native test owner'
+ $naviOwner.TopMost=$false
  $naviInfo = New-Object Diagnostics.ProcessStartInfo
  $naviInfo.FileName = (Resolve-Path $Executable).Path
  $naviInfo.Arguments = "--host-pid $PID --diagnostics"
@@ -67,6 +86,7 @@ try {
  Require ($naviReady.Wait(4000)) 'No readiness response'
  Require ($naviReady.Result -match 'ready') 'Unexpected readiness response'
  $naviProcess.StandardInput.WriteLine('{"type":"configure","enabled":true,"eco":false,"respectReducedMotion":false}')
+ $naviProcess.StandardInput.WriteLine('{"type":"presence","enabled":true,"energy":0.8,"attention":0.9,"curiosity":0.7}')
  $naviProcess.StandardInput.WriteLine('{"type":"focus","focused":true}')
  $naviProcess.StandardInput.Flush()
  Pump 300
@@ -78,6 +98,22 @@ try {
  Require ($null -ne $naviFirstFrame) 'Active overlay produced no animation frame diagnostics'
  $naviSecondFrame = ReadFrame $naviProcess 3000
  Require ($null -ne $naviSecondFrame -and $naviSecondFrame.count -gt $naviFirstFrame.count) 'Animation frame counter did not advance'
+ $script:naviActionsSeen=$false
+ [NaviWindowTest]::SendMessage($naviWindow,0x204,[IntPtr]::Zero,[IntPtr]::Zero)|Out-Null
+ $naviActionFrame = ReadFrame $naviProcess 3000
+ Require ($script:naviActionsSeen) 'Native right click did not emit the explicit actions event'
+ Require ([NaviWindowTest]::GetForegroundWindow() -eq $naviOwner.Handle) 'Native right click stole focus'
+ $naviPointerPark=$naviOwner.PointToScreen([Drawing.Point]::new(900,600));[NaviWindowTest]::SetCursorPos($naviPointerPark.X,$naviPointerPark.Y)|Out-Null
+ $naviProcess.StandardInput.WriteLine('{"type":"speech","message":"Ankerflug startet."}')
+ $naviProcess.StandardInput.WriteLine('{"type":"editorAnchor","id":17,"token":"5868ae"}');$naviProcess.StandardInput.Flush()
+ $script:naviAnchorState=$null;$naviAnchorWatch=[Diagnostics.Stopwatch]::StartNew()
+ while($naviAnchorWatch.ElapsedMilliseconds -lt 9000 -and $script:naviAnchorState.status -ne 'arrived'){ReadFrame $naviProcess 1500|Out-Null;Pump 30}
+ Require ($script:naviAnchorState.status -eq 'arrived') 'Native helper did not locate and reach the actual painted beacon'
+ $naviAnchor=$script:naviAnchorState;$naviFairyRect=[NaviWindowTest]::Bounds($naviWindow)
+ $naviExpected=$naviBeacon.PointToScreen([Drawing.Point]::new(10,10))
+ Require ([Math]::Abs(($naviFairyRect.Top+$naviFairyRect.Bottom)/2-$naviExpected.Y) -le 1) 'Actual fairy window missed the painted line height'
+ Require ([Math]::Abs(($naviFairyRect.Left+$naviFairyRect.Right)/2-($naviExpected.X-60)) -le 1) 'Actual fairy window missed the beacon offset'
+ $naviProcess.StandardInput.WriteLine('{"type":"cancelTarget"}');$naviProcess.StandardInput.Flush();Pump 100
  $naviProcess.StandardInput.WriteLine('{"type":"speech","message":"Hallo! Ich mache deiner Maus Platz."}')
  $naviProcess.StandardInput.Flush();Pump 200
  $naviBubble = [NaviWindowTest]::FindBubble([uint32]$naviProcess.Id)
@@ -97,22 +133,23 @@ try {
  Require ([Math]::Abs(($naviAfter.Top-$naviBefore.Top)-80) -le 2) 'Paused overlay did not follow vertical window move'
  $naviOwnerBounds = [NaviWindowTest]::Bounds($naviOwner.Handle)
  Require ($naviAfter.Left -ge $naviOwnerBounds.Left -and $naviAfter.Right -le $naviOwnerBounds.Right -and $naviAfter.Top -ge $naviOwnerBounds.Top -and $naviAfter.Bottom -le $naviOwnerBounds.Bottom) 'Overlay left the owner bounds'
- $naviOther.Show();$naviOther.Activate();[NaviWindowTest]::SetForegroundWindow($naviOther.Handle)|Out-Null;Pump 300
+ $naviOther.Show();$naviOther.Activate();[NaviWindowTest]::ActivateOwner($naviOther.Handle)|Out-Null;Pump 300
  Require (-not [NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay remained visible over another window'
  Require (-not [NaviWindowTest]::IsWindowVisible($naviBubble)) 'Speech bubble remained visible over another window'
- $naviOwner.Activate();[NaviWindowTest]::SetForegroundWindow($naviOwner.Handle)|Out-Null;Pump 300
+ $naviOwner.Activate();[NaviWindowTest]::ActivateOwner($naviOwner.Handle)|Out-Null;Pump 300
  Require ([NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay did not return to its owner'
  $naviOwner.WindowState = 'Minimized';Pump 300
  Require (-not [NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay remained visible while minimized'
- $naviOwner.WindowState = 'Normal';$naviOwner.Activate();[NaviWindowTest]::SetForegroundWindow($naviOwner.Handle)|Out-Null;Pump 300
+ $naviOwner.WindowState = 'Normal';$naviOwner.Activate();[NaviWindowTest]::ActivateOwner($naviOwner.Handle)|Out-Null;Pump 300
  Require ([NaviWindowTest]::IsWindowVisible($naviWindow)) 'Overlay did not return after restore'
  $naviProcess.StandardInput.WriteLine('{"type":"stop"}');$naviProcess.StandardInput.Close()
  Require ($naviProcess.WaitForExit(4000)) 'Overlay did not stop'
  Require ($naviProcess.ExitCode -eq 0) ($naviProcess.StandardError.ReadToEnd())
  New-Item -ItemType Directory -Force $Output|Out-Null
- @{windowIntegration='passed';speechBubble=$true;speechClickThrough=$true;speechOwnerTracking=$true;ownerTracking=$true;noFocusStealing=$true;pausedWindowMove=$true;staysInBounds=$true;otherWindowHidden=$true;minimizeRestore=$true;cleanShutdown=$true;scope='native WinForms host; not a VS Code end-to-end session'}|ConvertTo-Json|Set-Content (Join-Path $Output 'native-window-integration.json')
+ @{windowIntegration='passed';pixelAnchorFlight=$true;nativeRightClickActions=$true;speechBubble=$true;speechClickThrough=$true;speechOwnerTracking=$true;ownerTracking=$true;noFocusStealing=$true;pausedWindowMove=$true;staysInBounds=$true;otherWindowHidden=$true;minimizeRestore=$true;cleanShutdown=$true;scope='native WinForms host; not a VS Code end-to-end session'}|ConvertTo-Json|Set-Content (Join-Path $Output 'native-window-integration.json')
  Get-Content (Join-Path $Output 'native-window-integration.json')
 } finally {
+ [NaviWindowTest]::SetCursorPos($naviSavedPointer.X,$naviSavedPointer.Y)|Out-Null
  if($naviProcess -and -not $naviProcess.HasExited){$naviProcess.Kill()}
  $naviOwner.Dispose();$naviOther.Dispose()
 }

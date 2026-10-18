@@ -3,6 +3,8 @@
 package main
 
 import (
+	"math"
+	"navi/overlay/internal/motion"
 	"navi/overlay/internal/protocol"
 	"os"
 	"path/filepath"
@@ -42,7 +44,7 @@ func TestBubbleRasterHasTransparentBodyReadableTextAndTrackingTip(t *testing.T) 
 		}
 		var area rect
 		pGetWindowRect.Call(b.hwnd, uintptr(unsafe.Pointer(&area)))
-		tx, ty := int(center.X-area.Left), int(center.Y+3-area.Top)
+		tx, ty := int(center.X-area.Left), int(center.Y-area.Top)
 		nearTip := false
 		for y := ty - 3; y <= ty+3; y++ {
 			for x := tx - 3; x <= tx+3; x++ {
@@ -58,6 +60,22 @@ func TestBubbleRasterHasTransparentBodyReadableTextAndTrackingTip(t *testing.T) 
 	if output := os.Getenv("NAVI_TEST_BUBBLE_IMAGE"); output != "" {
 		if err := b.canvas.PNG(filepath.Clean(output)); err != nil {
 			t.Fatal(err)
+		}
+	}
+}
+
+func TestSpeechAnchorMatchesPresentedCoreAtFractionalDPI(t *testing.T) {
+	for _, dpi := range []float64{1, 1.25, 1.3, 1.5, 2} {
+		a := application{bounds: rect{Left: 80, Top: 120}, dpi: dpi, position: motion.Point{X: 241.3, Y: 305.7}, rig: motion.NewRig(), renderer: &renderer{pixels: int(math.Ceil(192 * dpi))}}
+		a.rig.Value[motion.X], a.rig.Value[motion.Y], a.rig.Value[motion.Scale] = 43.2, -28.4, 1.17
+		got := a.speechAnchor()
+		pixels := a.renderer.pixels
+		scale := float64(pixels) / 192 * (80.0 / 220) * a.rig.Value[motion.Scale]
+		x := a.bounds.Left + int32(math.Round(a.position.X*dpi)) - int32(pixels/2)
+		y := a.bounds.Top + int32(math.Round(a.position.Y*dpi)) - int32(pixels/2)
+		want := point{x + int32(math.Round(float64(pixels)/2+a.rig.Value[motion.X]*scale)), y + int32(math.Round(float64(pixels)/2+a.rig.Value[motion.Y]*scale))}
+		if got != want {
+			t.Fatalf("DPI %v: anchor %v, rendered core %v", dpi, got, want)
 		}
 	}
 }

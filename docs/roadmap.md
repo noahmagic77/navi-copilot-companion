@@ -1,22 +1,36 @@
 # NAVI Roadmap
 
-Stand: 17.10.2026. Diese Datei beschreibt Reihenfolge, Umfang und Abnahmekriterien der geplanten Entwicklung. Den tatsächlichen Implementierungs-, Test- und Veröffentlichungsstand dokumentiert der separate [Statusbericht](STATUS.md). Es gibt keine zugesagten Veröffentlichungstermine.
+Stand: 18.10.2026. Diese Datei beschreibt Reihenfolge, Umfang und Abnahmekriterien der geplanten Entwicklung. Den tatsächlichen Implementierungs-, Test- und Veröffentlichungsstand dokumentiert der separate [Statusbericht](STATUS.md). Es gibt keine zugesagten Veröffentlichungstermine.
+
+## Neu: aktiver Begleiter B → C → D/E → Sprache
+
+[Bedienung, Architektur und Grenzen](ACTIVE-COMPANION.md): B ist lokal umgesetzt (Platzmachen, Rückkehr, begrenzte Hilfeangebote), C ergänzt ausdrückliche Problemnavigation und vorbereitete Erklärung, D bestätigte Vorlieben/Projekteinträge und E eine echte Live-Webview mit 50 flüchtigen Entscheidungen. Ein isolierter echter VS-Code-Host prüft Editoränderungen und Diagnosemarkierung; Browserprüfungen ergänzen die Darstellung. Die folgenden älteren Abschnitte beschreiben die vorausgegangenen Grundlagen.
+
+Sprache hat eine registrierbare Anbieterschnittstelle, Befehlsparser, sichtbaren Zuhörmodus und Stopplogik. Ein kompatibler vorhandener Aufnahme-/Transkriptionsanbieter ist in dieser Umgebung **nicht angebunden**; ohne ihn bleibt die Funktion deaktiviert. Kein zusätzliches Modell oder neuer Cloud-Dienst wird vorausgesetzt. Nächste Abnahme: aktuelle VSIX installieren und Zusammenspiel mit Overlay, Spielen und realen Modellanfragen prüfen.
 
 ## Aktuelle Position
 
+**Expliziter Quick Fix lokal ergänzt:** Nach „Problem beheben“ darf ein eindeutig vom Sprachdienst empfohlener Vorschlag sofort angewendet werden; mehrere oder nicht empfohlene Vorschläge bleiben auswählbar. NAVIs Symbol markiert die tatsächliche Diagnosezeile. Die [markergebundene Pixelnavigation](EDITOR-ANCHORS.md) ist jetzt lokal implementiert: echte Erkennung und native Landung sind geprüft; die vollständige VS-Code-Abnahme mit Zoom, Umbruch und geteilten Editoren bleibt offen. Allgemeines autonomes Reparieren ohne Diagnose/Sprachdienst ist nicht umgesetzt.
+
+**Direkt nutzbare Hilfe lokal ergänzt:** Rechtsklick-Aktionsmenü, wiederholtes Weitergehen durch Diagnosen, Auswahl bekannter Projektprobleme, vorhandene VS-Code-Korrekturvorschläge und vorbereitete Besprechung markierten Codes. Konkrete Hilfeangebote verweisen auf ihre geprüfte Diagnose. Die Sprechblasenspitze ist in beiden Darstellungen am gerenderten Feenkern befestigt. Die nächste Abnahme prüft Lesbarkeit und Bedienung im normalen VS-Code-Profil; echte Modellantworten bleiben gesondert offen.
+
+Die [lebendigere Verhaltensebene](LIFELIKE.md) ist lokal implementiert: sechs neue Ausdrucksreaktionen, kontinuierliche Dynamik und Reaktionen auf weitere VS-Code-Ereignisse. Nächster Schritt bleibt die Sichtabnahme im normalen Profil; Debugger- und Modell-Live-Tests werden gesondert ausgewiesen.
+
 Die Grundlage für eine umgebungsbezogene Fee ist umgesetzt: Windows-Overlay, geometrische Maus-Wahrnehmung, Ausweichen und einfache Zielflüge. Dazu kommen 110 Animationen, Begrüßungen, Feenklänge und Sprechblasen.
 
-**Wir stehen bei der visuellen Prüfung der lokalen v0.5.3-Vorschau.** v0.5.2 ist auf GitHub veröffentlicht. v0.5.3 überarbeitet Transparenz, die Ausrichtung der Sprechblase und die Sichtbarkeit der Bewegungen; der Live-Test dieser Änderungen in VS Code steht aus. Die Verbindung zu den vorhandenen VS-Code- und Codex-Zugängen ist im lokalen v0.5.3-Arbeitsstand umgesetzt und automatisch geprüft; die echte Client-Einrichtung und Modell-Live-Prüfung stehen aus. Ein zusätzliches lokales Modell oder Ollama ist nicht gewünscht.
+**Der lokale v0.6.0-Entwicklungsstand umfasst Mausspiele, begrenzte Wahrnehmung, Begleiterentscheidungen, Problemnavigation, bestätigte Erinnerungen und die Live-Gehirnansicht.** Die v0.6.0-VSIX mit Prüfsumme und zweisprachigen Notizen ist zur GitHub-Veröffentlichung vorbereitet. Der tatsächliche Uploadstatus steht im Statusbericht und auf der Release-Seite. Automatische Tests sowie isolierte echte VS-Code-, Browser- und native Fensterprüfungen bestehen. Die menschliche Sichtabnahme des Zusammenspiels, selektive Spielklicks und echte Client-/Modellverbindungen bleiben offen. Kein zusätzliches Modell oder Ollama wird vorausgesetzt.
 
 ## Konzept: das Fee-Gehirn
 
-Das [vollständige Konzept mit mathematischen Formeln](FAIRY-BRAIN.md) beschreibt lokale Zustände, Aufmerksamkeit, Arbeitsgedächtnis, Aktionsbewertung, Rechte und sichtbare Nachrichtenreaktionen. Eine [interaktive bildliche Darstellung](fairy-brain.html) ergänzt den Entwurf um ein zentrales Selbstmodell: Fähigkeiten, Verbindungen, Zustände, Entscheidungsgründe und Unsicherheit. Die Grafik ist eine Offline-Simulation, keine Live-Gehirnansicht. Die [technische Spezifikation](FAIRY-BRAIN-TECHNICAL.md) und der [Umsetzungsplan](FAIRY-BRAIN-PLAN.md) liegen vor. A1 ist lokal implementiert: deterministischer Zustandskern und begrenzte Selbstauskunft aus Aktivitäten/Fokus. Die Live-Abnahme bleibt offen. A2 ergänzt Empfangs- und Anfragezuordnung; Diagnose-Navigation und erlaubte Erinnerungen folgen später.
+Das [Konzept mit mathematischen Formeln](FAIRY-BRAIN.md), die [technische Spezifikation](FAIRY-BRAIN-TECHNICAL.md) und der [Umsetzungsplan](FAIRY-BRAIN-PLAN.md) beschreiben Zustände, Wahrnehmung, Entscheidungen und Selbstmodell. Die [Konzeptgrafik](fairy-brain.html) bleibt eine Offline-Simulation. Davon getrennt existiert jetzt eine echte Live-Gehirnansicht in VS Code. A1/A2 liefern Zustände und Anfragezuordnung, A2b begrenzte Wahrnehmung. B, C und D/E sind im beschriebenen begrenzten Umfang lokal umgesetzt; eine offene autonome Programmierplanung gehört weiterhin nicht dazu.
 
 ## Reihenfolge der nächsten Schritte
 
+Die Tabelle beschreibt die weitere Abnahmereihenfolge. Bereits implementierte Bausteine werden erst nach der jeweils genannten Prüfung als vollständig abgenommen behandelt; eine neue Test-VSIX ist schon gebaut.
+
 | Schritt | Ziel | Fertig, wenn … |
 |---|---|---|
-| 1. Visuelle Überarbeitung abschließen | Transparente Sprechblase mit Zeiger zur Fee und klar erkennbare Animationen | Die v0.5.3-Vorschau im echten VS Code geprüft ist; Text lesbar bleibt, die Spitze mitfliegt und Pause, Fokus sowie Fensterränder funktionieren. Danach Release vorbereiten. |
+| 1. Windows-Vordergrund-Fee live validieren | v0.6.0-Mausspiele und die visuellen Änderungen der v0.5.3-Vorschau | Fang, Verstecken, Klickdurchleitung außerhalb der Fee, Fokusverlust und Abbruch im echten VS Code geprüft sind; Sprechblase und Bewegung bleiben lesbar und stabil. Die vorbereitete v0.6.0-Vorschau unabhängig davon als Vorschau kennzeichnen. |
 | 2. Vorhandene KI-Zugänge verbinden | NAVI reagiert auf eigene VS-Code-Modellanfragen und ausdrücklich übergebene Codex-Meldungen | Chat-Zustände, Antwortauszüge, Abbruch und Fehler getestet sind; der Codex-Übergabeweg in der tatsächlichen Umgebung eingerichtet und live geprüft ist. |
 | 3. Reaktives Fee-Gehirn | Bestehende Ereignisse, Zustände und nachvollziehbare Entscheidungen verbinden | Empfang, Arbeit, Abschluss, Abbruch, Fokus und mehrere Quellen reproduzierbar geprüft sind; kein zusätzlicher Modellaufruf pro Reaktion nötig ist. |
 | 4. Editor-Ziele und Chat-Navigation | Ein ausdrücklich ausgewähltes Problem öffnen und hervorheben | Datei und Bereich zuverlässig geöffnet werden; die Fee eine nachvollziehbare Fensterposition ansteuert. Exakte Codezeilen-Koordinaten brauchen eine unterstützte Zuordnung. |
@@ -67,3 +81,7 @@ Live-Testergebnisse mit getesteter Version und Umgebung festhalten. Neue Builds 
 ## Dokumente pflegen
 
 Bei jedem Meilenstein den [Statusbericht](STATUS.md) aktualisieren: umgesetzt, automatisch geprüft, live bestätigt, veröffentlicht und noch offen. Die Roadmap nur ändern, wenn sich Umfang, Reihenfolge oder Abnahmekriterien ändern. Versionsbezogene Änderungen gehören zusätzlich ins [Changelog](../CHANGELOG.md).
+
+## Gehirn-Ausdruck — lokale Umsetzung
+
+Die [Ausdrucksschicht](BRAIN-EXPRESSION.md) übersetzt vorhandene Gehirn-/Aktivitätsereignisse jetzt in gemeinsame Browser-/Windows-Profile. Empfang, Warten, Bearbeitung, lokale Hilfe/Klärung, Antwortabschluss, Abbruch und Fehler sind getrennt. Maus-Sicherheit, Pause, Sichtbarkeit und die ausdrückliche Quellenzuordnung bleiben erhalten. Die allgemeine autonome Aktionsauswahl ist davon weiterhin getrennt und noch nicht umgesetzt.

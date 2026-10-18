@@ -3,6 +3,7 @@ package motion
 import (
 	"math"
 	"testing"
+	"time"
 )
 
 func TestLocalPointer(t *testing.T) {
@@ -58,6 +59,22 @@ func TestAvoidanceIgnoresDistantOrUnavailablePointer(t *testing.T) {
 	}
 }
 
+func TestAvoidanceSpeedMultiplierBoostsFleeAndStaysBounded(t *testing.T) {
+	e := Environment{Width: 800, Height: 600, Margin: 96, Pointer: Point{400, 300}, PointerValid: true}
+	start := Point{400, 300}
+	normal, boosted := Avoidance{}, Avoidance{SpeedMultiplier: 3}
+	normalNext := normal.Step(start, e, 1.0/60)
+	boostedNext := boosted.Step(start, e, 1.0/60)
+	normalDistance := math.Hypot(normalNext.X-start.X, normalNext.Y-start.Y)
+	boostedDistance := math.Hypot(boostedNext.X-start.X, boostedNext.Y-start.Y)
+	if boostedDistance <= normalDistance*2 {
+		t.Fatal("boost did not make escape visibly faster", normalDistance, boostedDistance)
+	}
+	if boostedNext != e.bound(boostedNext) || boostedDistance > 480.0*3/60+1e-6 {
+		t.Fatal("boost escaped movement bounds", boostedNext, boostedDistance)
+	}
+}
+
 func TestAvoidanceNarrowWindowAndPointerLoss(t *testing.T) {
 	e := Environment{Width: 192, Height: 192, Margin: 96, Pointer: Point{96, 96}, PointerValid: true}
 	a := Avoidance{}
@@ -107,5 +124,34 @@ func TestAvoidanceNoFrameAllocations(t *testing.T) {
 	p := Point{400, 300}
 	if n := testing.AllocsPerRun(1000, func() { e.Pointer = p; p = a.Step(p, e, 1.0/30) }); n != 0 {
 		t.Fatal("allocations per frame", n)
+	}
+}
+
+func TestTickleBuildsWithQuickClicksAndDecays(t *testing.T) {
+	start := time.Unix(100, 0)
+	tickle := Tickle{}
+	if tickle.Strength(start) != 0 {
+		t.Fatal("inactive tickle has strength")
+	}
+	tickle.Click(start)
+	first := tickle.Strength(start)
+	tickle.Click(start.Add(400 * time.Millisecond))
+	second := tickle.Strength(start.Add(400 * time.Millisecond))
+	if second <= first || tickle.SpeedMultiplier(start.Add(400*time.Millisecond)) <= 1+2*first {
+		t.Fatal("rapid click did not intensify tickle", first, second)
+	}
+	tickle.Click(start.Add(700 * time.Millisecond))
+	third := tickle.Strength(start.Add(700 * time.Millisecond))
+	tickle.Click(start.Add(800 * time.Millisecond))
+	fourth := tickle.Strength(start.Add(800 * time.Millisecond))
+	if third <= second || fourth <= third || tickle.Level != 1 {
+		t.Fatal("repeated clicks did not reach bounded maximum", third, tickle.Level)
+	}
+	if got := tickle.Strength(start.Add(2050 * time.Millisecond)); got != 0 {
+		t.Fatal("tickle pulse did not decay", got)
+	}
+	tickle.Click(start.Add(3 * time.Second))
+	if math.Abs(tickle.Level-.35) > 1e-9 {
+		t.Fatal("slow click did not reset the pulse", tickle.Level)
 	}
 }

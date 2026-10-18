@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.vsix
+!downloads/*.vsix
 *.log
 .vscode-test/
 coverage/

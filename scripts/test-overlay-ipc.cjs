@@ -10,7 +10,7 @@ child.stdout.on('data',chunk=>{
  buffer+=chunk.toString();
  if(!ready&&buffer.includes('"ready"')){
   ready=true;
-  for(const command of [{type:'configure',enabled:true,eco:true},{type:'focus',focused:false},{type:'motion',motion:'greet'},{type:'stop'}])child.stdin.write(JSON.stringify(command)+'\n');
+  for(const command of [{type:'configure',enabled:true,eco:true},{type:'focus',focused:false},{type:'presence',enabled:true,energy:.7,attention:.8,curiosity:.6},...['acknowledge','waiting','working','completed','cancelled','error','curious','pleased','startled','sleepy','welcoming','attentive','idle'].map(state=>({type:'expression',state,age:0})),{type:'presence',enabled:false,energy:0,attention:0,curiosity:0},{type:'motion',motion:'greet'},{type:'stop'}])child.stdin.write(JSON.stringify(command)+'\n');
   child.stdin.end();
  }
 });

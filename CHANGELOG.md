@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0 — 2026-10-18 (Preview)
+
+- Add bounded active-companion decisions: make space after three changes in five seconds, return after ten quiet seconds, and offer diagnostic help with five-minute/hourly budgets and explicit priorities.
+- Add shared right-click actions, diagnostic cycling, workspace problem selection, current-range markers and bounded selected-code discussion through the existing @navi path. Revalidate stale targets; do not submit chat automatically.
+- Add explicit **Fix Problem** through VS Code: apply only a single preferred Quick Fix after a user action; retain the picker for multiple/non-preferred actions and leave documents unchanged if no correction exists. Preserve undo; do not save automatically.
+- Add experimental measured Windows diagnostic flight: detect a unique editor beacon, fly to its actual height with a 60-DIP left offset, and keep the core steady. Read active-owner pixels briefly in RAM only, up to four times per second for 20 seconds, with an opt-out and focus/edit/mouse/manual priorities. Native landing and real editor raster cases pass separately; full VS Code-to-overlay acceptance remains open.
+- Add lifelike editor/save/diagnostic, task/debug, focus and contact reactions, simulated attention, settling, mouse gaze and breathing. Share body/wing/light profiles across Webview and native Windows renderers, with cooldowns and an independent opt-out.
+- Add confirmed opt-in profile/workspace memories with edit/delete/reset controls and a live brain inspector. Retain 50 decisions in RAM without code/message text; refresh only while visible, at most four times per second.
+- Add an existing-provider voice adapter, explicit start/stop lifecycle and allowlisted commands. Without a compatible real audio/transcription provider, voice remains visibly unavailable.
+- Add three mouse games, bounded opt-in invitations and click-triggered tickle/glitter reactions. Vary natural idle motions and preserve pointer response during animation previews.
+- Attach translucent speech tails to the actual rendered core, adapt placement on resize, remove repeated NAVI labels and show problem actions only for matching offers.
+- Remove prompt analysis, topic-change scoring, OTel imports, session journal/SQLite indexing and analytics commands. Leave old user files untouched and unloaded; retain separate opt-in own-chat history and confirmed memories.
+- Validate with 83 JavaScript/TypeScript tests, native Go tests, real isolated VS Code Quick Fix/undo/navigation checks, browser tests and native window/IPC tests. Human visual acceptance, combined normal-profile games, full diagnostic flight and real model/debugger/microphone flows remain open.
+- Prepare the GitHub preview VSIX, checksum and English/German notes. Actual publication is tracked separately in docs/STATUS.md and GitHub Releases.
+
 ## 0.5.3 — 2026-10-17
 
 - Release project code, documentation and project-authored assets under MIT; add contribution guidance and bundled Go third-party notices.

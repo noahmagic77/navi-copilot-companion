@@ -7,6 +7,43 @@ import (
 	"testing"
 )
 
+func TestEditorAnchorProtocol(t *testing.T) {
+	if _, err := Parse([]byte(`{"type":"editorAnchor","id":7,"token":"5868ae"}`)); err != nil {
+		t.Fatal(err)
+	}
+	for _, data := range []string{`{"type":"editorAnchor","id":0,"token":"5868ae"}`, `{"type":"editorAnchor","id":-1,"token":"5868ae"}`, `{"type":"editorAnchor","id":2147483648,"token":"5868ae"}`, `{"type":"editorAnchor","id":1,"token":"wrong!"}`, `{"type":"editorAnchor","id":1,"token":"b3eaff"}`} {
+		if _, err := Parse([]byte(data)); err == nil {
+			t.Fatal("invalid anchor accepted", data)
+		}
+	}
+}
+
+func TestPresenceProtocol(t *testing.T) {
+	for _, data := range []string{`{"type":"presence","enabled":true,"energy":0.7,"attention":0.4,"curiosity":0.6}`, `{"type":"presence","enabled":false,"energy":0,"attention":0,"curiosity":0}`} {
+		if _, err := Parse([]byte(data)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, data := range []string{`{"type":"presence","energy":-1,"attention":0,"curiosity":0}`, `{"type":"presence","energy":1,"attention":2,"curiosity":0}`, `{"type":"presence","energy":1,"attention":0}`, `{"type":"presence","energy":"high","attention":0,"curiosity":0}`} {
+		if _, err := Parse([]byte(data)); err == nil {
+			t.Fatal("invalid presence accepted", data)
+		}
+	}
+}
+
+func TestExpressionProtocol(t *testing.T) {
+	for _, data := range []string{`{"type":"expression","state":"working","age":0}`, `{"type":"expression","state":"waiting","age":2}`, `{"type":"expression","state":"completed","age":0.1}`} {
+		if _, err := Parse([]byte(data)); err != nil {
+			t.Fatal(data, err)
+		}
+	}
+	for _, data := range []string{`{"type":"expression","state":"made-up"}`, `{"type":"expression","state":"error","age":-1}`, `{"type":"expression","state":"working","age":1000000}`, `{"type":"expression","state":"working","age":"text"}`} {
+		if _, err := Parse([]byte(data)); err == nil {
+			t.Fatal("invalid expression accepted", data)
+		}
+	}
+}
+
 func TestSpeechProtocol(t *testing.T) {
 	for _, message := range []string{"", "Hallo", strings.Repeat("🧚", 160)} {
 		data, _ := json.Marshal(Command{Type: "speech", Message: message})
@@ -24,7 +61,7 @@ func TestSpeechProtocol(t *testing.T) {
 }
 
 func TestProtocol(t *testing.T) {
-	for _, s := range []string{`{"type":"configure","enabled":true,"eco":true,"respectReducedMotion":true}`, `{"type":"focus","focused":true}`, `{"type":"motion","motion":"greet"}`, `{"type":"stop"}`} {
+	for _, s := range []string{`{"type":"configure","enabled":true,"eco":true,"respectReducedMotion":true}`, `{"type":"focus","focused":true}`, `{"type":"motion","motion":"greet"}`, `{"type":"stop"}`, `{"type":"startGame","mode":"catch"}`, `{"type":"startGame","mode":"chase"}`, `{"type":"startGame","mode":"hide"}`, `{"type":"stopGame"}`} {
 		if _, err := Parse([]byte(s)); err != nil {
 			t.Fatal(err)
 		}
@@ -33,7 +70,7 @@ func TestProtocol(t *testing.T) {
 	if err != nil || !configured.RespectReducedMotion {
 		t.Fatal("reduced-motion preference was not preserved", err)
 	}
-	for _, s := range []string{`{"type":"exec","command":"anything"}`, `{"type":"motion","motion":"unknown"}`, `broken`} {
+	for _, s := range []string{`{"type":"exec","command":"anything"}`, `{"type":"motion","motion":"unknown"}`, `{"type":"startGame","mode":"unknown"}`, `{"type":"startGame"}`, `broken`} {
 		if _, err := Parse([]byte(s)); err == nil {
 			t.Fatal("accepted", s)
 		}

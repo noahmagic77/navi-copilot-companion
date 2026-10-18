@@ -23,6 +23,8 @@ jobs:
         run: node scripts/native-motion-fixture.cjs --check
       - name: Verify original audio resources
         run: node scripts/generate-audio.cjs --check
+      - name: Verify shared brain expression contract
+        run: node scripts/generate-expression.cjs --check
       - name: Native unit tests
         working-directory: native/overlay
         run: go test ./...

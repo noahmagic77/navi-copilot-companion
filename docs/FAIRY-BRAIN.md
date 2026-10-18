@@ -30,14 +30,14 @@ flowchart LR
 
 | Quelle | Beobachtung | Grenze |
 |---|---|---|
-| Native Windows-Wahrnehmung | Zeigerposition, Fenstergrenzen, DPI und Feenposition | Geometrie, keine Interpretation von Bildschirminhalten |
-| VS-Code-Ereignisse | Aktiver Editor, Auswahl, Dokumentversion, Fokus | Editor-Metadaten sind keine Erlaubnis, ganze Dateien an ein Modell zu senden |
-| Diagnose-API | Fehler-/Warnungsbereiche und Diagnosequelle | Eine Diagnose beweist weder Ursache noch richtige Lösung |
+| Native Windows-Wahrnehmung | Zeigerposition als fensterlokale DIPs, Fenstergrenzen und DPI | Nur innerhalb des aktiven Overlay-Fensters; Geometrie, keine Bildschirmbilder |
+| VS-Code-Ereignisse | Aktiver Editor, Auswahlbereich, Dokumentversion und Fokus | Nur markierter Text oder die Cursorzeile wird lokal flüchtig gelesen; kein automatischer Modellversand |
+| Diagnose-API | Begrenzte Fehler-/Warnungsmetadaten, Meldung und Bereich des aktiven Dokuments | Maximal 25 Diagnosen mit gekürzter Meldung; eine Diagnose beweist weder Ursache noch richtige Lösung |
 | Eigener `@navi`-Chat | Empfang, laufende Anfrage, Textfragmente, Abschluss, Abbruch, Fehler | Keine allgemeine Einsicht in fremde Chats |
 | Konfigurierte Codex-Brücke | Ausdrücklich übergebene Meldungen und Status | Kein automatischer Mitschnitt; keine internen Denkprozesse |
 | Nutzerhandlung | „Zeig das“, „Hilf mir“, „Sei ruhig“, Erinnerung bestätigen | Ausdrückliche Absicht hat Vorrang vor vermuteter Relevanz |
 
-Vorgesehene APIs: `window.onDidChangeActiveTextEditor`, `window.onDidChangeTextEditorSelection`, `workspace.onDidChangeTextDocument`, `languages.onDidChangeDiagnostics` und `languages.getDiagnostics`. Ausgewählte Ziele lassen sich über `window.showTextDocument`, `TextEditor.revealRange` und Decorations sichtbar machen. Diese APIs müssen bei der Implementierung gegen die unterstützte VS-Code-Version geprüft werden. Sie liefern keine allgemeine Pixelposition einer Codezeile für das native Overlay.
+Die lokale Wahrnehmung verwendet `window.onDidChangeActiveTextEditor`, `window.onDidChangeTextEditorSelection`, `workspace.onDidChangeTextDocument`, `languages.onDidChangeDiagnostics` und `languages.getDiagnostics`. Sie liest höchstens 2.000 Zeichen aus der Auswahl oder, wenn keine Auswahl besteht, aus der Cursorzeile. Diese Daten und höchstens 25 Diagnosen bleiben im RAM des Brain-Snapshots; die Selbstauskunft zeigt nur Metadaten und Mengen, nicht den Quelltext. Es gibt keinen automatischen Modellaufruf und keine persistente Speicherung. Ausgewählte Ziele lassen sich später über `window.showTextDocument`, `TextEditor.revealRange` und Decorations sichtbar machen. Diese APIs liefern keine allgemeine Pixelposition einer Codezeile für das native Overlay.
 
 Ein Ereignis erhält den Datensatz
 
@@ -333,4 +333,4 @@ Zusätzliche Abnahme: Selbstauskünfte müssen bei Verbindungsausfall, fehlendem
 
 ## Technischer Stand und Umsetzung
 
-Die [technische Spezifikation](FAIRY-BRAIN-TECHNICAL.md) legt Daten, Schnittstellen und Invarianten fest. Der [Etappenplan](FAIRY-BRAIN-PLAN.md) dokumentiert die Umsetzung. A1 ist lokal implementiert: reiner Zustandskern, begrenztes Selbstmodell, Anbindung ausgewählter Aktivitätsereignisse und Fokus sowie der Befehl **NAVI: About My State / Eigenen Zustand erklären**. Das ist eine Momentaufnahme ohne Nachrichteninhalte und ohne weiteren Modellaufruf. Die Offline-Grafik bleibt Simulation; der allgemeine Aktionsplaner ist noch nicht vorhanden.
+Die [technische Spezifikation](FAIRY-BRAIN-TECHNICAL.md) legt Daten, Schnittstellen und Invarianten fest. Der [Etappenplan](FAIRY-BRAIN-PLAN.md) dokumentiert die Umsetzung. A1 ist lokal implementiert; dazu kommen Task-ID-Verfolgung und begrenzte Wahrnehmung: Fenstermausposition, Auswahl beziehungsweise Cursorzeile und Diagnosen des aktiven Dokuments. Quelltext wird nicht dauerhaft gespeichert oder automatisch an ein Modell gesendet. **NAVI: About My State / Eigenen Zustand erklären** zeigt eine Momentaufnahme und keine laufende Gehirnansicht. Die Offline-Grafik bleibt Simulation; der allgemeine Aktionsplaner und Diagnose-Navigation sind noch nicht vorhanden.

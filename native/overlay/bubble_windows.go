@@ -110,11 +110,11 @@ func (b *speechBubble) draw(text string, center point, bounds rect, scale float6
 	}
 	r := b.canvas
 	width := math.Min(280*scale, float64(bounds.Right-bounds.Left)-16*scale)
-	lines := math.Ceil(float64(utf8.RuneCountInString(text)+9) / math.Max(8, (width/scale-32)/8))
+	lines := math.Ceil(float64(utf8.RuneCountInString(text)) / math.Max(8, (width/scale-32)/8))
 	height := math.Min((28+lines*20)*scale, float64(bounds.Bottom-bounds.Top)-16*scale)
 	layout := speech.Place(float64(center.X-bounds.Left), float64(center.Y-bounds.Top), float64(bounds.Right-bounds.Left), float64(bounds.Bottom-bounds.Top), width, height, scale)
 	// Include the tip in the layered surface. Its endpoint follows the luminous core.
-	tipX, tipY := float64(center.X), float64(center.Y)+3*scale
+	tipX, tipY := float64(center.X), float64(center.Y)
 	bodyX, bodyY := float64(bounds.Left)+layout.X, float64(bounds.Top)+layout.Y
 	originX, originY := math.Min(bodyX, tipX)-2*scale, math.Min(bodyY, tipY)-2*scale
 	x, y := int32(math.Round(bodyX-originX)), int32(math.Round(bodyY-originY))
@@ -196,7 +196,7 @@ func (b *speechBubble) draw(text string, center point, bounds rect, scale float6
 	}
 	defer gDeleteFont.Call(font)
 	textArea := [4]float32{float32(x) + float32(16*scale), float32(y) + float32(12*scale), float32(w) - float32(32*scale), float32(h) - float32(20*scale)}
-	content := utf16("NAVI  ·  " + text)
+	content := utf16(text)
 	if err := gdip(gDrawString, r.graphics, uintptrPointer(content), negative(-1), font, uintptr(unsafe.Pointer(&textArea)), 0, ink); err != nil {
 		return err
 	}
@@ -236,6 +236,9 @@ func (a *application) say(text string, priority int) {
 	}
 }
 func (a *application) paintSpeech() {
+	if a.renderer == nil {
+		return
+	}
 	if !a.bubbleEnabled || !a.visible || !a.speech.Active(wallSeconds()) {
 		a.hideSpeech()
 		return
@@ -250,9 +253,18 @@ func (a *application) paintSpeech() {
 			return
 		}
 	}
-	poseScale := (80.0 / 220) * a.rig.Value[motion.Scale] * a.dpi
-	center := point{a.bounds.Left + int32(math.Round(a.position.X*a.dpi+a.rig.Value[motion.X]*poseScale)), a.bounds.Top + int32(math.Round(a.position.Y*a.dpi+a.rig.Value[motion.Y]*poseScale))}
+	center := a.speechAnchor()
 	a.bubble.Show(a.speech.Message, center, a.bounds, a.dpi)
+}
+
+// Match the renderer's pixel scale and the separately rounded window position.
+func (a *application) speechAnchor() point {
+	if a.anchor.rendering {
+		return point{a.bounds.Left + int32(math.Round(a.anchor.core.X)), a.bounds.Top + int32(math.Round(a.anchor.core.Y))}
+	}
+	poseScale := (80.0 / 220) * a.rig.Value[motion.Scale] * float64(a.renderer.pixels) / 192
+	center := float64(a.renderer.pixels) / 2
+	return point{a.bounds.Left + int32(math.Round(a.position.X*a.dpi)) - int32(a.renderer.pixels/2) + int32(math.Round(center+a.rig.Value[motion.X]*poseScale)), a.bounds.Top + int32(math.Round(a.position.Y*a.dpi)) - int32(a.renderer.pixels/2) + int32(math.Round(center+a.rig.Value[motion.Y]*poseScale))}
 }
 func speechForMotion(id string) string {
 	switch soundForMotion(id) {
@@ -261,9 +273,9 @@ func speechForMotion(id string) string {
 	case "discover":
 		return "Was möchtest du als Nächstes ausprobieren?"
 	case "hint":
-		return "Ich habe einen Tipp für deinen Prompt."
+		return "Ich habe einen Hinweis für dich."
 	case "celebrate":
-		return "Dein Prompt sieht nach den lokalen Regeln gut aus."
+		return "Ein kleiner Freudenfunke!"
 	}
 	return ""
 }

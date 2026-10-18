@@ -3,6 +3,11 @@
 (() => {
   const vscode = acquireVsCodeApi();
   const {motions, idleMotionIds, greetingMotionIds, createGreetingSelector, chooseIdleMotion, shouldScheduleIdle, sampleMotion, samplePreviewMotion, createRig, stepRig, frameRate} = window.NaviMotion;
+  const {profiles:expressionProfiles,applyExpression,applyPresence}=window.NaviExpression;
+  let livingEnabled=false,living={energy:.72,attention:.25,curiosity:.4};
+  let touchUntil=0,lastPointerNotice=-Infinity;
+  let expression={state:'idle',age:0,at:0,engaged:false};
+  const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   const scene = document.getElementById('fairy-scene');
   const field = document.getElementById('sparkles');
   const float = scene.querySelector('.fairy-float');
@@ -19,11 +24,7 @@
   const choice = document.getElementById('motion-choice');
   const previewAll = document.getElementById('preview-all');
   const caption = document.getElementById('motion-caption');
-  const prompt = document.getElementById('prompt');
   const presence = document.getElementById('presence');
-  const heading = document.getElementById('heading');
-  const hint = document.getElementById('hint');
-  const status = document.getElementById('status');
   const speechBubble=document.getElementById('speech-bubble');
   const bubbleTail=document.createElementNS('http://www.w3.org/2000/svg','svg');
   bubbleTail.classList.add('bubble-tail');bubbleTail.setAttribute('aria-hidden','true');
@@ -33,27 +34,36 @@
     bubbleTail.toggleAttribute('hidden',speechBubble.hidden);
     if(speechBubble.hidden)return;
     const stage=document.querySelector('.fairy-stage').getBoundingClientRect();
-    const area=scene.getBoundingClientRect();
-    const x=area.left-stage.left+area.width*.5+pose.x*modelScale;
-    const y=area.top-stage.top+area.height*.4844+(pose.y+3)*modelScale;
-    speechBubble.style.top=Math.max(0,y-speechBubble.offsetHeight-30)+'px';
+    // Read the rendered core after all transforms, including roll, glow and perspective.
+    const light=core.getBoundingClientRect();
+    const x=light.left-stage.left+light.width/2;
+    const y=light.top-stage.top+light.height/2;
+    const width=speechBubble.offsetWidth,height=speechBubble.offsetHeight;
+    const left=clamp(x+24,0,Math.max(0,stage.width-width));
+    const above=y-height-28;
+    const top=clamp(above>=0?above:y+28,0,Math.max(0,stage.height-height));
+    speechBubble.style.left=left+'px';speechBubble.style.right='auto';speechBubble.style.top=top+'px';
     const box=speechBubble.getBoundingClientRect();
     const baseX=clamp(x,box.left-stage.left+20,box.right-stage.left-20);
-    const baseY=box.bottom-stage.top-1;
+    const baseY=y<top?top+1:box.bottom-stage.top-1;
     tailPath.setAttribute('d',`M ${baseX-9} ${baseY} L ${x} ${y} L ${baseX+9} ${baseY} Z`);
     bubbleTail.setAttribute('viewBox',`0 0 ${stage.width} ${stage.height}`);
   }
   let bubbleEnabled=document.querySelector('.fairy-stage').dataset.bubbleEnabled==='true';
+  let offeredMessage=null;
+  let companionAway=false;
+  document.querySelectorAll('[data-companion-command]').forEach(button=>button.addEventListener('click',()=>vscode.postMessage({type:'companionCommand',command:button.dataset.companionCommand})));
+  document.getElementById('bubble-problem').addEventListener('click',()=>vscode.postMessage({type:'companionCommand',command:'navi.showOfferedProblem'}));
   let bubblePriority=0,bubbleUntil=0,bubbleTimer=0;
-  function hideBubble(){clearTimeout(bubbleTimer);speechBubble.hidden=true;bubbleTail.setAttribute('hidden','');bubblePriority=0;bubbleUntil=0;}
+  function hideBubble(){clearTimeout(bubbleTimer);speechBubble.hidden=true;document.getElementById('bubble-problem').hidden=true;bubbleTail.setAttribute('hidden','');bubblePriority=0;bubbleUntil=0;}
   function showBubble(message,priority=1){
     if(!bubbleEnabled||!hostVisible||!hostFocused||document.hidden||typeof message!=='string')return;
     const text=Array.from(message.replace(/[\u0000-\u001f\u007f-\u009f]/g,' ').replace(/\s+/g,' ').trim()).slice(0,160).join('');
     if(!text){hideBubble();return;}
     const now=Date.now();
-    if(!speechBubble.hidden && now < bubbleUntil && bubblePriority >= priority) return;
-    if(!speechBubble.hidden && now < bubbleUntil && bubblePriority > priority) return;
+    if(!speechBubble.hidden&&now<bubbleUntil&&(bubblePriority>priority||bubblePriority===priority&&document.getElementById('bubble-text').textContent===text))return;
     document.getElementById('bubble-text').textContent=text;speechBubble.hidden=false;
+    document.getElementById('bubble-problem').hidden=text!==offeredMessage;
     positionBubble();
     bubblePriority=priority;const duration=Math.min(10000,4000+Array.from(text).length/30*1000);bubbleUntil=now+duration;
     clearTimeout(bubbleTimer);bubbleTimer=setTimeout(hideBubble,duration);
@@ -64,8 +74,21 @@
   const soundToggle=document.getElementById('toggle-sound');
   const soundVolume=document.getElementById('sound-volume');
   const soundStatus=document.getElementById('sound-status');
+  const glowLevelInput = document.getElementById('glow-level');
+  const glowValue = document.getElementById('glow-value');
   let soundEnabled=soundControls.dataset.soundEnabled==='true';
   let volume=Number(soundControls.dataset.soundVolume);
+  let glowLevel = Number(glowLevelInput?.value ?? 1);
+  function applyGlow(){
+    const value = clamp(glowLevel, .5, 1.5);
+    document.documentElement.style.setProperty('--navi-glow', String(value));
+    document.querySelector('.fairy-stage').style.setProperty('--navi-glow', String(value));
+    document.querySelector('.fairy-stage').style.setProperty('--navi-bubble-alpha', String(clamp(.35 + value * .45, .3, .9)));
+    if (glowValue) glowValue.textContent = `${Math.round(value * 100)} %`;
+    core.style.filter = `brightness(${clamp(.7 + value * .85, .7, 1.9)})`;
+    halo.style.filter = `brightness(${clamp(.8 + value * .9, .8, 2)})`;
+    glint.style.opacity = String(clamp(.5 + value * .6, .4, 1));
+  }
   const soundPlayer=window.NaviSound.createPlayer({baseUri:soundControls.dataset.soundBase,onBlocked:error=>{
     soundStatus.textContent=error?.name==='NotAllowedError'?'Klangwiedergabe noch gesperrt. Bitte direkt auf „Anhören“ klicken.':'Klang konnte nicht abgespielt werden. Prüfe die Audioausgabe von VS Code.';
   }});
@@ -84,15 +107,19 @@
   });
   soundVolume.addEventListener('input',()=>{volume=Number(soundVolume.value);syncSound();});
   soundVolume.addEventListener('change',()=>vscode.postMessage({type:'setSoundVolume',volume}));
+  glowLevelInput?.addEventListener('input',()=>{glowLevel=Number(glowLevelInput.value);applyGlow();});
   document.getElementById('preview-sound').addEventListener('click',()=>{
     // Play inside the user gesture; do not lose autoplay permission to an IPC hop.
     void soundPlayer.play(document.getElementById('sound-choice').value,{audition:true}).then(started=>{
       if(started)soundStatus.textContent='Testton gestartet. Falls du nichts hörst, prüfe die VS-Code-Lautstärke im Windows-Lautstärkemixer.';
     });
   });
+  if (glowLevelInput) {
+    glowLevelInput.value = String(glowLevel);
+    applyGlow();
+  }
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const TAU = Math.PI * 2;
-  const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   let animationEnabled = scene.dataset.animationEnabled === 'true';
   let respectReducedMotion = scene.dataset.respectReducedMotion === 'true';
   let hostVisible = true;
@@ -108,7 +135,7 @@
   let modelScale = 1;
   let lastInteraction = 0;
   let lastCuriosity = -10;
-  let checking = false;
+
   let modelBusy = false;
   let mode = 'auto';
   let transitionPending = true;
@@ -124,12 +151,7 @@
   let lastParticleCount = 0;
   const trail = Array.from({length: 90}, () => ({at: -1, x: 0, y: 0}));
   let trailIndex = 0;
-  const idleSequence = Object.freeze([
-    'drift','figure8','stretch','curious','twirl',
-    'sway-breeze','arc-sunrise','bob-skip','orbit-halo','light-breathe',
-    'sway-cloud','arc-return','orbit-wreath'
-  ]);
-  let idleIndex = Math.floor(Math.random() * idleSequence.length);
+  const idleSequence = idleMotionIds;
 
   const groups = new Map();
   for (const motion of motions) {
@@ -160,20 +182,19 @@
     previewAll.textContent = mode === 'auto' ? 'Alle ansehen' : 'Vorschau beenden';
   }
 
-  function enterMotion(id, source = 'auto', duration) {
+  function enterMotion(id, source = 'auto', duration, notify=true) {
     const definition = motions.find(motion => motion.id === id);
     if (!definition) return;
     active = {id, age: 0, source, duration: duration || definition.duration};
     if(source!=='preview'&&source!=='integration'){
       if(id==='greet'||id.startsWith('greet-'))showBubble('Hallo! Ich bin da. Schreib mir mit @navi.');
-      else if(id==='curious')showBubble('Was möchtest du als Nächstes ausprobieren?');
-      else if(id==='hint')showBubble('Ich habe einen Tipp für deinen Prompt.');
-      else if(id==='celebrate')showBubble('Dein Prompt sieht nach den lokalen Regeln gut aus.');
+      else if(id==='hint')showBubble('Ich habe einen Hinweis für dich.');
+      else if(id==='celebrate')showBubble('Ein kleiner Freudenfunke!');
     }
     transitionPending = true;
     scene.dataset.animation = id;
     nextFrameAt = 0;
-    vscode.postMessage({type: 'motion', motion: id, preview: source === 'preview'});
+    if(notify)vscode.postMessage({type: 'motion', motion: id, preview: source === 'preview'});
     if (source === 'preview') choice.value = id;
     updateCaption();
   }
@@ -182,8 +203,8 @@
     mode = 'auto';
     previewQueue = [];
     choice.value = 'auto';
-    if (checking || document.activeElement === prompt) {
-      enterMotion(checking ? 'think' : 'listen', checking ? 'context' : 'context', 16 + Math.random() * 8);
+    if (modelBusy) {
+      enterMotion('think', 'context', 16 + Math.random() * 8);
       return;
     }
     const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
@@ -193,11 +214,11 @@
 
   function advanceMotion(dt) {
     active.age += dt;
+    if(expression.state!=='idle')return;
     const quietFor = Math.max(0, elapsed - lastInteraction) * 1000;
     const bubbleWindowOpen = !speechBubble.hidden && Date.now() < bubbleUntil;
     const canResumeIdle = shouldScheduleIdle({
-      checking,
-      promptFocused: document.activeElement === prompt,
+      busy: modelBusy,
       bubbleVisible: bubbleWindowOpen,
       bubblePriority,
       hostVisible,
@@ -206,14 +227,14 @@
       now: elapsed * 1000,
       minIdleGapMs: 5000
     });
-    if (mode === 'auto' && !checking && !modelBusy && document.activeElement !== prompt && bubbleWindowOpen && bubblePriority >= 2) {
+    if (mode === 'auto' && !modelBusy && bubbleWindowOpen && bubblePriority >= 2) {
       // Keep a short recovery window when the bubble is active so that reactions remain visible.
       return;
     }
-    if (mode === 'auto' && !checking && document.activeElement !== prompt && quietFor > 9000 && active.id !== 'rest' && bubbleWindowOpen && bubblePriority >= 2) {
+    if (mode === 'auto' && !modelBusy && quietFor > 9000 && active.id !== 'rest' && bubbleWindowOpen && bubblePriority >= 2) {
       return;
     }
-    if (mode === 'auto' && !checking && document.activeElement !== prompt && quietFor > 9000 && active.id !== 'rest') {
+    if (mode === 'auto' && !modelBusy && quietFor > 9000 && active.id !== 'rest') {
       enterMotion('rest', 'context');
     }
     if (active.age < active.duration) return;
@@ -230,7 +251,7 @@
         resumeNaturalMotion();
         return;
       }
-      if (canResumeIdle && !checking && !modelBusy && document.activeElement !== prompt) {
+      if (canResumeIdle && !modelBusy) {
         const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
         lastIdleMotion = nextIdle;
         idleCooldownUntil = elapsed * 1000 + 8000;
@@ -239,7 +260,7 @@
         resumeNaturalMotion();
       }
     } else {
-      if (canResumeIdle && !checking && !modelBusy && document.activeElement !== prompt && elapsed * 1000 >= idleCooldownUntil) {
+      if (canResumeIdle && !modelBusy && elapsed * 1000 >= idleCooldownUntil) {
         const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
         lastIdleMotion = nextIdle;
         idleCooldownUntil = elapsed * 1000 + 8000;
@@ -260,7 +281,6 @@
   }
 
   function render() {
-    positionBubble();
     const recoil = Math.sin(wingPhase * 2) * .25 * pose.wingAmplitude;
     float.style.transform = `translate(${pose.x * modelScale}px, ${(pose.y + recoil) * modelScale}px) rotate(${pose.roll}deg) scale(${pose.scale})`;
     art.style.transform = `perspective(600px) rotateY(${pose.yaw}deg)`;
@@ -299,6 +319,7 @@
       const front = depth > 0;
       if (particle.front !== front) {particle.element.style.zIndex = front ? '3' : '1'; particle.front = front;}
     }
+    positionBubble();
   }
 
   function tick(timestamp) {
@@ -310,6 +331,10 @@
       advanceMotion(dt);
       const sample=active.source==='preview'?samplePreviewMotion:sampleMotion;
       sample(active.id, active.age, elapsed, pointer, targetPose);
+      if(expression.state!=='idle')applyExpression(expression.state,expression.age+Math.max(0,elapsed-expression.at),targetPose);
+      if(livingEnabled&&mode==='auto')applyPresence(living,elapsed,pointer,targetPose);
+      if(elapsed<touchUntil){targetPose.scatter+=.65;targetPose.glow+=.2;}
+      if(companionAway&&expression.state==='idle'&&mode==='auto'){targetPose.x=65+targetPose.x*.15;targetPose.y=30+targetPose.y*.15;targetPose.wingSpeed*=.65;}
       document.getElementById('motion-progress').value=active.source==='preview'?active.age/active.duration:0;
       if (active.id === 'hover' || active.id === 'listen') targetPose.wingSpeed *= .65;
       pose = stepRig(rig, targetPose, transitionPending ? 0 : dt);
@@ -341,8 +366,9 @@
     scene.dataset.motion = !visible ? 'hidden' : enabled ? 'running' : 'paused';
     toggle.setAttribute('aria-pressed', String(enabled));
     toggle.disabled = reduced;
-    choice.disabled = !enabled || modelBusy;
-    previewAll.disabled = !enabled || modelBusy;
+    choice.disabled = !enabled || modelBusy || expression.state!=='idle';
+    previewAll.disabled = !enabled || modelBusy || expression.state!=='idle';
+    document.querySelectorAll('[data-game-mode]').forEach(button=>{button.disabled=modelBusy;});
     motionLabel.textContent = reduced ? 'Bewegung reduziert' : enabled ? 'Animation an' : 'Animation aus';
     toggle.title = reduced ? 'Die Systemeinstellung für reduzierte Bewegung wird berücksichtigt.' : enabled ? 'Animation pausieren' : 'Animation einschalten';
     if (enabled && visible) frame = requestAnimationFrame(tick);
@@ -365,6 +391,10 @@
   });
   document.getElementById('show-overlay').addEventListener('click', () => vscode.postMessage({type:'showOverlay'}));
   document.getElementById('hide-overlay').addEventListener('click', () => vscode.postMessage({type:'hideOverlay'}));
+  document.querySelectorAll('[data-game-mode]').forEach(button => button.addEventListener('click', () => {
+    if(['catch','chase','hide'].includes(button.dataset.gameMode))vscode.postMessage({type:'startGame',mode:button.dataset.gameMode});
+  }));
+  document.getElementById('stop-game').addEventListener('click', () => vscode.postMessage({type:'stopGame'}));
   choice.addEventListener('change', () => {
     noteInteraction();
     if (choice.value === 'auto') return resumeNaturalMotion();
@@ -379,23 +409,25 @@
     previewQueue = motions.map(motion => motion.id);
     enterMotion(previewQueue.shift(), 'preview');
   });
-  prompt.addEventListener('focus', () => {
-    noteInteraction();
-    if (mode === 'auto' && !checking) enterMotion('listen', 'context');
-  });
-  prompt.addEventListener('blur', () => {
-    if (mode === 'auto' && active.id === 'listen' && !checking) resumeNaturalMotion();
-  });
   scene.addEventListener('pointermove', event => {
     const bounds = scene.getBoundingClientRect();
     pointer = {x: (event.clientX - bounds.left) / bounds.width * 2 - 1, y: (event.clientY - bounds.top) / bounds.height * 2 - 1};
     noteInteraction();
-    if (mode === 'auto' && ['hover', 'rest'].includes(active.id) && elapsed - lastCuriosity > 8) {
+    if(livingEnabled&&elapsed-lastPointerNotice>=12){lastPointerNotice=elapsed;vscode.postMessage({type:'fairyInteraction',kind:'pointer'});}
+    if (expression.state==='idle' && mode === 'auto' && ['hover', 'rest'].includes(active.id) && elapsed - lastCuriosity > 8) {
       lastCuriosity = elapsed;
       enterMotion('curious');
     }
   });
   scene.addEventListener('pointerleave', () => { pointer = {x: 0, y: 0}; });
+  function touchFairy(){
+    noteInteraction();
+    if(!animationEnabled||!hostFocused||!hostVisible)return;
+    touchUntil=elapsed+.8;vscode.postMessage({type:'fairyInteraction',kind:'touch'});
+  }
+  scene.addEventListener('pointerdown',event=>{if(event.button===0)touchFairy();});
+  scene.addEventListener('contextmenu',event=>{event.preventDefault();vscode.postMessage({type:'companionCommand',command:'navi.actions'});});
+  scene.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();touchFairy();}});
   document.addEventListener('keydown', noteInteraction);
   document.addEventListener('pointerdown', noteInteraction, {passive: true});
   reducedMotion.addEventListener('change', syncMotion);
@@ -405,32 +437,36 @@
     render();
   }).observe(scene);
 
-  document.getElementById('check').addEventListener('submit', event => {
-    event.preventDefault();
-    const input = prompt.value;
-    if (!input.trim()) return;
-    mode = 'auto';
-    previewQueue = [];
-    choice.value = 'auto';
-    checking = true;
-    enterMotion('think', 'context');
-    vscode.postMessage({type: 'check', text: input});
-  });
-
   window.addEventListener('message', event => {
     const data = event.data;
     if (!data || typeof data !== 'object') return;
-    if(data.type==='activity'&&['busy','completed','cancelled','error','message'].includes(data.state)&&typeof data.message==='string'){
-      modelBusy=data.state==='busy';checking=modelBusy;mode='auto';previewQueue=[];choice.value='auto';lastInteraction=elapsed;
-      enterMotion(checking?'think':data.state==='completed'?'celebrate':data.state==='error'?'hint':'hover',checking?'context':'integration');
-      presence.textContent=checking?(data.source==='codex'?'Codex arbeitet …':'NAVI arbeitet …'):data.state==='error'?'Anfrage fehlgeschlagen':data.state==='cancelled'?'Anfrage beendet':'Ich bin da';
-      showBubble(data.message,2);syncMotion();return;
+    if(data.type==='presence'&&typeof data.enabled==='boolean'&&['energy','attention','curiosity'].every(key=>Number.isFinite(data[key])&&data[key]>=0&&data[key]<=1)){
+      livingEnabled=data.enabled;living={energy:data.energy,attention:data.attention,curiosity:data.curiosity};scene.dataset.living=String(livingEnabled);return;
+    }
+    if(data.type==='companionPosition'){companionAway=data.away===true;return;}
+    if(data.type==='problemOffer'){
+      offeredMessage=data.available?(data.message||'Soll ich dir das nächste Problem zeigen?'):null;
+      document.getElementById('bubble-problem').hidden=true;
+      if(offeredMessage)showBubble(offeredMessage,2);
+      document.getElementById('bubble-problem').hidden=!offeredMessage||document.getElementById('bubble-text').textContent!==offeredMessage||speechBubble.hidden;
+      return;
+    }
+    if(data.type==='expression'&&Object.hasOwn(expressionProfiles,data.state)&&Number.isFinite(data.age)&&data.age>=0&&data.age<=86400&&typeof data.engaged==='boolean'){
+      expression={state:data.state,age:data.age,at:elapsed,engaged:data.engaged};
+      scene.dataset.expression=data.state;
+      modelBusy=data.engaged;mode='auto';previewQueue=[];choice.value='auto';lastInteraction=elapsed;
+      const labels={idle:'Ich bin da',acknowledge:'Nachricht angekommen',working:data.source==='codex'?'Codex arbeitet …':'NAVI arbeitet …',waiting:'Ich warte auf die Antwort …',offer:'Ein Hinweis für dich',uncertain:'Ziel genauer beschreiben?',completed:'Antwort angekommen · ungeprüft',cancelled:'Anfrage beendet',error:'Anfrage fehlgeschlagen',curious:'Was gibt es Neues?',pleased:'Ein kleiner Lichtblick',startled:'Huch!',sleepy:'Ich ruhe mich ein wenig aus',welcoming:'Da bist du wieder',attentive:'Ich schaue mit'};
+      presence.textContent=labels[data.state];
+      if(data.state==='acknowledge')hideBubble();
+      enterMotion(expressionProfiles[data.state].motion,'integration',undefined,false);
+      if(typeof data.message==='string'&&data.message)showBubble(data.message,2);
+      syncMotion();return;
     }
     if(data.type==='speech'){showBubble(data.message,2);return;}
     if(data.type==='sound'){void soundPlayer.play(data.cue);return;}
     if(data.type==='audioFocus'){soundPlayer.configure({focused:data.focused});if(typeof data.focused==='boolean')hostFocused=data.focused;if(!hostFocused)hideBubble();return;}
     if (data.type === 'greeting' && greetingMotionIds.includes(data.motion)) {
-      if (mode === 'auto' && !checking && document.activeElement !== prompt) {
+      if (expression.state==='idle' && mode === 'auto' && !modelBusy) {
         lastGreetingAt = Date.now();
         lastInteraction = elapsed;
         enterMotion(data.motion, 'feedback');
@@ -452,7 +488,7 @@
     if (data.type === 'visibility' && typeof data.visible === 'boolean') {
       const returning = !hostVisible && data.visible;
       hostVisible = data.visible;
-      if (returning && Date.now() - lastGreetingAt >= 15000 && mode === 'auto' && !checking && document.activeElement !== prompt) {
+      if (!livingEnabled && expression.state==='idle' && returning && Date.now() - lastGreetingAt >= 15000 && mode === 'auto' && !modelBusy) {
         lastGreetingAt = Date.now();
         lastInteraction = elapsed;
         enterMotion(selectGreeting(), 'feedback');
@@ -460,34 +496,12 @@
       syncMotion();
       return;
     }
-    if (data.type !== 'analysis' || !Array.isArray(data.hints)) return;
-    checking = modelBusy;
-    const hints = data.hints.filter(h => h && typeof h.text === 'string').slice(0, 5);
-    scene.dataset.mood = hints.length ? 'hint' : 'idle';
-    mode = 'auto';
-    previewQueue = [];
-    choice.value = 'auto';
-    lastInteraction = elapsed;
-    enterMotion(modelBusy ? 'think' : hints.length ? 'hint' : 'celebrate', modelBusy ? 'context' : 'feedback');
-    if(!modelBusy)presence.textContent = hints.length ? 'Ein Tipp für dich' : 'Ich bin da';
-    heading.textContent = hints.length ? 'Ein kleiner Hinweis …' : 'Sieht gut aus.';
-    hint.replaceChildren();
-    if (!hints.length) hint.textContent = 'Dein Prompt ist nach den aktivierten Heuristiken unauffällig.';
-    else {
-      const list = document.createElement('ul');
-      for (const h of hints) {
-        const item = document.createElement('li');
-        item.textContent = h.text;
-        list.appendChild(item);
-      }
-      hint.appendChild(list);
-    }
-    status.textContent = 'Lokale Analyse · ' + (Number.isSafeInteger(data.characterCount) && data.characterCount >= 0 ? data.characterCount : 0) + ' Zeichen';
   });
 
   enterMotion(selectGreeting());
   render();
   syncSound();
   syncMotion();
+  new ResizeObserver(positionBubble).observe(document.querySelector('.fairy-stage'));
   vscode.postMessage({type: 'ready'});
 })();

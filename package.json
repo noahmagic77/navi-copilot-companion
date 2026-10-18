@@ -1,8 +1,8 @@
 {
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
-  "description": "Open-source, local-first VS Code companion with a fairy guide and local prompt insights.",
-  "version": "0.5.3",
+  "description": "Open-source, local-first VS Code fairy companion with editor awareness and explicit problem navigation.",
+  "version": "0.6.0",
   "private": true,
   "license": "MIT",
   "engines": {
@@ -59,6 +59,21 @@
       ]
     },
     "commands": [
+      {"command":"navi.actions","title":"NAVI: Actions / Wie kannst du helfen?"},
+      {"command":"navi.showWorkspaceProblems","title":"NAVI: Workspace Problems / Projektprobleme zeigen"},
+      {"command":"navi.showOfferedProblem","title":"NAVI: Show Offered Problem / Angebotenes Problem zeigen"},
+      {"command":"navi.quickFix","title":"NAVI: Quick Fixes / Korrekturvorschläge anzeigen"},
+      {"command":"navi.fixProblem","title":"NAVI: Fix Problem / Problem beheben"},
+      {"command":"navi.explainSelection","title":"NAVI: Discuss Selection / Markierten Code besprechen"},
+      {"command":"navi.openBrain","title":"NAVI: Live Brain / Gehirn live ansehen"},
+      {"command":"navi.showProblems","title":"NAVI: Show Problems / Probleme zeigen"},
+      {"command":"navi.nextProblem","title":"NAVI: Next Problem / Nächstes Problem"},
+      {"command":"navi.manageMemories","title":"NAVI: Memories / Erinnerungen verwalten"},
+      {"command":"navi.toggleInitiative","title":"NAVI: Toggle Initiative / Eigeninitiative umschalten"},
+      {"command":"navi.makeSpace","title":"NAVI: Make Space / Platz machen"},
+      {"command":"navi.returnHome","title":"NAVI: Return Home / Zurückkommen"},
+      {"command":"navi.startListening","title":"NAVI: Listen / Zuhörmodus einschalten"},
+      {"command":"navi.stopListening","title":"NAVI: Stop Listening / Mikrofon ausschalten"},
       {"command":"navi.explainState","title":"NAVI: About My State / Eigenen Zustand erklären"},
       {"command":"navi.configureCodex","title":"NAVI: Configure Codex Connection / Codex-Verbindung einrichten"},
       {"command":"navi.shareText","title":"NAVI: Share Text / Text an Fee übergeben"},
@@ -72,6 +87,14 @@
       {
         "command": "navi.cancelFlight",
         "title": "NAVI: Cancel Target Flight / Zielflug abbrechen"
+      },
+      {
+        "command": "navi.playGame",
+        "title": "NAVI: Play a Mouse Game / Mauspiel starten"
+      },
+      {
+        "command": "navi.stopGame",
+        "title": "NAVI: Stop Mouse Game / Mauspiel beenden"
       },
       {
         "command": "navi.showOverlay",
@@ -100,31 +123,15 @@
       {
         "command": "navi.clearHistory",
         "title": "NAVI: Clear Local History"
-      },
-      {
-        "command": "navi.checkPrompt",
-        "title": "NAVI: Check Prompt"
-      },
-      {
-        "command": "navi.rebuildIndex",
-        "title": "NAVI: Rebuild Analytics Index"
-      },
-      {
-        "command": "navi.exportAnalytics",
-        "title": "NAVI: Export Sanitized Analytics"
-      },
-      {
-        "command": "navi.clearAnalytics",
-        "title": "NAVI: Delete Sanitized Analytics"
-      },
-      {
-        "command": "navi.importOtel",
-        "title": "NAVI: Import OTel Metrics JSONL (Manual)"
       }
     ],
     "configuration": {
       "title": "NAVI",
       "properties": {
+        "navi.overlay.editorAnchors":{"type":"boolean","default":true,"description":"After explicit problem navigation, locate NAVI's coloured editor beacon in the active VS Code client area for precise Windows flight (up to 20 seconds, at most 4 scans/second). No screenshots are saved or sent. Disable to keep only the editor marker."},
+        "navi.companion.enabled":{"type":"boolean","default":true,"description":"Let NAVI make space during editor activity and offer bounded help. Files open only after an explicit action."},
+        "navi.companion.lifelike":{"type":"boolean","default":true,"description":"React to editor, task, debug and interaction events with simulated attention, natural settling, pointer gaze and shared fairy gestures. No extra model requests or prompt scoring."},
+        "navi.memory.enabled":{"type":"boolean","default":false,"description":"Enable explicitly confirmed preferences and workspace memories. NAVI does not automatically collect memories."},
         "navi.bubble.enabled": {"type":"boolean","default":true,"description":"Show transient speech bubbles beside NAVI for interaction events and short excerpts of NAVI's own chat replies."},
         "navi.sound.enabled": {
           "type": "boolean", "default": false,
@@ -158,11 +165,6 @@
           "maximum": 5000,
           "description": "Maximum stored opt-in NAVI chat exchanges."
         },
-        "navi.analytics.enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Explicit opt-in: save only sanitized NAVI rule codes and metrics in local JSONL and optional SQLite index."
-        },
         "navi.overlay.enabled": {
           "type": "boolean",
           "default": true,
@@ -188,9 +190,10 @@
   },
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
-    "compile": "node scripts/native-motion-fixture.cjs --check && node scripts/generate-audio.cjs --check && tsc -p .",
-    "check": "node scripts/native-motion-fixture.cjs --check && node scripts/generate-audio.cjs --check && tsc -p . --noEmit",
+    "compile": "node scripts/native-motion-fixture.cjs --check && node scripts/generate-audio.cjs --check && node scripts/generate-expression.cjs --check && tsc -p .",
+    "check": "node scripts/native-motion-fixture.cjs --check && node scripts/generate-audio.cjs --check && node scripts/generate-expression.cjs --check && tsc -p . --noEmit",
     "test": "npm run compile && node --test dist/test/*.test.js",
+    "test:companion-host":"npm run compile && node scripts/test-companion-host.cjs",
     "package": "npm run build:overlay && npm test && npm run verify:overlay && vsce package --no-dependencies",
     "build:overlay": "node scripts/build-overlay.cjs",
     "verify:overlay": "node scripts/verify-overlay.cjs"

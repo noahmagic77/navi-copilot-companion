@@ -13,6 +13,30 @@ function fakeChild() {
   return {child,typed:child as unknown as ChildProcessWithoutNullStreams};
 }
 
+test('editor anchor status is forwarded only from a ready live helper with validated geometry',async()=>{
+  const {child,typed}=fakeChild();const reports:unknown[]=[];
+  const bridge=new OverlayProcess(()=>{},()=>typed,undefined,undefined,undefined,undefined,undefined,state=>reports.push(state));
+  const start=bridge.start('helper.exe',123);
+  const state={type:'editorAnchor',id:3,status:'arrived',x:10,y:20,coreX:10,coreY:20};
+  child.stdout.write(JSON.stringify(state)+'\n');assert.equal(reports.length,0);
+  child.stdout.write('{"type":"ready"}\n');await start;
+  child.stdout.write(JSON.stringify({...state,coreX:'bad'})+'\n');assert.equal(reports.length,0);
+  child.stdout.write(JSON.stringify({...state,extra:'not part of the geometry projection'})+'\n');
+  const {type,...geometry}=state;assert.deepEqual(reports,[geometry]);
+  bridge.stop();child.stdout.write(JSON.stringify(state)+'\n');assert.equal(reports.length,1);
+});
+
+test('game and direct-interaction priorities accept only a ready current helper',async()=>{
+  const {child,typed}=fakeChild();const states:string[]=[];
+  const bridge=new OverlayProcess(()=>{},()=>typed,()=>{},()=>{},()=>{},()=>{},state=>states.push(state));
+  const pending=bridge.start('helper.exe',123);
+  child.stdout.write('{"type":"gameStarted"}\n');assert.deepEqual(states,[]);
+  child.stdout.write('{"type":"ready"}\n');await pending;
+  for(const type of ['gameStarted','interaction','gameStopped','actions'])child.stdout.write(JSON.stringify({type})+'\n');
+  assert.deepEqual(states,['gameStarted','interaction','gameStopped','actions']);
+  bridge.stop();child.stdout.write('{"type":"actions"}\n');assert.equal(states.length,4);
+});
+
 test('concurrent starts share one helper and typed control pipe',async()=>{
   const {child,typed}=fakeChild();let launches=0;const failures:Error[]=[];const wire:string[]=[];
   child.stdin.on('data',chunk=>wire.push(chunk.toString()));
@@ -38,9 +62,31 @@ test('target coordinates and cancellation cross the control pipe without file or
   child.stdin.on('data',chunk=>wire.push(chunk.toString()));
   const bridge=new OverlayProcess(()=>{},()=>typed);
   const start=bridge.start('helper.exe',123);child.stdout.write('{"type":"ready"}\n');await start;
-  bridge.send({type:'target',x:0,y:1});bridge.send({type:'cancelTarget'});bridge.stop();
+  bridge.send({type:'target',x:0,y:1});bridge.send({type:'cancelTarget'});bridge.send({type:'startGame',mode:'hide'});bridge.send({type:'stopGame'});bridge.stop();
   await new Promise(resolve=>setImmediate(resolve));
-  assert.deepEqual(wire.map(line=>JSON.parse(line)),[{type:'target',x:0,y:1},{type:'cancelTarget'},{type:'stop'}]);
+  assert.deepEqual(wire.map(line=>JSON.parse(line)),[{type:'target',x:0,y:1},{type:'cancelTarget'},{type:'startGame',mode:'hide'},{type:'stopGame'},{type:'stop'}]);
+});
+
+test('native game invitations are forwarded only from the live ready helper',async()=>{
+  const {child,typed}=fakeChild();let invitations=0;
+  const bridge=new OverlayProcess(()=>{},()=>typed,undefined,undefined,()=>invitations++);
+  child.stdout.write('{"type":"gameInvite"}\n');
+  const start=bridge.start('helper.exe',123);child.stdout.write('{"type":"ready"}\n');await start;
+  child.stdout.write('{"type":"gameInvite"}\n');
+  assert.equal(invitations,1);
+  bridge.stop();
+  child.stdout.write('{"type":"gameInvite"}\n');
+  assert.equal(invitations,1);
+  await new Promise(resolve=>setImmediate(resolve));
+});
+
+test('native pointer events expose only valid window-local geometry and clear on loss',async()=>{
+  const {child,typed}=fakeChild();const points:({x:number;y:number}|null)[]=[];
+  const bridge=new OverlayProcess(()=>{},()=>typed,undefined,undefined,undefined,point=>points.push(point));
+  const start=bridge.start('helper.exe',123);child.stdout.write('{"type":"ready"}\n');await start;
+  child.stdout.write('{"type":"pointer","x":320.5,"y":140.25}\n{"type":"pointer","x":"bad","y":4}\n{"type":"pointerLost"}\n');
+  assert.deepEqual(points,[{x:320.5,y:140.25},null]);
+  bridge.stop();await new Promise(resolve=>setImmediate(resolve));
 });
 
 test('helper diagnostics are forwarded while the process is running',async()=>{

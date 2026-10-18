@@ -2,7 +2,7 @@ import {sendToBridge} from './bridge';
 
 export const naviTools = [
   {name: 'navi_show_message', description: 'Show an explicitly shared short message beside NAVI. Does not read chats or call a model. Acknowledgement does not guarantee visibility when NAVI is hidden or bubbles are disabled.', inputSchema: {type: 'object', properties: {message: {type:'string', minLength:1, maxLength:4000}}, required:['message'], additionalProperties:false}},
-  {name: 'navi_set_status', description: 'Set NAVI activity for this requestId. Start with busy, then completed, cancelled or error using the same id. Renew busy within 120 seconds for long tasks. Pass an optional final excerpt. Other active requests can delay or suppress display.', inputSchema: {type:'object', properties: {requestId:{type:'string',pattern:'^[a-zA-Z0-9_-]{1,80}$'}, state:{type:'string',enum:['busy','completed','cancelled','error']}, message:{type:'string',maxLength:4000}}, required:['requestId','state'],additionalProperties:false}}
+  {name: 'navi_set_status', description: 'Set NAVI activity for this requestId. Start with received or busy; waiting means awaiting a response. Finish with completed, cancelled or error using the same id. Renew an active state within 120 seconds for long tasks. Pass an optional final excerpt. Other active requests can delay or suppress display.', inputSchema: {type:'object', properties: {requestId:{type:'string',pattern:'^[a-zA-Z0-9_-]{1,80}$'}, state:{type:'string',enum:['received','waiting','busy','completed','cancelled','error']}, message:{type:'string',maxLength:4000}}, required:['requestId','state'],additionalProperties:false}}
 ];
 
 /** MCP JSON-RPC over newline-delimited stdio. Uses only bundled code and Node built-ins. */
@@ -15,7 +15,7 @@ export async function handleMcp(message: Record<string, unknown>, descriptor: st
   if (message.method === 'initialize') {
     const params = message.params as {protocolVersion?: string} | undefined;
     const supported = ['2024-11-05','2025-03-26','2025-06-18'];
-    return result({protocolVersion: supported.includes(params?.protocolVersion ?? '') ? params!.protocolVersion : '2025-06-18', capabilities:{tools:{}}, serverInfo:{name:'navi-companion',version:'0.5.3'}, instructions:'Use NAVI only for explicitly requested short status or result handoffs. Do not forward private reasoning or unrelated chat history. Start status with busy and finish with the same requestId. This tool does not invoke another model.'});
+    return result({protocolVersion: supported.includes(params?.protocolVersion ?? '') ? params!.protocolVersion : '2025-06-18', capabilities:{tools:{}}, serverInfo:{name:'navi-companion',version:'0.6.0'}, instructions:'Use NAVI only for explicitly requested short status or result handoffs. Do not forward private reasoning or unrelated chat history. Start status with busy and finish with the same requestId. This tool does not invoke another model.'});
   }
   if (message.method === 'ping') return result({});
   if (message.method === 'tools/list') return result({tools:naviTools});

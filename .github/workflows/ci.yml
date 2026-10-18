@@ -57,6 +57,16 @@ jobs:
                   'extension/THIRD_PARTY_NOTICES.md',
                   'extension/dist/src/extension.js',
                   'extension/dist/src/brain/brain.js',
+                  'extension/dist/src/brain/expression.js',
+                  'extension/dist/src/brain/decisions.js',
+                  'extension/dist/src/brain/presence.js',
+                  'extension/dist/src/brain/inspection.js',
+                  'extension/dist/src/brain/memories.js',
+                  'extension/dist/src/companion/companion.js',
+                  'extension/dist/src/companion/problems.js',
+                  'extension/dist/src/integration/voice.js',
+                  'extension/dist/src/ui/brainView.js',
+                  'extension/dist/src/ui/brainContent.js',
                   'extension/dist/src/integration/naviMcp.js',
                   'extension/dist/src/integration/bridge.js',
                   'extension/dist/src/integration/activity.js',
@@ -64,10 +74,10 @@ jobs:
                   'extension/dist/src/ui/naviView.js',
                   'extension/dist/src/ui/fairyMarkup.js',
                   'extension/dist/src/ui/webviewContent.js',
-                  'extension/dist/src/storage/sessionJournal.js',
                   'extension/media/fairy.css',
                   'extension/media/fairy.js',
                   'extension/media/fairy-motion.js',
+                  'extension/media/fairy-expression.js',
                   'extension/media/fairy-sound.js',
                   'extension/media/icon.svg',
                   'extension/media/logo.png',
@@ -75,11 +85,14 @@ jobs:
                   'extension/bin/win32-x64/navi-overlay.exe.sha256',
                   'extension/dist/src/overlay/overlayController.js',
                   'extension/dist/src/overlay/overlayProcess.js',
+                  'extension/dist/src/overlay/editorAnchor.js',
               }
               required.update(f'extension/media/sounds/{cue}-{variant}.wav'
                               for cue in ('greeting', 'discover', 'hint', 'celebrate')
                               for variant in range(3))
               assert required.issubset(files), f'Missing: {required - files}'
+              removed = {'extension/dist/src/core/promptAnalyzer.js', 'extension/dist/src/core/otelParser.js', 'extension/dist/src/storage/sessionJournal.js'}
+              assert not removed.intersection(files), f'Retired analysis modules packaged: {removed.intersection(files)}'
               manifest = json.loads(package.read('extension/package.json'))
               helper = package.read('extension/bin/win32-x64/navi-overlay.exe')
               expected_hash = package.read('extension/bin/win32-x64/navi-overlay.exe.sha256').decode().split()[0]

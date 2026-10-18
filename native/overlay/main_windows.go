@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand/v2"
+	"navi/overlay/internal/anchor"
 	"navi/overlay/internal/motion"
 	"navi/overlay/internal/protocol"
 	"navi/overlay/internal/speech"
@@ -38,6 +39,10 @@ type application struct {
 	id                                                     string
 	preview                                                bool
 	context                                                bool
+	expression                                             string
+	expressionAge                                          float64
+	presenceEnabled                                        bool
+	presence                                               motion.Presence
 	flight                                                 motion.Flight
 	avoidance                                              motion.Avoidance
 	navigation                                             motion.Navigation
@@ -46,9 +51,16 @@ type application struct {
 	speech                                                 speech.State
 	bubbleEnabled                                          bool
 	position                                               motion.Point
+	game                                                   motion.Game
+	inputEnabled                                           bool
+	tickle                                                 motion.Tickle
+	nextGameInvite                                         float64
+	lastPointerReport                                      float64
+	pointerKnown                                           bool
 	frameCount                                             uint64
 	commands                                               chan protocol.Command
 	pendingGeometry                                        bool
+	anchor                                                 editorAnchor
 }
 
 var app *application
@@ -94,9 +106,27 @@ func windowProcedure(hwnd uintptr, msg uint32, wparam, lparam uintptr) uintptr {
 			app.refresh()
 			return 0
 		case wmNCHitTest:
+			if app.inputEnabled && app.hitTest(lparam) {
+				return 1
+			}
 			return negative(-1)
+		case wmLButtonDown:
+			if app.game.Active {
+				if app.game.Click() {
+					app.finishGame()
+					app.refresh()
+				}
+			} else {
+				app.tickleClick()
+			}
+			return 0
 		case wmMouseActivate:
 			return 3 // MA_NOACTIVATE
+		case wmRButtonDown:
+			if app.inputEnabled && app.focused && app.visible {
+				emit("actions")
+			}
+			return 0
 		case wmClose:
 			pDestroyWindow.Call(hwnd)
 			return 0
@@ -217,6 +247,27 @@ func (a *application) enter(id string, context bool) {
 }
 func (a *application) apply(c protocol.Command) {
 	switch c.Type {
+	case "editorAnchor":
+		a.refresh()
+		a.hideSpeech() // The old bubble must not obscure the beacon during capture.
+		a.cancelAnchor()
+		a.navigation.Cancel()
+		a.flight.Active = false
+		a.cancelGame()
+		colour, _ := anchor.Colour(c.Token)
+		a.anchor = editorAnchor{id: c.ID, colour: colour, until: time.Now().Add(20 * time.Second)}
+		if !a.enabled || !a.systemMotion || !a.focused || !a.visible {
+			a.cancelAnchor(fmt.Sprintf("request unavailable: enabled=%t motion=%t focused=%t visible=%t owner=%t", a.enabled, a.systemMotion, a.focused, a.visible, a.target != 0))
+			return
+		}
+		a.lastInteraction = a.elapsed
+		a.nextFlight = a.elapsed + 25
+		a.anchorStatus("searching")
+	case "presence":
+		a.presenceEnabled = c.Enabled
+		if c.Energy != nil && c.Attention != nil && c.Curiosity != nil {
+			a.presence = motion.Presence{Energy: *c.Energy, Attention: *c.Attention, Curiosity: *c.Curiosity}
+		}
 	case "stop":
 		pPostMessage.Call(a.hwnd, wmClose, 0, 0)
 		return
@@ -232,12 +283,46 @@ func (a *application) apply(c protocol.Command) {
 		a.eco = c.Eco
 		a.respectReducedMotion = c.RespectReducedMotion
 		a.systemMotion = !a.respectReducedMotion || animationsAllowed()
+	case "startGame":
+		a.cancelAnchor()
+		if !a.enabled || !a.systemMotion || !a.focused || !a.visible || a.renderer == nil || a.game.Active {
+			return
+		}
+		e := a.environment()
+		target := motion.Point{}
+		if c.Mode == string(motion.GameHide) {
+			bestDistance := -1.0
+			for i := 0; i < 8; i++ {
+				candidate := motion.HideSpot(e, rand.Float64(), rand.Float64())
+				distance := math.Hypot(candidate.X-a.position.X, candidate.Y-a.position.Y)
+				if distance > bestDistance {
+					target, bestDistance = candidate, distance
+				}
+				if distance >= 220 {
+					break
+				}
+			}
+		}
+		if a.game.Start(motion.GameMode(c.Mode), a.position, target, e, 45) {
+			emit("gameStarted")
+			a.flight.Active = false
+			a.avoidance = motion.Avoidance{}
+			a.navigation.Cancel()
+			a.lastInteraction = a.elapsed
+			a.nextFlight = a.elapsed + 15
+			a.enter("curious", true)
+			a.syncGameInput()
+		}
+	case "stopGame":
+		a.cancelGame()
 	case "focus":
 		a.focused = c.Focused
 		if !c.Focused {
 			a.navigation.Cancel()
+			a.cancelGame()
 		}
 	case "target":
+		a.cancelAnchor()
 		if c.X != nil && c.Y != nil && a.enabled && a.systemMotion && a.focused {
 			if a.navigation.Request(motion.Point{X: *c.X, Y: *c.Y}) {
 				a.flight.Active = false
@@ -248,6 +333,7 @@ func (a *application) apply(c protocol.Command) {
 			}
 		}
 	case "cancelTarget":
+		a.cancelAnchor("target cancelled")
 		a.navigation.Cancel()
 		a.flight.Active = false
 		a.nextFlight = a.elapsed + 15
@@ -257,6 +343,18 @@ func (a *application) apply(c protocol.Command) {
 			a.hideSpeech()
 		} else {
 			a.say(c.Message, 2)
+		}
+	case "expression":
+		if id, ok := motion.ExpressionMotion(c.State); ok {
+			if c.State == "acknowledge" {
+				a.cancelAnchor("chat request")
+				a.cancelGame()
+			}
+			a.expression = c.State
+			a.expressionAge = c.Age
+			a.lastInteraction = a.elapsed
+			a.enter(id, c.State != "idle")
+			a.preview = false
 		}
 	case "motion":
 		// A welcome must not replace an explicit listening/thinking interaction.
@@ -268,9 +366,11 @@ func (a *application) apply(c protocol.Command) {
 			}
 		}
 		a.lastInteraction = a.elapsed
+		a.expression = ""
 		a.enter(c.Motion, c.Motion == "listen" || c.Motion == "think")
 		a.preview = c.Preview
 		if a.preview {
+			a.cancelAnchor("preview")
 			a.flight.Active = false
 			a.navigation.Cancel()
 		}
@@ -301,6 +401,7 @@ func (a *application) stopTimer() {
 }
 func (a *application) refresh() {
 	a.bindTarget()
+	a.syncGameInput()
 	foreground, _, _ := pGetForeground.Call()
 	exists, _, _ := pIsWindow.Call(a.target)
 	visible, _, _ := pIsVisible.Call(a.target)
@@ -310,14 +411,21 @@ func (a *application) refresh() {
 		show = false
 	}
 	if !show {
+		a.cancelGame()
+		if a.pointerKnown {
+			emit("pointerLost")
+			a.pointerKnown = false
+		}
 		a.hideSpeech()
 		a.sound.Stop()
 		a.avoidance = motion.Avoidance{}
 		a.navigation.Cancel()
 		a.stopTimer()
+		a.cancelAnchor("owner hidden or unfocused")
 		if a.visible {
 			pShowWindow.Call(a.hwnd, 0)
 			a.visible = false
+			a.syncGameInput()
 		}
 		return
 	}
@@ -326,13 +434,20 @@ func (a *application) refresh() {
 		pShowWindow.Call(a.hwnd, 4)
 		pSetWindowPos.Call(a.hwnd, ^uintptr(0), 0, 0, 0, 0, 0x0001|0x0002|0x0010)
 		a.visible = true
+		a.syncGameInput()
 		a.lastFrame = time.Time{}
 		a.paint()
 	}
 	if !a.enabled || !a.systemMotion {
+		a.cancelGame()
+		if a.pointerKnown {
+			emit("pointerLost")
+			a.pointerKnown = false
+		}
 		a.avoidance = motion.Avoidance{}
 		a.navigation.Cancel()
 		a.stopTimer()
+		a.cancelAnchor("animation paused")
 		return
 	}
 	a.syncBudget()
@@ -342,7 +457,7 @@ func (a *application) syncBudget() {
 		a.stopTimer()
 		return
 	}
-	fps := motion.FPS(a.id, a.flight.Active || a.avoidance.Active || a.navigation.Flying(), a.eco)
+	fps := motion.FPS(a.id, a.flight.Active || a.avoidance.Active || a.navigation.Flying() || a.anchor.flight.Active, a.eco)
 	if a.age < .7 {
 		fps = 30
 		if a.eco {
@@ -389,6 +504,91 @@ func (a *application) planFlight() {
 	a.flight.Plan(a.position, motion.Point{x, y}, width, height, margin)
 	a.nextFlight = a.elapsed + 15 + rand.Float64()*15
 }
+
+func (a *application) environment() motion.Environment {
+	width := float64(a.bounds.Right-a.bounds.Left) / a.dpi
+	height := float64(a.bounds.Bottom-a.bounds.Top) / a.dpi
+	margin := float64(a.renderer.pixels) / (2 * a.dpi)
+	return motion.Environment{Width: width, Height: height, Margin: margin}
+}
+
+func (a *application) hitTest(lparam uintptr) bool {
+	point := motion.Point{X: float64(int16(uint16(lparam))), Y: float64(int16(uint16(lparam >> 16)))}
+	center := motion.Point{X: float64(a.bounds.Left) + a.position.X*a.dpi, Y: float64(a.bounds.Top) + a.position.Y*a.dpi}
+	return motion.HitTest(center, point, 72*a.dpi)
+}
+
+func (a *application) syncGameInput() {
+	inputEnabled := a.visible && a.enabled && a.systemMotion
+	if a.hwnd == 0 || a.inputEnabled == inputEnabled {
+		return
+	}
+	style, _, _ := pGetWindowLong.Call(a.hwnd, negative(-20))
+	if inputEnabled {
+		style &^= 0x20
+	} else {
+		style |= 0x20
+	}
+	pSetWindowLong.Call(a.hwnd, negative(-20), style)
+	pSetWindowPos.Call(a.hwnd, 0, 0, 0, 0, 0, 0x0001|0x0002|0x0004|0x0010|0x0020)
+	a.inputEnabled = inputEnabled
+}
+
+func (a *application) tickleClick() {
+	emit("interaction")
+	now := time.Now()
+	a.tickle.Click(now)
+	a.avoidance.Active = false
+	a.avoidance.Velocity = motion.Point{}
+	a.avoidance.SpeedMultiplier = a.tickle.SpeedMultiplier(now)
+	a.flight.Active = false
+	a.navigation.Cancel()
+	a.lastInteraction = a.elapsed
+	a.nextFlight = a.elapsed + 15
+	if a.id == "rest" && !a.context && !a.preview {
+		a.enter("curious", false)
+	}
+}
+
+func (a *application) finishGame() {
+	emit("gameStopped")
+	result, mode := a.game.Result, a.game.Mode
+	a.syncGameInput()
+	a.nextFlight = a.elapsed + 15
+	if result == motion.GameCancelled {
+		return
+	}
+	switch result {
+	case motion.GamePlayerWon:
+		a.enter("celebrate", false)
+		if mode == motion.GameHide {
+			a.say("Du hast mich gefunden!", 1)
+		} else {
+			a.say("Du hast mich erwischt!", 1)
+		}
+		a.sound.Cue("celebrate", a.visible && a.focused)
+	case motion.GameFairyWon:
+		a.enter("celebrate", false)
+		a.say("Ich hab dich!", 1)
+		a.sound.Cue("celebrate", a.visible && a.focused)
+	case motion.GameTimedOut:
+		a.enter("curious", false)
+		a.say("Die Runde ist vorbei.", 1)
+	}
+}
+
+func (a *application) cancelGame() {
+	if !a.game.Active {
+		return
+	}
+	a.game.Cancel()
+	emit("gameStopped")
+	a.context = false
+	a.enter("hover", false)
+	a.nextFlight = a.elapsed + 15
+	a.syncGameInput()
+}
+
 func (a *application) tick() {
 	if !a.visible || !a.enabled || !a.systemMotion {
 		a.refresh()
@@ -403,6 +603,12 @@ func (a *application) tick() {
 	a.lastFrame = now
 	a.elapsed += dt
 	a.age += dt
+	a.expressionAge += dt
+	a.avoidance.SpeedMultiplier = a.tickle.SpeedMultiplier(now)
+	if a.focused && !a.game.Active && a.elapsed >= a.nextGameInvite {
+		a.nextGameInvite = a.elapsed + 3600
+		emit("gameInvite")
+	}
 	if a.elapsed-a.lastInteraction > 90 && !a.context && !a.preview && a.id != "rest" {
 		a.enter("rest", false)
 		a.flight.Active = false
@@ -418,16 +624,37 @@ func (a *application) tick() {
 			}
 		}
 	}
-	width, height := float64(a.bounds.Right-a.bounds.Left)/a.dpi, float64(a.bounds.Bottom-a.bounds.Top)/a.dpi
-	environment := motion.Environment{Width: width, Height: height, Margin: float64(a.renderer.pixels) / (2 * a.dpi)}
+	environment := a.environment()
 	var cursor point
 	if ok, _, _ := pGetCursorPos.Call(uintptr(unsafe.Pointer(&cursor))); ok != 0 {
 		environment.Pointer, environment.PointerValid = motion.LocalPointer(
 			motion.Point{X: float64(cursor.X), Y: float64(cursor.Y)},
-			motion.Point{X: float64(a.bounds.Left), Y: float64(a.bounds.Top)}, a.dpi, width, height)
+			motion.Point{X: float64(a.bounds.Left), Y: float64(a.bounds.Top)}, a.dpi, environment.Width, environment.Height)
 	}
-	a.advancePerception(environment, dt)
-	if a.id != "rest" && !a.context && !a.preview && !a.flight.Active && !a.avoidance.Active && a.elapsed >= a.nextFlight {
+	if a.elapsed-a.lastPointerReport >= .25 {
+		a.lastPointerReport = a.elapsed
+		if environment.PointerValid {
+			fmt.Fprintf(os.Stdout, "{\"type\":\"pointer\",\"x\":%.2f,\"y\":%.2f}\n", environment.Pointer.X, environment.Pointer.Y)
+			a.pointerKnown = true
+		} else if a.pointerKnown {
+			emit("pointerLost")
+			a.pointerKnown = false
+		}
+	}
+	if a.game.Active {
+		a.flight.Active = false
+		a.avoidance = motion.Avoidance{}
+		a.navigation.Cancel()
+		a.position = a.game.Step(a.position, environment, dt)
+		if !a.game.Active {
+			a.finishGame()
+		}
+	} else {
+		a.advancePerception(environment, dt)
+		a.scanAnchor()
+		a.advanceAnchor(environment, dt)
+	}
+	if a.anchor.id == 0 && !a.game.Active && a.id != "rest" && !a.context && !a.preview && !a.flight.Active && !a.avoidance.Active && a.elapsed >= a.nextFlight {
 		a.planFlight()
 	}
 	if a.flight.Active {
@@ -436,6 +663,14 @@ func (a *application) tick() {
 	targetPose := motion.Sample(a.id, a.age, a.elapsed)
 	if a.preview {
 		targetPose = motion.SamplePreview(a.id, a.age, a.elapsed)
+	}
+	motion.ApplyExpression(a.expression, a.expressionAge, &targetPose)
+	if a.presenceEnabled && !a.preview {
+		look := motion.Point{}
+		if environment.PointerValid {
+			look = motion.Point{X: (environment.Pointer.X - a.position.X) / 220, Y: (environment.Pointer.Y - a.position.Y) / 220}
+		}
+		motion.ApplyPresence(a.presence, a.elapsed, look, &targetPose)
 	}
 	if a.id == "hover" || a.id == "listen" {
 		targetPose[motion.WingSpeed] *= .65
@@ -463,7 +698,7 @@ func (a *application) advancePerception(environment motion.Environment, dt float
 	wasAvoiding := a.avoidance.Active
 	a.position = a.avoidance.Step(a.position, environment, dt)
 	if wasAvoiding || a.avoidance.Active {
-		if !wasAvoiding && a.avoidance.Active {
+		if !wasAvoiding && a.avoidance.Active && a.tickle.Strength(time.Now()) < .01 {
 			a.say("Ich mache deiner Maus Platz.", 0)
 		}
 		a.flight.Active = false
@@ -481,26 +716,36 @@ func (a *application) paint() {
 	if a.renderer == nil || !a.visible {
 		return
 	}
-	if err := a.renderer.Draw(a.rig.Value, a.wing, a.orbit, a.elapsed, a.eco); err != nil {
+	pose := a.rig.Value
+	tickle := a.tickle.Strength(time.Now())
+	pose[motion.Scatter] = math.Max(pose[motion.Scatter], tickle)
+	pose[motion.Glow] += tickle * .25
+	x := a.bounds.Left + int32(math.Round(a.position.X*a.dpi)) - int32(a.renderer.pixels/2)
+	y := a.bounds.Top + int32(math.Round(a.position.Y*a.dpi)) - int32(a.renderer.pixels/2)
+	if a.anchor.rendering {
+		pose, x, y = a.anchorPose(pose)
+	}
+	if err := a.renderer.Draw(pose, a.wing, a.orbit, a.elapsed, a.eco); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		pPostMessage.Call(a.hwnd, wmClose, 0, 0)
 		return
 	}
-	x := a.bounds.Left + int32(math.Round(a.position.X*a.dpi)) - int32(a.renderer.pixels/2)
-	y := a.bounds.Top + int32(math.Round(a.position.Y*a.dpi)) - int32(a.renderer.pixels/2)
 	if err := a.renderer.Present(a.hwnd, x, y); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		pPostMessage.Call(a.hwnd, wmClose, 0, 0)
 		return
 	}
 	a.paintSpeech()
+	if a.anchor.rendering && !a.anchor.flight.Active {
+		a.anchorStatus("arrived")
+	}
 
 }
 func run(hostPID uint32, diagnostics bool) error {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	pDPIAware.Call(negative(-4))
-	app = &application{allowed: ancestors(hostPID), commands: make(chan protocol.Command, 16), enabled: true, systemMotion: true, diagnostics: diagnostics, rig: motion.NewRig(), id: "greet", dpi: 1, nextFlight: 6}
+	app = &application{allowed: ancestors(hostPID), commands: make(chan protocol.Command, 16), enabled: true, systemMotion: true, diagnostics: diagnostics, rig: motion.NewRig(), id: "greet", dpi: 1, nextFlight: 6, nextGameInvite: 3600}
 	if len(app.allowed) == 0 {
 		return fmt.Errorf("VS Code parent process is unavailable")
 	}

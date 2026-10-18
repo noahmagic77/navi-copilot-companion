@@ -54,6 +54,10 @@ jobs:
             echo "Release $TAG already exists."
             exit 0
           fi
+          NOTES="${RUNNER_TEMP}/navi-release-notes.md"
+          cat "docs/releases/v$VERSION.en.md" > "$NOTES"
+          printf '\n\n---\n\n' >> "$NOTES"
+          cat "docs/releases/v$VERSION.de.md" >> "$NOTES"
           gh release create "$TAG" "$VSIX" "$VSIX.sha256" \
-            --target "$(git rev-parse HEAD)" --title "NAVI $TAG" \
-            --notes-file "docs/releases/v$VERSION.en.md" --prerelease
+            --target "$(git rev-parse HEAD)" --title "NAVI $TAG (Preview)" \
+            --notes-file "$NOTES" --prerelease

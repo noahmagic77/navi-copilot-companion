@@ -25,7 +25,7 @@ Die Konfiguration gehört zu genau diesem NAVI-Fenster. Nach einem Reload, Neust
 | Werkzeug | Argumente | Verhalten |
 |---|---|---|
 | `navi_show_message` | `message` | Zeigt eine ausdrücklich geteilte Meldung, sofern keine Anfrage die Fee belegt. |
-| `navi_set_status` | `requestId`, `state`, optional `message` | `busy` startet die Aktivität. `completed`, `cancelled` oder `error` beenden dieselbe Anfrage. Bei `completed` kann `message` einen Ergebnis-Auszug enthalten. |
+| `navi_set_status` | `requestId`, `state`, optional `message` | `received`, `waiting` oder `busy` starten beziehungsweise aktualisieren die Aktivität. `completed`, `cancelled` oder `error` beenden dieselbe Anfrage. Bei `completed` kann `message` einen Ergebnis-Auszug enthalten. |
 
 Beispielhafte Werkzeugargumente:
 
@@ -58,3 +58,5 @@ CPU, GPU und RAM für das Modell werden weiterhin vom vorhandenen Modell-Setup b
 ## Prüfstand
 
 Automatische Tests decken Aktivitätskonkurrenz und Ablauf, Streaming, Abbruch, Fehler sowie echten MCP-stdio-Verkehr mit einer laufenden lokalen Pipe ab. Der MCP-Test wurde zusätzlich mit der installierten Windows-VS-Code-Laufzeit durchgeführt. Ein Browserlauf prüft die sichtbaren Aktivitätszustände. Der Live-Aufruf eines echten VS-Code-Modells und die Registrierung beim tatsächlich verwendeten Codex-Host bleiben separat zu prüfen; diese Sitzung hat die neuen Werkzeuge noch nicht geladen.
+
+Ab der lokalen v0.6.0-Ausdrucksschicht zeigt NAVI den Nachrichtenempfang, Warten auf die erste Antwort und laufendes Streaming getrennt. Empfang löst eine kurze Geste aus; wiederholte Textfragmente starten diese nicht neu. [Ausdrucksverhalten](BRAIN-EXPRESSION.md).

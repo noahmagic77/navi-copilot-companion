@@ -59,7 +59,7 @@ npm test
 4. In diesem zweiten Fenster **Strg + Umschalt + P** drücken.
 5. **NAVI: Open Companion / Ansicht öffnen** auswählen.
 
-Dort lassen sich die zwölf Bewegungen ansehen und über **Prompt analysieren** die lokalen Regeln ausprobieren. Alternativ ist der Befehl **NAVI: Check Prompt** verfügbar.
+Dort lassen sich die 110 Bewegungen ansehen. **NAVI: Live Brain** zeigt Begleiterentscheidungen, **NAVI: Show Problems** öffnet die Problemauswahl. Die frühere Prompt-Analyse und ihr Befehl sind entfernt.
 
 Auf Windows x64 startet **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen** die native Fee. Sie ist sichtbar, solange das zugehörige VS-Code-Fenster aktiv ist. **NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden** beendet den Helfer.
 

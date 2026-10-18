@@ -1,34 +1,32 @@
-# NAVI architecture (v0.5.1 preview)
+# NAVI architecture (local v0.6.0 preview)
 
 ## Boundaries
 
 NAVI is an independent VS Code extension with a supported Chat Participant (`@navi`), a Webview companion and an optional native Windows x64 overlay. It is not a fork or replacement of GitHub Copilot Chat. `@navi` uses `request.model` for the current request and streams the response. NAVI cannot read other participants' private messages, chat storage, internal APIs, authentication tokens or full conversation history.
 
 ```text
-VS Code Chat -> @navi -> selected VS Code model -> streamed reply
-                   |                 |
-                   |                 +--> optional LocalHistoryStore
-                   |                      (NAVI's own full-text history)
-                   v
-          local prompt analysis -> NAVI Webview -> motion identifiers
-                   |                       |
-                   v                       v
-       sanitized JSONL journal       native Windows overlay
-                   |
-                   +--> optional rebuildable SQLite index
+VS Code Chat -> @navi -> selected model -> streamed reply
+                  |                           |
+                  +-> ActivityController      +-> optional own-chat history
+                            |
+Editor/focus/pointer -> Brain -> decisions/expressions -> Webview + Windows fairy
+                            |
+                            +-> sanitized live inspector (no prompt scoring)
+
+Local analysis, metric import, journals and SQLite indexing: removed
 ```
 
 The native child process receives typed configuration, focus, motion, target, sound and bounded speech messages over inherited stdin/stdout pipes. The extension verifies the bundled helper's SHA-256 before starting it. In the local v0.5.2 preview, speech messages can contain up to 160 Unicode characters from NAVI's own completed chat replies, with fenced code blocks replaced by a placeholder. The helper does not read raw prompts, workspace files or other chats. Bubble text is transient, displayed locally and not added to analytics or a separate log.
 
 ## Privacy / threat model
 
-- Local-first storage and deterministic prompt analysis do not make model inference offline. The selected VS Code model provider processes `@navi` requests under that provider's terms.
+- Local companion decisions and storage do not make model inference offline. The selected VS Code model provider processes `@navi` requests under that provider's terms.
 - Storage scope: `globalStorageUri` is allocated for the extension and separated by local user environment and VS Code profile. Do not place history in the workspace or Git repo.
 - No NAVI central server, background upload or hidden extension telemetry. The configured model provider is a separate service when a cloud model is selected.
 - No attempt to ingest another participant's messages or private history.
 - No implicit file-system/workspace scanning. Future context features must be explicit and tested.
 - `navi.history.enabled` and `navi.history.maxEntries` control optional local retention of NAVI's own chat; `NAVI: Clear Local History` deletes that history.
-- Sanitized analytics are a separate opt-in. JSONL is the primary journal; the optional SQLite index can be rebuilt from it. `NAVI: Clear Sanitized Analytics` does not remove exported copies or OS backups.
+- Local analytics and metric imports are removed. Existing legacy files are left untouched and no longer loaded.
 - `navi.fairy.animationEnabled` controls movement; `navi.fairy.respectReducedMotion` optionally follows the OS preference and is off by default. Hidden views and inactive/minimized overlay windows pause their animation clocks.
 - Filesystem users with access to the OS profile may be able to read the JSON. This is not encrypted at rest by NAVI. Respect OS account access controls.
 - Local history is unencrypted. Users should opt in only when appropriate; deleting NAVI data cannot erase provider-side prompts, OS backups or separate VS Code/Copilot history.
@@ -43,9 +41,9 @@ The native child process receives typed configuration, focus, motion, target, so
 
 `src/storage/localHistoryStore.ts`: opt-in per-profile full-text history.
 
-`src/storage/sessionJournal.ts`: sanitized JSONL events and optional SQLite index.
+`src/brain/` and `src/companion/`: bounded perception, decisions, lifelike dynamics and confirmed memories. No analytics journal or SQLite index.
 
-`src/ui/`: Webview rendering, fairy state and local prompt-check UI.
+`src/ui/`: companion rendering, fairy state and live brain inspection. Prompt analysis and its UI have been removed.
 
 `src/overlay/` and `native/overlay/`: helper lifecycle, typed IPC, Win32 window tracking and GDI+ rendering.
 

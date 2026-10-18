@@ -238,13 +238,20 @@ func (r *renderer) Draw(p motion.Pose, wing, orbit, elapsed float64, eco bool) e
 	if eco {
 		n = 6
 	}
+	if p[motion.Scatter] > 0 {
+		burst := int(math.Ceil(p[motion.Scatter] * 24))
+		if eco {
+			burst = (burst + 1) / 2
+		}
+		n += burst
+	}
 	s := float64(r.pixels) / 192
 	center := float64(r.pixels) / 2
 	for i := 0; i < n; i++ {
 		phase := float64(i) * 2.399963
 		angle := phase + orbit*(.44+float64(i%4)*.045)
 		depth := math.Cos(angle)
-		radius := (26+float64(i%5)*3.5)*p[motion.OrbitRadius] + p[motion.Scatter]*8
+		radius := (26+float64(i%5)*3.5)*p[motion.OrbitRadius] + p[motion.Scatter]*24
 		x := center + (math.Sin(angle)*radius+p[motion.X]*.36)*s
 		y := center + (depth*radius*.36-math.Sin(angle)*radius*.25+p[motion.Y]*.36)*s
 		alpha := motion.Clamp((.56+math.Sin(elapsed*1.5+phase)*.24)*(.58+(depth+1)*.21)*p[motion.Glow], 0, 1)

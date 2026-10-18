@@ -16,7 +16,7 @@ export function dispatchBridge(activity: ActivityController, input: unknown): Br
     return {accepted: true, displayed: activity.message('codex', data.message)};
   }
   if (data.type === 'status' && typeof data.requestId === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(data.requestId) &&
-      typeof data.state === 'string' && ['busy','completed','cancelled','error'].includes(data.state) &&
+      typeof data.state === 'string' && ['received','waiting','busy','completed','cancelled','error'].includes(data.state) &&
       (data.message === undefined || typeof data.message === 'string' && data.message.length <= 4000)) {
     return {accepted: true, displayed: activity.update('codex', data.requestId, data.state as ActivityState, data.message as string | undefined)};
   }

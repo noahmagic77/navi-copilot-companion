@@ -29,13 +29,13 @@ Die neuen Varianten unterscheiden sich in Pfadform, Amplitude, Rhythmus, Phase, 
 | Eine kleine Acht fliegen | Als gelegentliche Variation im Leerlauf. |
 | Flügel strecken | Als gelegentliche Variation im Leerlauf. |
 | Sanft drehen | Als gelegentliche Variation im Leerlauf. |
-| Aufmerksam zuhören | Wenn das Prompt-Feld fokussiert ist. |
-| Nachdenken | Während eine lokale Prompt-Prüfung auf ihr Ergebnis wartet; meist sehr kurz. |
-| Einen Hinweis geben | Wenn die lokale Prüfung Hinweise liefert. |
-| Sich freuen | Wenn die lokale Prüfung keine Hinweise liefert. |
+| Aufmerksam zuhören | Als auswählbare Bewegung oder kurze Empfangsreaktion; kein Nachweis einer Mikrofonaufnahme. |
+| Nachdenken | Während einer eigenen aktiven Modellanfrage. |
+| Einen Hinweis geben | Bei einer Diagnose oder einem Begleiterangebot. |
+| Sich freuen | Als ausdrückliche Vorschau oder positive Spielreaktion; keine Prompt-Bewertung. |
 | Ausruhen | Nach 90 Sekunden ohne Interaktion in der NAVI-Ansicht. |
 
-Diese Reaktionen beziehen sich auf NAVIs eigene Ansicht und lokale Prüfung. Sie beobachten keine fremden Chat-Eingaben und greifen nicht auf Mikrofon, Kamera oder andere Anwendungen zu.
+Diese Reaktionen verwenden NAVIs eigene Zustände und verfügbare Editorereignisse. Sie beobachten keine fremden Chat-Eingaben. Eine Mikrofonaufnahme benötigt zusätzlich einen unterstützten Anbieter und ausdrückliche Aktivierung; aktuell ist kein echter Anbieter angebunden.
 
 ## Alle Bewegungen ansehen
 
@@ -43,7 +43,7 @@ Diese Reaktionen beziehen sich auf NAVIs eigene Ansicht und lokale Prüfung. Sie
 2. **110 Bewegungen entdecken** aufklappen.
 3. Eine Bewegung auswählen oder **Alle ansehen** starten.
 
-Die Auswahl ist nach Familien gruppiert. Eine ausgewählte Einzelbewegung wird wiederholt, bis die Vorschau beendet wird. **Alle ansehen** spielt die vollständige Folge einmal ab; sie dauert mehrere Minuten. Ein Fortschrittsbalken zeigt die aktuelle Bewegung an. **Natürlich bewegen** oder **Vorschau beenden** beendet die Vorschau sofort. Eine neue Prompt-Prüfung hat Vorrang vor einer Vorschau. Im Vorschaumodus werden Wege, Flügelbewegungen, Drehung und Licht betont; natürliche Leerlaufbewegungen bleiben zurückhaltender. Die native Fee übernimmt den Vorschaumodus und startet dabei keinen eigenen zufälligen Flug. Die Einstellung **Animation an/aus** gilt für alle 110 Bewegungen. Mit `navi.fairy.respectReducedMotion` lässt sich die Betriebssystempräferenz berücksichtigen; standardmäßig ist diese Option aus.
+Die Auswahl ist nach Familien gruppiert. Eine ausgewählte Einzelbewegung wird wiederholt, bis die Vorschau beendet wird. **Alle ansehen** spielt die vollständige Folge einmal ab; sie dauert mehrere Minuten. Ein Fortschrittsbalken zeigt die aktuelle Bewegung an. **Natürlich bewegen** oder **Vorschau beenden** beendet die Vorschau sofort. Eine neue eigene Modellanfrage hat Vorrang vor einer Vorschau. Im Vorschaumodus werden Wege, Flügelbewegungen, Drehung und Licht betont; natürliche Leerlaufbewegungen bleiben zurückhaltender. Die native Fee übernimmt den Vorschaumodus und startet dabei keinen eigenen zufälligen Flug. Die Einstellung **Animation an/aus** gilt für alle 110 Bewegungen. Mit `navi.fairy.respectReducedMotion` lässt sich die Betriebssystempräferenz berücksichtigen; standardmäßig ist diese Option aus.
 
 [Früheres Video der zwölf Grundbewegungen](navi-12-motions.mp4)
 

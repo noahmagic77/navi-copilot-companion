@@ -1,47 +1,22 @@
-# NAVI integration and limits – local v0.5.3 preview
+# NAVI integration and limits – local v0.6.0 preview
 
-This document describes the local experimental v0.5.3 implementation; the published GitHub preview is v0.5.2. NAVI is an independent VS Code extension, not a fork or replacement for Copilot Chat. It deliberately does not inspect private Copilot conversations or rely on undocumented APIs.
+NAVI is an independent VS Code companion, not a replacement for Copilot Chat. Local prompt analysis and the remaining analytics/metrics subsystem have been removed: no checker, topic scoring, OTel import, session journal or SQLite startup/index. Old user files are not deleted or loaded.
 
-## Implemented
+## Available integrations
 
-- Side-panel fairy UI using `WebviewViewProvider`; CSP limits script loading to bundled assets and there are no external requests.
-- Optional Windows x64 foreground overlay, controlled through typed local pipes and bundled with the extension. The local v0.5.2 preview also sends short excerpts of NAVI's own completed replies to its speech bubble (up to 160 Unicode characters, fenced code blocks replaced). No raw prompt, file read or access to another participant's chat is introduced. See [Speech bubbles](SPEECH.md).
-- Pure local prompt checker with nonauthoritative guidance, conservative topic-change heuristic and no implicit model calls.
-- Sanitized JSONL journal in `globalStorageUri/sessions/<salted-workspace-key>/<session-id>.jsonl`, storing only rule codes and selected token counts.
-- Optional `node:sqlite` database index, rebuildable from JSONL. Fallback to JSONL-only when SQLite unavailable.
-- Explicit commands to check a prompt, export analytics, clear analytics, rebuild the index, and import a **selected** local JSONL metric file.
-- `@navi` uses the model selected for that request in VS Code Chat and streams its response. NAVI's local checker observes only requests sent to `@navi`; it cannot read another participant's private chat.
-- Raw `@navi` prompt/answer history is now **disabled for new users by default**; if the existing user already enabled it, the setting remains effective. It is independent of sanitized analytics (also opt-in).
-- `navi.fairy.respectReducedMotion` optionally controls whether both fairy renderers respect the operating system's reduced-motion preference; default is `false`.
+- `@navi` streams the model selected for its own request through the supported VS Code Chat Participant API. It does not read another participant's private messages.
+- The companion Webview and optional Windows-x64 overlay use bundled assets and typed local messages. Shared expressions and lifelike dynamics add no model requests.
+- Editor/focus/diagnostic/task/debug events drive bounded reactions. Explicit problem actions open and highlight a current diagnostic; no automatic file modification. [Behavior and limits](LIFELIKE.md).
+- Confirmed memories are opt-in and separate from optional own-chat history. No automatic analysis records are generated.
+- A bundled MCP adapter accepts deliberately shared Codex messages/status through authenticated per-window local IPC. **Configure Codex Connection** produces a host-specific configuration; it does not connect every chat automatically. Manual text sharing is available. [Setup and live-check limits](AI-CONNECTION.md).
+- Voice uses an explicitly registered existing-provider adapter. No compatible real microphone/transcription provider is connected here. Unavailable voice stays disabled with an explanation. [Provider API](ACTIVE-COMPANION.md).
 
-## Unsupported, by design
+## Data and execution boundaries
 
-- No automatic detection or forwarding of arbitrary Copilot Chat prompts: no stable general-purpose access to another participant's private messages. Users must address `@navi` or explicitly submit text to NAVI.
-- No active GitHub Copilot hooks configured or modified.
-- No automatic telemetry capture, scanning of workspace files, or Copilot token savings calculation.
-- Offline local analysis does not mean Copilot's selected cloud model runs offline.
+Own-chat history is disabled by default and stores only NAVI's own exchanges when enabled. Confirmed memories are disabled by default and use profile/workspace state. Both have explicit deletion controls. Files are not encrypted by NAVI; deleting local data does not erase provider-side copies or OS backups. Legacy analytics files from older installations remain untouched; their old commands and automatic startup processing are removed.
 
-## Storage constraints and next hardening tasks
+No automatic access to external chat history, hidden model thoughts, camera or desktop screenshots. No extra model installation or telemetry backend. Model execution remains with the configured local, remote/cloud or server provider; companion animation and event processing run in the extension host.
 
-- SQLite `node:sqlite` is runtime-conditional, and `DatabaseSync` uses synchronous operations. Check VS Code extension-host compatibility under real installed VS Code; consider async storage adapter later.
-- Concurrent VS Code windows use one SQLite database; its WAL and busy timeout help with reader concurrency, but JSONL single-writer coordination across processes is **not** fully hardened. Do not claim multi-process production readiness.
-- Manual OTel importer accepts simple JSONL span objects with `gen_ai.usage.*` metrics; exporter formats vary and repeated imports can create duplicate metrics. Add import fingerprints before beta.
-- `clear analytics` deletes the journal and SQLite index rows; local backups and previously exported files are not touched. `clear history` is a separate explicit command.
-- Content is unencrypted on disk; OS permissions protect the local profile. Logs and SQLite WAL/SHM files must remain outside the git repository.
-- `workspaceSalt` stays local, and hashed keys cannot be interpreted without the salt. Original workspace URIs are not persisted.
+## Verification
 
-## How to verify
-
-1. `npm ci`, `npm run check`, `npm test`.
-2. Press F5 in VS Code Desktop and open NAVI from the Activity Bar.
-3. Run **NAVI: Check Prompt**; verify a tip and the animated fairy. Verify CSP and both states of `navi.fairy.respectReducedMotion`.
-4. Send `@navi Explain this code` in VS Code Chat. NAVI only inspects its **own** chat requests.
-5. Enable `navi.analytics.enabled` explicitly and inspect `NAVI: Open Local Data Folder`; inspect sanitized JSONL.
-6. Run `NAVI: Rebuild Analytics Index` and `NAVI: Export Sanitized Analytics`.
-7. Test `NAVI: Delete Sanitized Analytics`, `NAVI: Clear Local History` separately.
-
-The repository is public, but the extension remains an experimental preview and is not published in the VS Code Marketplace. NAVI project code is licensed under MIT; third-party components retain their own licenses. Open-source licensing does not imply Marketplace approval.
-
-## Existing AI connections (local v0.5.3)
-
-Selected-model turns now drive busy, completed, cancelled and error activity. A bundled stdio MCP adapter accepts explicitly shared Codex messages and status through authenticated per-window IPC. The configuration command generates a host-specific block; it does not edit Codex settings or load tools into this chat. Manual text sharing is also available. These paths add no model request and do not read external conversation history. The bridge stores only a transient connection descriptor/token, not message history. See [setup, tests and live-check limits](AI-CONNECTION.md).
+Run `npm run check` and `npm test`. `npm run test:companion-host` uses an isolated real VS Code profile and verifies that retired commands/modules are absent, alongside actual editor and diagnostic behavior. Browser and native tests cover drawing and IPC. Focus-dependent checks are reported as skipped when the test window lacks focus. Full model, debugger, microphone and human visual acceptance remain separate.

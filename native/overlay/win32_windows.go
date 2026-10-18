@@ -66,6 +66,8 @@ const (
 	wmTimer         = 0x0113
 	wmNCHitTest     = 0x0084
 	wmMouseActivate = 0x0021
+	wmLButtonDown   = 0x0201
+	wmRButtonDown   = 0x0204
 	wmCommandLocal  = 0x8001
 	wmGeometry      = 0x8002
 	wmClose         = 0x0010

@@ -1,8 +1,11 @@
-# Sprechblase neben NAVI (lokale v0.5.3-Vorschau)
+# Sprechblasen aus NAVIs Feenkern (lokale v0.6.0-Vorschau)
 
-Die fliegende Windows-Fee erhält eine eigene mitbewegte Sprechblase. Sie erscheint bei Begrüßungen, beim ersten Ausweichschritt vor der Maus und bei lokalen Prompt-Rückmeldungen. Nach einer abgeschlossenen Anfrage an `@navi` zeigt sie einen kurzen Auszug der Antwort. Die Companion-Ansicht zeigt dieselben Arten von Meldungen direkt neben der Fee; dort lässt sich **Mit @navi sprechen** anklicken.
+Die fliegende Windows-Fee erhält eine eigene mitbewegte Sprechblase. Sie erscheint bei Begrüßungen, beim ersten Ausweichschritt vor der Maus und bei Begleiter-Hinweisen. Nach einer abgeschlossenen Anfrage an `@navi` zeigt sie einen kurzen Auszug der Antwort. Die Companion-Ansicht zeigt dieselben Arten von Meldungen direkt neben der Fee; dort lässt sich **Mit @navi sprechen** anklicken. Prompt-Bewertungen sind entfernt.
 
 ## Bedienung
+
+- Die Blasenspitze sitzt auf dem tatsächlich dargestellten leuchtenden Kern. In der Webview folgt sie nach Anwendung aller Körpertransformationen; im Windows-Overlay werden dieselbe Pixelskalierung und Fensterrundung wie beim Renderer verwendet. Die Webview platziert die Blase oberhalb oder unterhalb der Fee und korrigiert sie bei Größenänderungen. Transparenz und getrennte Textdarstellung bleiben erhalten.
+- Rechtsklick auf NAVI öffnet das Aktionsmenü; alternativ **Was kannst du tun?** in der Companion-Ansicht. Hilfeangebote zeigen eine konkrete Diagnose mit Zeile. Nur diese Angebote erhalten den eingebetteten Knopf **Problem zeigen**.
 
 - **NAVI: Show Speech Bubble / Sprechblase anzeigen** aktiviert die Blase und zeigt eine Begrüßung.
 - **NAVI: Talk to Fairy / Mit NAVI sprechen** öffnet VS Code Chat mit vorbereitetem `@navi`. Erst der Benutzer sendet die Nachricht ab.
@@ -18,7 +21,7 @@ Bis zu 160 Unicode-Zeichen aus NAVIs eigener abgeschlossener Antwort werden als 
 
 ## Prüfung
 
-Go-Tests prüfen Unicode-Begrenzung, Nachrichtenpriorität, Ablauf, Platzierung bei verschiedenen Skalierungen, native Klickdurchleitung und Fokusverhalten. Der opt-in Test `NAVI_TEST_VISIBLE_BUBBLE=1` zeigt kurz eine native Testblase und prüft Position, Bewegung und Ausblenden ohne Aktivierung eines anderen Fensters. Der Browser-Test prüft Klartextdarstellung, den Chat-Knopf und Ausschalten. Der vollständige Vordergrund-Testhost konnte in dieser Sitzung wegen der Windows-Aktivierungsbeschränkung nicht aktiviert werden; eine End-to-End-Prüfung im echten VS-Code-Extension-Host bleibt erforderlich.
+Go-Tests prüfen Unicode-Begrenzung, Nachrichtenpriorität, Ablauf, Platzierung bei verschiedenen Skalierungen, native Klickdurchleitung und Fokusverhalten. Der opt-in Test `NAVI_TEST_VISIBLE_BUBBLE=1` zeigt kurz eine native Testblase. Der echte Browser prüft Klartextdarstellung, Knöpfe, Ausschalten, gleichrangige Textwechsel und Übereinstimmung der Spitze mit dem gerenderten Kern. Der native WinForms-Test prüft mitbewegte Blase, Rechtsklickereignis und Fokusverhalten; ein fokussierter VS-Code-Host prüft Diagnoseauswahl und Navigation. Menschliche Sichtabnahme und echte Modellantworten bleiben offen. Aktuelle Nachweise im [Statusbericht](STATUS.md).
 
 Die visuelle Überarbeitung verwendet einen durchscheinenden Hintergrund mit separat lesbarem Text. Der Zeiger folgt dem leuchtenden Feenkern; das aktuelle Modell hat keinen gezeichneten Mund. Die native Blase wird selbst gezeichnet und verwendet kein Windows-Tooltip mehr. Rastertests prüfen echte Alpha-Werte, Textpixel und die Spitze am Feenkern.
 

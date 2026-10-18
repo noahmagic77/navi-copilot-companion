@@ -4,11 +4,10 @@ import {randomUUID} from 'node:crypto';
 import {runModelTurn} from './modelTurn';
 import type {ActivityState} from '../integration/activity';
 function config():vscode.WorkspaceConfiguration {return vscode.workspace.getConfiguration('navi');}
-export function registerNaviParticipant(context:vscode.ExtensionContext,store:LocalHistoryStore,onPrompt?:(prompt:string)=>Promise<void>,onState?:(id:string,state:ActivityState,message?:string)=>void):vscode.Disposable {
+export function registerNaviParticipant(context:vscode.ExtensionContext,store:LocalHistoryStore,onState?:(id:string,state:ActivityState,message?:string)=>void):vscode.Disposable {
  const handler:vscode.ChatRequestHandler=async(request,_chatContext,stream,token)=>{
   const text=request.prompt.trim();
   if(!text){stream.markdown('Please enter a question for NAVI.');return;}
-  if(onPrompt){try{await onPrompt(text);}catch(error){console.error('NAVI offline analysis failed',error);}}
   const prefix=request.command==='explain'?'Explain the following clearly and accurately:\n\n':request.command==='summarize'?'Summarize the following concisely:\n\n':'Respond accurately to the following request:\n\n';
   const messages=[vscode.LanguageModelChatMessage.User(prefix+text)];
   const id=randomUUID();

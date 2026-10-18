@@ -1,42 +1,78 @@
 import * as vscode from 'vscode';
 import { registerNaviParticipant } from './chat/participant';
 import { LocalHistoryStore } from './storage/localHistoryStore';
-import { SessionJournal } from './storage/sessionJournal';
 import { NaviView } from './ui/naviView';
-import { analyzePrompt, potentialTopicChange } from './core/promptAnalyzer';
-import { parseTokenMetrics } from './core/otelParser';
 import { OverlayController } from './overlay/overlayController';
 import { GreetingCycle } from './core/greetingCycle';
 import {ActivityController,type ActivityEvent} from './integration/activity';
 import {NaviBridge} from './integration/bridge';
 import {join} from 'node:path';
-import {Brain} from './brain/brain';
+import {Brain,type EditorObservation} from './brain/brain';
+import {ExpressionController,isActiveActivity,describeExpression} from './brain/expression';
+import {Companion} from './companion/companion';
+import type {VoiceProvider} from './integration/voice';
 
-let journal:SessionJournal|undefined;
+let activeCompanion:Companion|undefined;
 
-export async function activate(context:vscode.ExtensionContext):Promise<void> {
+export async function activate(context:vscode.ExtensionContext):Promise<{registerVoiceProvider(provider:VoiceProvider):vscode.Disposable;getCompanionState():ReturnType<Companion['snapshot']>;getEditorAnchorState():OverlayController['editorAnchorState']}> {
   const history=new LocalHistoryStore(context);
-  journal=new SessionJournal(context.globalStorageUri.fsPath);
-  await journal.initialize();
-  // Reconstruct any stale SQLite cache from sanitized local journals on startup.
-  await journal.rebuild();
   const overlay=new OverlayController(context.extensionUri);
   const view=new NaviView(context.extensionUri,()=>overlay.audioActive,cue=>overlay.playSound(cue));
   const brain=new Brain(vscode.window.state.focused);
+  const expression=new ExpressionController(frame=>{
+    overlay.express(frame);
+    if(frame.state==='acknowledge')overlay.say('');
+    if(frame.message)overlay.say(frame.message);
+    view.showExpression(frame);
+    const cue=frame.state==='acknowledge'?'discover':frame.state==='error'||frame.state==='offer'?'hint':undefined;
+    if(cue&&!overlay.playSound(cue))void view.playSound(cue);
+  });
+  const expressionTimer=setInterval(()=>expression.tick(),80);expressionTimer.unref();
+  context.subscriptions.push({dispose:()=>clearInterval(expressionTimer)});
+  const syncEditorPerception=(editor:vscode.TextEditor|undefined):void=>{
+    if(!editor){brain.editor(null);return;}
+    const selection=editor.selection;
+    const contextKind=selection.isEmpty?'line':'selection';
+    const document=editor.document;
+    const startOffset=selection.isEmpty
+      ? Math.max(document.offsetAt(new vscode.Position(selection.active.line,0)),document.offsetAt(selection.active)-1000)
+      : document.offsetAt(selection.start);
+    const requestedEnd=selection.isEmpty
+      ? document.offsetAt(new vscode.Position(selection.active.line,selection.active.character+1000))
+      : document.offsetAt(selection.end);
+    const endOffset=Math.max(startOffset,Math.min(requestedEnd,startOffset+2000));
+    const boundedRange=new vscode.Range(document.positionAt(startOffset),document.positionAt(endOffset));
+    const text=document.getText(boundedRange);
+    const position=(value:vscode.Position)=>({line:value.line,character:value.character});
+    const diagnostics:EditorObservation['diagnostics']=vscode.languages.getDiagnostics(document.uri).slice(0,25).map(diagnostic=>({
+      severity:diagnostic.severity===vscode.DiagnosticSeverity.Error?'error':diagnostic.severity===vscode.DiagnosticSeverity.Warning?'warning':diagnostic.severity===vscode.DiagnosticSeverity.Information?'information':'hint',
+      source:diagnostic.source??null,
+      code:diagnostic.code===undefined?null:typeof diagnostic.code==='object'?String(diagnostic.code.value):String(diagnostic.code),
+      message:diagnostic.message.slice(0,500),
+      start:position(diagnostic.range.start),end:position(diagnostic.range.end)
+    }));
+    brain.editor({
+      languageId:document.languageId,version:document.version,
+      selection:{start:position(selection.start),end:position(selection.end)},
+      contextKind,contextText:text,diagnostics
+    });
+  };
+  let editorRefreshTimer:ReturnType<typeof setTimeout>|undefined;
+  const queueEditorPerception=():void=>{
+    if(editorRefreshTimer)clearTimeout(editorRefreshTimer);
+    editorRefreshTimer=setTimeout(()=>syncEditorPerception(vscode.window.activeTextEditor),100);
+  };
+  syncEditorPerception(vscode.window.activeTextEditor);
   let currentActivity:ActivityEvent|undefined;
   const activity=new ActivityController(event=>{
     brain.observe(event);
-    currentActivity=event.state==='busy'?event:undefined;
-    const label=event.source==='codex'?'Codex':'NAVI';
-    const text=event.state==='busy'?`${label}: Ich bearbeite deine Anfrage.`:
-      event.state==='error'?`${label}: Die Anfrage konnte nicht abgeschlossen werden.`:
-      event.state==='cancelled'?`${label}: Anfrage beendet oder abgebrochen.`:
-      `${label}: ${event.message || 'Anfrage abgeschlossen.'}`;
-    overlay.motion(event.state==='busy'?'think':event.state==='error'?'hint':event.state==='completed'?'celebrate':'hover');
-    overlay.say(text);
-    void view.showActivity({...event,message:text});
+    currentActivity=isActiveActivity(event)?event:undefined;
+    expression.observe(brain.snapshot(),event);
   });
-  const activityTimer=setInterval(()=>{activity.expire();if(currentActivity)overlay.motion('think');},4000);
+  const companion=new Companion(context,brain,expression,overlay,view,()=>!!currentActivity);
+  activeCompanion=companion;
+  context.subscriptions.push(companion);
+  const activityTimer=setInterval(()=>activity.expire(),4000);
   activityTimer.unref();context.subscriptions.push({dispose:()=>clearInterval(activityTimer)});
   let codexBridge:NaviBridge|undefined;
   let codexConnection:Promise<NaviBridge>|undefined;
@@ -52,39 +88,36 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
     return codexConnection;
   };
   context.subscriptions.push({dispose:()=>{integrationDisposed=true;void codexBridge?.dispose();}});
-  context.subscriptions.push(overlay.onSoundFailure(cue=>void view.playSound(cue)));
+  context.subscriptions.push(
+    overlay.onSoundFailure(cue=>void view.playSound(cue)),
+    overlay.onPointer(point=>brain.pointer(point)),
+    {dispose:()=>{if(editorRefreshTimer)clearTimeout(editorRefreshTimer);}},
+    vscode.window.onDidChangeTextEditorSelection(event=>{if(event.textEditor===vscode.window.activeTextEditor)queueEditorPerception();}),
+    vscode.workspace.onDidChangeTextDocument(event=>{if(event.document===vscode.window.activeTextEditor?.document)queueEditorPerception();}),
+    vscode.languages.onDidChangeDiagnostics(event=>{
+      const document=vscode.window.activeTextEditor?.document;
+      if(document&&event.uris.some(uri=>uri.toString()===document.uri.toString()))queueEditorPerception();
+    })
+  );
   const greetings=new GreetingCycle();
   const greet=()=>{
-    if (currentActivity || !vscode.window.state.focused || !vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled',true)) return;
+    if (companion.occupied || expression.snapshot().state!=='idle' || !vscode.window.state.focused || !vscode.workspace.getConfiguration('navi').get<boolean>('fairy.animationEnabled',true)) return;
     const id=greetings.next(Date.now());
     if(id){overlay.motion(id);void view.showGreeting(id);}
   };
+  const useLegacyGreetings=()=>{const config=vscode.workspace.getConfiguration('navi');return !config.get<boolean>('companion.enabled',true)||!config.get<boolean>('companion.lifelike',true);};
   context.subscriptions.push(
-    vscode.window.onDidChangeWindowState(state=>{brain.focus(state.focused);if(state.focused) greet();}),
-    vscode.window.onDidChangeActiveTextEditor(editor=>{if(editor) greet();})
+    vscode.window.onDidChangeWindowState(state=>{brain.focus(state.focused);if(state.focused&&useLegacyGreetings())greet();}),
+    vscode.window.onDidChangeActiveTextEditor(editor=>{syncEditorPerception(editor);if(editor&&useLegacyGreetings())greet();})
   );
-  context.subscriptions.push(overlay,view.onMotion(({id,preview})=>{if(!currentActivity||id==='think')overlay.motion(id,preview);}),view.onAnalysis(result=>{if(!currentActivity)overlay.motion(result.hints.length?'hint':'celebrate');}));
+  context.subscriptions.push(overlay,view.onMotion(({id,preview})=>{if(expression.snapshot().state==='idle')overlay.motion(id,preview);}),view.onGameAction(action=>{if(action.type==='start'&&!currentActivity)void overlay.startGame(action.mode);else if(action.type==='stop')overlay.stopGame();}));
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(NaviView.viewId,view),view);
-  const session=journal.newSessionId();
-  const workspaceId=journal.workspaceKey(vscode.workspace.workspaceFolders?.[0]?.uri.toString()??'no-workspace');
-  let lastPrompt='';
-  // Only NAVI's own Chat Participant requests are observed. Not the private Copilot history.
-  registerNaviParticipant(context,history,async prompt=>{
-    const analysis=analyzePrompt(prompt,{topicChanged:!!lastPrompt&&potentialTopicChange(lastPrompt,prompt)});
-    lastPrompt=prompt; // in-memory only, discarded at deactivation
-    await view.showAnalysis(analysis);
-    overlay.motion(analysis.hints.length?'hint':'celebrate');
-    if(vscode.workspace.getConfiguration('navi').get<boolean>('analytics.enabled',false)){
-      for(const hint of analysis.hints){
-        try{await journal?.record({workspaceId,sessionId:session,type:'hint',code:hint.code});}
-        catch(err){console.error('NAVI sanitized event persistence failed',err);}
-      }
-    }
-  },(id,state,message)=>{activity.update('vscode',id,state,message);});
+  // Only NAVI's own requests drive activity; no prompt scoring or analysis.
+  registerNaviParticipant(context,history,(id,state,message)=>{activity.update('vscode',id,state,message);});
 
   context.subscriptions.push(
     vscode.commands.registerCommand('navi.explainState',async()=>{
-      const document=await vscode.workspace.openTextDocument({language:'markdown',content:brain.describe()});
+      const document=await vscode.workspace.openTextDocument({language:'markdown',content:brain.describe()+describeExpression(expression.snapshot())});
       await vscode.window.showTextDocument(document,{preview:true,preserveFocus:true});
     }),
     vscode.commands.registerCommand('navi.configureCodex',async()=>{
@@ -122,10 +155,11 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
       if(target) await overlay.flyTo(target.x,target.y);
     }),
     vscode.commands.registerCommand('navi.cancelFlight',()=>overlay.cancelTarget()),
+    vscode.commands.registerCommand('navi.playGame',()=>overlay.playGame()),
+    vscode.commands.registerCommand('navi.stopGame',()=>overlay.stopGame()),
     vscode.commands.registerCommand('navi.openCompanion',async()=>{await vscode.commands.executeCommand('navi.companion.focus');}),
     vscode.commands.registerCommand('navi.showStatus',async()=>{
-      const enabled=vscode.workspace.getConfiguration('navi').get<boolean>('analytics.enabled',false);
-      await vscode.window.showInformationMessage(`NAVI TypeScript companion active. Sanitized analytics: ${enabled?'enabled':'disabled'}. External Copilot chat history is not accessed.`);
+      await vscode.window.showInformationMessage('NAVI ist aktiv. Die Fee begleitet dich mit Wahrnehmung, Reaktionen und ausdrücklicher Problemhilfe.');
     }),
     vscode.commands.registerCommand('navi.openDataFolder',async()=>{
       await vscode.workspace.fs.createDirectory(history.folder);
@@ -134,49 +168,10 @@ export async function activate(context:vscode.ExtensionContext):Promise<void> {
     vscode.commands.registerCommand('navi.clearHistory',async()=>{
       if(await vscode.window.showWarningMessage('Permanently delete NAVI’s saved chat history (does not affect Copilot)?',{modal:true},'Delete history')!=='Delete history')return;
       await history.clear();void vscode.window.showInformationMessage('NAVI chat history deleted.');
-    }),
-    vscode.commands.registerCommand('navi.clearAnalytics',async()=>{
-      if(await vscode.window.showWarningMessage('Permanently delete sanitized NAVI analytics for this VS Code profile?',{modal:true},'Delete analytics')!=='Delete analytics')return;
-      await journal?.clear();void vscode.window.showInformationMessage('NAVI analytics deleted.');
-    }),
-    vscode.commands.registerCommand('navi.exportAnalytics',async()=>{
-      const target=await vscode.window.showSaveDialog({saveLabel:'Export sanitized NAVI events',filters:{JSONL:['jsonl']}});
-      if(!target)return;
-      const result=await journal!.exportJsonl();
-      await vscode.workspace.fs.writeFile(target,new TextEncoder().encode(result));
-      void vscode.window.showInformationMessage('Sanitized NAVI event export complete.');
-    }),
-    vscode.commands.registerCommand('navi.rebuildIndex',async()=>{
-      const status=await journal!.rebuild();
-      void vscode.window.showInformationMessage(`NAVI: ${status.eventCount} events, ${status.sessionCount} sessions (${status.mode}).`);
-    }),
-    vscode.commands.registerCommand('navi.checkPrompt',async()=>{
-      const text=await vscode.window.showInputBox({title:'NAVI: Check Prompt',prompt:'Local analysis; no model request; text not stored.',ignoreFocusOut:true});
-      if(!text)return;
-      const a=analyzePrompt(text);await view.showAnalysis(a);
-      overlay.motion(a.hints.length?'hint':'celebrate');
-      const msg=a.hints.map(h=>h.text).join(' · ') || 'No obvious issues detected.';
-      void vscode.window.showInformationMessage(msg);
-    }),
-    vscode.commands.registerCommand('navi.importOtel',async()=>{
-      const chosen=await vscode.window.showOpenDialog({canSelectMany:false,filters:{JSONL:['jsonl']},openLabel:'Import explicit local metrics'});
-      if(!chosen?.length)return;
-      const file=chosen[0];
-      const metadata=await vscode.workspace.fs.stat(file);
-      if(metadata.size>5_000_000){void vscode.window.showWarningMessage('NAVI only accepts metric files up to 5 MB.');return;}
-      const input=new TextDecoder().decode(await vscode.workspace.fs.readFile(file));
-      let added=0;
-      for(const line of input.split(/\r?\n/).slice(0,5000)){
-        if(!line.trim())continue;
-        try{
-          const parsed=parseTokenMetrics(JSON.parse(line));
-          if(parsed){await journal!.record({workspaceId,sessionId:session,type:'token_metrics',inputTokens:parsed.inputTokens,outputTokens:parsed.outputTokens,cachedInputTokens:parsed.cachedInputTokens});added++;}
-        }catch{ /* skip malformed or unsupported spans */ }
-      }
-      void vscode.window.showInformationMessage(`Imported ${added} sanitized metric records. Reimporting the same file creates duplicates.`);
     })
   );
   await overlay.update();
   greet();
+  return {registerVoiceProvider:provider=>companion.registerVoiceProvider(provider),getCompanionState:()=>companion.snapshot(),getEditorAnchorState:()=>overlay.editorAnchorState};
 }
-export function deactivate():void{journal?.close();}
+export async function deactivate():Promise<void>{await activeCompanion?.stopListening();}
