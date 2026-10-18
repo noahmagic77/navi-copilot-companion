@@ -32,6 +32,21 @@ exports.run=async()=>{
     for(const retired of ['navi.checkPrompt','navi.importOtel','navi.exportAnalytics','navi.clearAnalytics','navi.rebuildIndex'])assert(!commands.includes(retired),retired);
     assert(!Object.keys(require.cache).some(file=>/[/\\](sessionJournal|otelParser|promptAnalyzer)\.js$/.test(file)));
     report.checks.push('retired analysis/metrics commands and journal/index modules are absent');
+    const {OverlayController}=require('../dist/src/overlay/overlayController.js');
+    const playback=new OverlayController(extension.extensionUri),packets=[];
+    playback.bridge.send=packet=>packets.push(packet);
+    const frame=(state,engaged=false)=>({state,engaged,age:0,source:'manual',message:'',reason:'Animation regression fixture'});
+    try{
+      playback.express(frame('welcoming'));playback.motion('listen',true);
+      const before=packets.length;playback.express(frame('curious'));playback.express(frame('idle'));
+      assert(playback.previewing);assert.equal(packets.length,before,'Ambient expression interrupted native preview');
+      playback.motion('greet-wave',true);assert.equal(packets.at(-1).motion,'greet-wave');
+      playback.express(frame('welcoming'));playback.motion('greet-wave',false);
+      assert(!playback.previewing);assert.equal(packets.at(-1).state,'welcoming','Preview stop lost the latest expression');
+      playback.motion('figure8',true);playback.express(frame('working',true));
+      assert(!playback.previewing);assert.equal(packets.at(-1).state,'working','A real request must preempt preview');
+    }finally{playback.dispose();}
+    report.checks.push('native preview ownership survives ambient/idle expressions, restores pending expression and yields to requests');
     const config=vscode.workspace.getConfiguration('navi');
     await config.update('overlay.enabled',false,vscode.ConfigurationTarget.Global);
     await config.update('fairy.animationEnabled',true,vscode.ConfigurationTarget.Global);

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.1 — 2026-10-18 (Animation hotfix preview)
+
+- Keep explicit animation previews and the full 110-item sequence active across ambient expressions and idle recovery; retain priority for real engaged requests and restore the latest expression when preview ends.
+- Loop native previews without requiring repeated Webview commands. Allow explicit greeting selections after listening/thinking, while automatic greetings continue to yield.
+- Resume native preview when the embedded view returns, reset progress immediately and use actual catalogue durations for natural idle clips. Correct the embedded rest threshold from nine to 90 seconds.
+- Exercise every one of the 110 motions through multiple actual browser DOM/CSS cycles and two native Windows raster cycles. Add complete-sequence, lifecycle, priority and host-controller regression checks; run the browser catalogue audit in GitHub CI.
+- Keep measured diagnostic flight experimental; its separate hosted-Windows beacon failure and complete VS Code overlay acceptance remain open.
+
 ## 0.6.0 — 2026-10-18 (Preview)
 
 - Add bounded active-companion decisions: make space after three changes in five seconds, return after ten quiet seconds, and offer diagnostic help with five-minute/hourly budgets and explicit priorities.

@@ -1,0 +1,800 @@
+{
+    "clock":  "controlled requestAnimationFrame; actual Chromium DOM and CSS",
+    "motions":  [
+                    {
+                        "id":  "greet",
+                        "bodyTravelPixels":  47.61708605490261,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "hover",
+                        "bodyTravelPixels":  25.962224318467012,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "drift",
+                        "bodyTravelPixels":  142.31468570351973,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "curious",
+                        "bodyTravelPixels":  34.76171700894534,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "figure8",
+                        "bodyTravelPixels":  167.09671357833463,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "stretch",
+                        "bodyTravelPixels":  38.47479787489598,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "twirl",
+                        "bodyTravelPixels":  36.80248062587642,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "listen",
+                        "bodyTravelPixels":  33.25255345638888,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "think",
+                        "bodyTravelPixels":  26.912043703799235,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "hint",
+                        "bodyTravelPixels":  59.40290467686576,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "celebrate",
+                        "bodyTravelPixels":  82.43309402931325,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "rest",
+                        "bodyTravelPixels":  27.007679280301005,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-breeze",
+                        "bodyTravelPixels":  56.616887340262714,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-leaf",
+                        "bodyTravelPixels":  74.72670335629694,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-feather",
+                        "bodyTravelPixels":  71.37268277267991,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-ribbon",
+                        "bodyTravelPixels":  73.25123598315594,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-cloud",
+                        "bodyTravelPixels":  49.87456557605289,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-reed",
+                        "bodyTravelPixels":  55.937747170314246,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-sail",
+                        "bodyTravelPixels":  92.62419024185853,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-petal",
+                        "bodyTravelPixels":  126.93748027848197,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-cradle",
+                        "bodyTravelPixels":  132.9308578476044,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-tide",
+                        "bodyTravelPixels":  107.31321200569855,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "sway-lullaby",
+                        "bodyTravelPixels":  122.72405258648362,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-sunrise",
+                        "bodyTravelPixels":  38.9906906033966,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-moon",
+                        "bodyTravelPixels":  39.92846620823795,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-rainbow",
+                        "bodyTravelPixels":  61.5271502685733,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-bridge",
+                        "bodyTravelPixels":  81.30114258328477,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-vault",
+                        "bodyTravelPixels":  45.337655863304185,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-comet",
+                        "bodyTravelPixels":  65.53346086366872,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-dawn",
+                        "bodyTravelPixels":  46.421269324416365,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-dusk",
+                        "bodyTravelPixels":  88.98096449112023,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-leap",
+                        "bodyTravelPixels":  65.68805181245368,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-return",
+                        "bodyTravelPixels":  71.19106576811448,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "arc-crescent",
+                        "bodyTravelPixels":  87.88140879970916,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-dewdrop",
+                        "bodyTravelPixels":  47.47551430042649,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-pebble",
+                        "bodyTravelPixels":  36.699726835086935,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-skip",
+                        "bodyTravelPixels":  48.34957485917016,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-spring",
+                        "bodyTravelPixels":  77.77414633142816,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-bubble",
+                        "bodyTravelPixels":  47.86613996520819,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-dance",
+                        "bodyTravelPixels":  46.26408301631082,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-step",
+                        "bodyTravelPixels":  70.24491898424041,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-rain",
+                        "bodyTravelPixels":  59.497286425264804,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-heart",
+                        "bodyTravelPixels":  55.15657586411706,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-jump",
+                        "bodyTravelPixels":  74.80295762529781,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "bob-tip",
+                        "bodyTravelPixels":  58.92004640471357,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-halo",
+                        "bodyTravelPixels":  61.72889896547321,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-clock",
+                        "bodyTravelPixels":  78.84491961122163,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-back",
+                        "bodyTravelPixels":  98.17154960455703,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-ellipse",
+                        "bodyTravelPixels":  97.47714095366155,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-satellite",
+                        "bodyTravelPixels":  99.6217801349183,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-pool",
+                        "bodyTravelPixels":  99.91073656144269,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-wreath",
+                        "bodyTravelPixels":  95.64247991542723,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-wheel",
+                        "bodyTravelPixels":  124.02611487102222,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-pearl",
+                        "bodyTravelPixels":  88.60709912467512,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-loop",
+                        "bodyTravelPixels":  127.53045607747977,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "orbit-compass",
+                        "bodyTravelPixels":  137.490838633925,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-wave",
+                        "bodyTravelPixels":  58.53069099925269,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-zigzag",
+                        "bodyTravelPixels":  77.55235135377907,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-stitch",
+                        "bodyTravelPixels":  89.38264223421682,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-stream",
+                        "bodyTravelPixels":  104.63799908560944,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-lightning",
+                        "bodyTravelPixels":  107.82910656075195,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-stairs",
+                        "bodyTravelPixels":  90.77966846557659,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-meander",
+                        "bodyTravelPixels":  107.17333712845746,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-thread",
+                        "bodyTravelPixels":  135.5498174508546,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-snake",
+                        "bodyTravelPixels":  127.145985363125,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-ripple",
+                        "bodyTravelPixels":  121.73409531569206,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "trace-weave",
+                        "bodyTravelPixels":  140.2671780681425,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-shell",
+                        "bodyTravelPixels":  30.565661791706717,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-whirl",
+                        "bodyTravelPixels":  41.39122094650628,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-bloom",
+                        "bodyTravelPixels":  59.37928950610643,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-galaxy",
+                        "bodyTravelPixels":  63.589315023516335,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-vortex",
+                        "bodyTravelPixels":  63.21018768054719,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-unfurl",
+                        "bodyTravelPixels":  58.610949464498525,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-coil",
+                        "bodyTravelPixels":  68.21550145012569,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-wisp",
+                        "bodyTravelPixels":  86.3844758408014,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-rose",
+                        "bodyTravelPixels":  55.934494765573774,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-fountain",
+                        "bodyTravelPixels":  70.08985956677328,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "spiral-home",
+                        "bodyTravelPixels":  66.49808827665649,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-breathe",
+                        "bodyTravelPixels":  31.975354975682443,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-beacon",
+                        "bodyTravelPixels":  34.209052959503275,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-firefly",
+                        "bodyTravelPixels":  37.54456257156287,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-star",
+                        "bodyTravelPixels":  38.676612140615426,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-lantern",
+                        "bodyTravelPixels":  31.47769085488324,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-heart",
+                        "bodyTravelPixels":  31.432472624348218,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-shimmer",
+                        "bodyTravelPixels":  36.26280721525018,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-dawn",
+                        "bodyTravelPixels":  36.441604436140025,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-signal",
+                        "bodyTravelPixels":  38.59636383168238,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-aura",
+                        "bodyTravelPixels":  41.65784732439256,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "light-goodnight",
+                        "bodyTravelPixels":  32.111829158926774,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-nod",
+                        "bodyTravelPixels":  38.511461901620926,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-bow",
+                        "bodyTravelPixels":  44.44449271282102,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-peek",
+                        "bodyTravelPixels":  53.317367080248815,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-lean",
+                        "bodyTravelPixels":  59.12499930173023,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-shake",
+                        "bodyTravelPixels":  44.69288066549303,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-welcome",
+                        "bodyTravelPixels":  36.7739247070584,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-proud",
+                        "bodyTravelPixels":  58.08368515375035,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-shy",
+                        "bodyTravelPixels":  50.55943654215304,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-wonder",
+                        "bodyTravelPixels":  45.261668185342,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-thanks",
+                        "bodyTravelPixels":  57.602101038417,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "gesture-wave",
+                        "bodyTravelPixels":  46.99687495866081,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-wave",
+                        "bodyTravelPixels":  42.94257917459197,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-bow",
+                        "bodyTravelPixels":  39.4096226160566,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-hop",
+                        "bodyTravelPixels":  50.933245938188534,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-circle",
+                        "bodyTravelPixels":  87.5872184239801,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-sun",
+                        "bodyTravelPixels":  70.40002780013656,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-spark",
+                        "bodyTravelPixels":  36.610794049979305,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-spiral",
+                        "bodyTravelPixels":  64.64165051628942,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-sway",
+                        "bodyTravelPixels":  125.0751230597036,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-dance",
+                        "bodyTravelPixels":  126.17242255025462,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    },
+                    {
+                        "id":  "greet-peek",
+                        "bodyTravelPixels":  46.94970968969243,
+                        "wingFrames":  12,
+                        "repeats":  true,
+                        "survivesAmbient":  true
+                    }
+                ],
+    "errors":  [
+
+               ],
+    "completeSequence":  true,
+    "priorities":  {
+                       "restored":  true,
+                       "busy":  true,
+                       "paused":  true,
+                       "resumed":  true,
+                       "hidden":  true,
+                       "returns":  true
+                   },
+    "restAfter90Seconds":  true,
+    "success":  true,
+    "version":  "0.6.1",
+    "nativeRenderer":  {
+                           "motions":  110,
+                           "cyclesPerMotion":  2,
+                           "visibleAndChangingRaster":  true,
+                           "goTestsPassed":  true
+                       },
+    "existingUnitTests":  83,
+    "isolatedHostPassed":  true,
+    "existingBrowserRegressionPassed":  true,
+    "fullDiagnosticFlightAccepted":  false
+}

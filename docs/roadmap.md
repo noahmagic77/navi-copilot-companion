@@ -8,6 +8,10 @@ Stand: 18.10.2026. Diese Datei beschreibt Reihenfolge, Umfang und Abnahmekriteri
 
 Sprache hat eine registrierbare Anbieterschnittstelle, Befehlsparser, sichtbaren Zuhörmodus und Stopplogik. Ein kompatibler vorhandener Aufnahme-/Transkriptionsanbieter ist in dieser Umgebung **nicht angebunden**; ohne ihn bleibt die Funktion deaktiviert. Kein zusätzliches Modell oder neuer Cloud-Dienst wird vorausgesetzt. Nächste Abnahme: aktuelle VSIX installieren und Zusammenspiel mit Overlay, Spielen und realen Modellanfragen prüfen.
 
+## Animations-Hotfix v0.6.1
+
+Vorschau-Prioritäten, native Schleifen, Begrüßungswechsel und Ruhezustand korrigiert. Jede der 110 Animationen wird im Browser und im Windows-Renderer automatisch geprüft. Die offene Diagnoseflug-Abnahme bleibt ein eigener Punkt; der Hotfix setzt sie nicht auf erledigt.
+
 ## Aktuelle Position
 
 **Expliziter Quick Fix lokal ergänzt:** Nach „Problem beheben“ darf ein eindeutig vom Sprachdienst empfohlener Vorschlag sofort angewendet werden; mehrere oder nicht empfohlene Vorschläge bleiben auswählbar. NAVIs Symbol markiert die tatsächliche Diagnosezeile. Die [markergebundene Pixelnavigation](EDITOR-ANCHORS.md) ist jetzt lokal implementiert: echte Erkennung und native Landung sind geprüft; die vollständige VS-Code-Abnahme mit Zoom, Umbruch und geteilten Editoren bleibt offen. Allgemeines autonomes Reparieren ohne Diagnose/Sprachdienst ist nicht umgesetzt.

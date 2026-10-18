@@ -110,7 +110,7 @@ export async function activate(context:vscode.ExtensionContext):Promise<{registe
     vscode.window.onDidChangeWindowState(state=>{brain.focus(state.focused);if(state.focused&&useLegacyGreetings())greet();}),
     vscode.window.onDidChangeActiveTextEditor(editor=>{syncEditorPerception(editor);if(editor&&useLegacyGreetings())greet();})
   );
-  context.subscriptions.push(overlay,view.onMotion(({id,preview})=>{if(expression.snapshot().state==='idle')overlay.motion(id,preview);}),view.onGameAction(action=>{if(action.type==='start'&&!currentActivity)void overlay.startGame(action.mode);else if(action.type==='stop')overlay.stopGame();}));
+  context.subscriptions.push(overlay,view.onMotion(({id,preview})=>{const frame=expression.snapshot();if(!frame.engaged&&(preview||overlay.previewing||frame.state==='idle'))overlay.motion(id,preview);}),view.onGameAction(action=>{if(action.type==='start'&&!currentActivity)void overlay.startGame(action.mode);else if(action.type==='stop')overlay.stopGame();}));
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(NaviView.viewId,view),view);
   // Only NAVI's own requests drive activity; no prompt scoring or analysis.
   registerNaviParticipant(context,history,(id,state,message)=>{activity.update('vscode',id,state,message);});

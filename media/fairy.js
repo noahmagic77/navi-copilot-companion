@@ -193,6 +193,7 @@
     }
     transitionPending = true;
     scene.dataset.animation = id;
+    document.getElementById('motion-progress').value = 0;
     nextFrameAt = 0;
     if(notify)vscode.postMessage({type: 'motion', motion: id, preview: source === 'preview'});
     if (source === 'preview') choice.value = id;
@@ -203,18 +204,22 @@
     mode = 'auto';
     previewQueue = [];
     choice.value = 'auto';
+    if (expression.state !== 'idle') {
+      enterMotion(expressionProfiles[expression.state].motion, 'integration');
+      return;
+    }
     if (modelBusy) {
       enterMotion('think', 'context', 16 + Math.random() * 8);
       return;
     }
     const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
     lastIdleMotion = nextIdle;
-    enterMotion(nextIdle, 'auto', 8 + Math.random() * 7);
+    enterMotion(nextIdle);
   }
 
   function advanceMotion(dt) {
     active.age += dt;
-    if(expression.state!=='idle')return;
+    if(expression.state!=='idle'&&mode==='auto')return;
     const quietFor = Math.max(0, elapsed - lastInteraction) * 1000;
     const bubbleWindowOpen = !speechBubble.hidden && Date.now() < bubbleUntil;
     const canResumeIdle = shouldScheduleIdle({
@@ -231,10 +236,10 @@
       // Keep a short recovery window when the bubble is active so that reactions remain visible.
       return;
     }
-    if (mode === 'auto' && !modelBusy && quietFor > 9000 && active.id !== 'rest' && bubbleWindowOpen && bubblePriority >= 2) {
+    if (mode === 'auto' && !modelBusy && quietFor > 90000 && active.id !== 'rest' && bubbleWindowOpen && bubblePriority >= 2) {
       return;
     }
-    if (mode === 'auto' && !modelBusy && quietFor > 9000 && active.id !== 'rest') {
+    if (mode === 'auto' && !modelBusy && quietFor > 90000 && active.id !== 'rest') {
       enterMotion('rest', 'context');
     }
     if (active.age < active.duration) return;
@@ -255,7 +260,7 @@
         const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
         lastIdleMotion = nextIdle;
         idleCooldownUntil = elapsed * 1000 + 8000;
-        enterMotion(nextIdle, 'auto', 9 + Math.random() * 8);
+        enterMotion(nextIdle);
       } else {
         resumeNaturalMotion();
       }
@@ -264,7 +269,7 @@
         const nextIdle = chooseIdleMotion(lastIdleMotion, idleSequence);
         lastIdleMotion = nextIdle;
         idleCooldownUntil = elapsed * 1000 + 8000;
-        enterMotion(nextIdle, 'auto', 7 + Math.random() * 7);
+        enterMotion(nextIdle);
       } else {
         active.age = 0;
       }
@@ -331,7 +336,7 @@
       advanceMotion(dt);
       const sample=active.source==='preview'?samplePreviewMotion:sampleMotion;
       sample(active.id, active.age, elapsed, pointer, targetPose);
-      if(expression.state!=='idle')applyExpression(expression.state,expression.age+Math.max(0,elapsed-expression.at),targetPose);
+      if(expression.state!=='idle'&&mode==='auto')applyExpression(expression.state,expression.age+Math.max(0,elapsed-expression.at),targetPose);
       if(livingEnabled&&mode==='auto')applyPresence(living,elapsed,pointer,targetPose);
       if(elapsed<touchUntil){targetPose.scatter+=.65;targetPose.glow+=.2;}
       if(companionAway&&expression.state==='idle'&&mode==='auto'){targetPose.x=65+targetPose.x*.15;targetPose.y=30+targetPose.y*.15;targetPose.wingSpeed*=.65;}
@@ -366,8 +371,8 @@
     scene.dataset.motion = !visible ? 'hidden' : enabled ? 'running' : 'paused';
     toggle.setAttribute('aria-pressed', String(enabled));
     toggle.disabled = reduced;
-    choice.disabled = !enabled || modelBusy || expression.state!=='idle';
-    previewAll.disabled = !enabled || modelBusy || expression.state!=='idle';
+    choice.disabled = !enabled || modelBusy;
+    previewAll.disabled = !enabled || modelBusy;
     document.querySelectorAll('[data-game-mode]').forEach(button=>{button.disabled=modelBusy;});
     motionLabel.textContent = reduced ? 'Bewegung reduziert' : enabled ? 'Animation an' : 'Animation aus';
     toggle.title = reduced ? 'Die Systemeinstellung für reduzierte Bewegung wird berücksichtigt.' : enabled ? 'Animation pausieren' : 'Animation einschalten';
@@ -454,11 +459,15 @@
     if(data.type==='expression'&&Object.hasOwn(expressionProfiles,data.state)&&Number.isFinite(data.age)&&data.age>=0&&data.age<=86400&&typeof data.engaged==='boolean'){
       expression={state:data.state,age:data.age,at:elapsed,engaged:data.engaged};
       scene.dataset.expression=data.state;
-      modelBusy=data.engaged;mode='auto';previewQueue=[];choice.value='auto';lastInteraction=elapsed;
+      modelBusy=data.engaged;
       const labels={idle:'Ich bin da',acknowledge:'Nachricht angekommen',working:data.source==='codex'?'Codex arbeitet …':'NAVI arbeitet …',waiting:'Ich warte auf die Antwort …',offer:'Ein Hinweis für dich',uncertain:'Ziel genauer beschreiben?',completed:'Antwort angekommen · ungeprüft',cancelled:'Anfrage beendet',error:'Anfrage fehlgeschlagen',curious:'Was gibt es Neues?',pleased:'Ein kleiner Lichtblick',startled:'Huch!',sleepy:'Ich ruhe mich ein wenig aus',welcoming:'Da bist du wieder',attentive:'Ich schaue mit'};
       presence.textContent=labels[data.state];
       if(data.state==='acknowledge')hideBubble();
-      enterMotion(expressionProfiles[data.state].motion,'integration',undefined,false);
+      // Explicit previews own their choreography; real requests still take priority.
+      if(mode==='auto'||data.engaged){
+        mode='auto';previewQueue=[];choice.value='auto';lastInteraction=elapsed;
+        enterMotion(expressionProfiles[data.state].motion,'integration',undefined,false);
+      }
       if(typeof data.message==='string'&&data.message)showBubble(data.message,2);
       syncMotion();return;
     }
@@ -494,6 +503,7 @@
         enterMotion(selectGreeting(), 'feedback');
       }
       syncMotion();
+      if(returning&&mode!=='auto')vscode.postMessage({type:'motion',motion:active.id,preview:true});
       return;
     }
   });

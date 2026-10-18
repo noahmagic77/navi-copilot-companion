@@ -1,32 +1,34 @@
 # NAVI — Copilot Companion
 
+**Hotfix v0.6.1:** Die 110 Animationsvorschauen bleiben bei automatischen Begleiterreaktionen aktiv. Native Schleifen, Begrüßungswechsel und der Ruhezustand sind korrigiert. Alle 110 Einträge werden im Browser und im Windows-Renderer automatisch geprüft.
+
 **Lebendigere Fee:** Reaktionen auf Dateiwechsel, Auswahl, Scrollen, Speichern, Diagnoseänderungen, Tasks, Debugging und Berührung. Simulierte Aufmerksamkeit, ruhiges Abklingen, sanfte Atembewegungen und Mausblick ergänzen die Animationen. [Verhalten und Grenzen](docs/LIFELIKE.md).
 
-**Neu in der v0.6.0-Vorschau:** NAVI macht bei Editoraktivität Platz, bietet begrenzt Hilfe an und kann ausgewählte Probleme öffnen und markieren. Bestätigte Erinnerungen sind optional; eine Live-Gehirnansicht zeigt echte Entscheidungen. Sprachsteuerung hat eine Anbieterschnittstelle, bleibt ohne kompatiblen vorhandenen Mikrofon-/Transkriptionsanbieter deaktiviert. [Bedienung und Grenzen](docs/ACTIVE-COMPANION.md).
+**Neu in der v0.6.1-Vorschau:** NAVI macht bei Editoraktivität Platz, bietet begrenzt Hilfe an und kann ausgewählte Probleme öffnen und markieren. Bestätigte Erinnerungen sind optional; eine Live-Gehirnansicht zeigt echte Entscheidungen. Sprachsteuerung hat eine Anbieterschnittstelle, bleibt ohne kompatiblen vorhandenen Mikrofon-/Transkriptionsanbieter deaktiviert. [Bedienung und Grenzen](docs/ACTIVE-COMPANION.md).
 
-**[English release overview](docs/releases/v0.6.0.en.md) · [Alle Änderungen auf Deutsch](docs/releases/v0.6.0.de.md)**
+**[English release overview](docs/releases/v0.6.1.en.md) · [Alle Änderungen auf Deutsch](docs/releases/v0.6.1.de.md)**
 
 ## NAVI direkt herunterladen
 
-**[NAVI Copilot Companion v0.6.0 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.6.0.vsix)**
+**[NAVI Copilot Companion v0.6.1 – VSIX direkt herunterladen](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.6.1.vsix)**
 
-Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.6.0.vsix`.
+Die Datei ist direkt installierbar – **kein ZIP-Entpacken erforderlich**. Öffne in **VS Code Desktop → Erweiterungen → … → Install from VSIX…** und wähle die heruntergeladene `navi-copilot-companion-0.6.1.vsix`.
 
 [Installationsanleitung (Deutsch)](docs/INSTALLATION.md) · [Automatische Build-Ergebnisse](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain)
 
-Dies ist die **v0.6.0-Vorschau**, zur Veröffentlichung auf GitHub vorbereitet. Der Diagnoseflug ist experimentell; die vollständige VS-Code-Overlay-Abnahme bleibt offen. Kein Marketplace-Eintrag. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.6.0.vsix.sha256).
+Dies ist die **v0.6.1-Vorschau**, zur Veröffentlichung auf GitHub vorbereitet. Der Diagnoseflug ist experimentell; die vollständige VS-Code-Overlay-Abnahme bleibt offen. Kein Marketplace-Eintrag. [SHA-256-Prüfsumme](downloads/navi-copilot-companion-0.6.1.vsix.sha256).
 
 TypeScript VS Code companion with an animated fairy guide, editor-aware behavior and explicit problem navigation.
 
-**Status:** v0.6.0 is prepared as a GitHub preview with a VSIX and checksum. Publication status is shown on [GitHub Releases](https://github.com/noahmagic77/navi-copilot-companion/releases). Full diagnostic-flight acceptance in VS Code remains open. No Marketplace release.
+**Status:** v0.6.1 is prepared as a GitHub preview with a VSIX and checksum. Publication status is shown on [GitHub Releases](https://github.com/noahmagic77/navi-copilot-companion/releases). Full diagnostic-flight acceptance in VS Code remains open. No Marketplace release.
 
-**v0.6.0-Vorschau:** Rechtsklick auf NAVI oder **Was kannst du tun?** öffnet Programmieraktionen: Diagnosen durchgehen, bekannte Projektprobleme auswählen, VS-Code-Korrekturvorschläge öffnen und markierten Code mit `@navi` besprechen. Die Sprechblase hängt am tatsächlich dargestellten Feenkern. [Bedienung](docs/ACTIVE-COMPANION.md) · [Status und Test-VSIX](docs/STATUS.md). Die VSIX enthält diese Funktionen; den aktuellen Veröffentlichungsstand zeigt die Release-Seite.
+**v0.6.1-Vorschau:** Rechtsklick auf NAVI oder **Was kannst du tun?** öffnet Programmieraktionen: Diagnosen durchgehen, bekannte Projektprobleme auswählen, VS-Code-Korrekturvorschläge öffnen und markierten Code mit `@navi` besprechen. Die Sprechblase hängt am tatsächlich dargestellten Feenkern. [Bedienung](docs/ACTIVE-COMPANION.md) · [Status und Test-VSIX](docs/STATUS.md). Die VSIX enthält diese Funktionen; den aktuellen Veröffentlichungsstand zeigt die Release-Seite.
 
 ## Die Fee im Vordergrund (Windows x64)
 
-NAVI v0.6.0 enthält einen kleinen nativen Windows-Helfer. Die weiße Fee kann vor Editor, Terminal und Seitenleisten des aktiven VS-Code-Fensters fliegen. Außerhalb der Trefferfläche lässt ihr transparentes Fenster Mausklicks durch; es übernimmt keinen Tastaturfokus. Beim Wechsel zu einem anderen Fenster oder beim Minimieren wird sie ausgeblendet und ihre Animationsuhr angehalten. Der Helfer ist im VSIX enthalten; ein separater Download oder eine zusätzliche Browser-Laufzeit sind nicht erforderlich.
+NAVI v0.6.1 enthält einen kleinen nativen Windows-Helfer. Die weiße Fee kann vor Editor, Terminal und Seitenleisten des aktiven VS-Code-Fensters fliegen. Außerhalb der Trefferfläche lässt ihr transparentes Fenster Mausklicks durch; es übernimmt keinen Tastaturfokus. Beim Wechsel zu einem anderen Fenster oder beim Minimieren wird sie ausgeblendet und ihre Animationsuhr angehalten. Der Helfer ist im VSIX enthalten; ein separater Download oder eine zusätzliche Browser-Laufzeit sind nicht erforderlich.
 
-Die v0.6.0-Vorschau ergänzt drei Mausspiele über **NAVI: Mauspiel starten**: NAVI anklicken, NAVI den Mauszeiger fangen lassen oder NAVI im VS-Code-Fenster suchen. Treffer auf NAVI erlauben Spielinteraktionen und Klick-Glitzer; Rechtsklick öffnet das Aktionsmenü. Die vollständige Spielabnahme im normalen VS-Code-Profil bleibt offen.
+Die v0.6.1-Vorschau ergänzt drei Mausspiele über **NAVI: Mauspiel starten**: NAVI anklicken, NAVI den Mauszeiger fangen lassen oder NAVI im VS-Code-Fenster suchen. Treffer auf NAVI erlauben Spielinteraktionen und Klick-Glitzer; Rechtsklick öffnet das Aktionsmenü. Die vollständige Spielabnahme im normalen VS-Code-Profil bleibt offen.
 
 **Öffnen:** `Strg + Umschalt + P` → **NAVI: Show Foreground Fairy / Vordergrund-Fee anzeigen**. **NAVI: Hide Foreground Fairy / Vordergrund-Fee ausblenden** beendet den Helfer. **NAVI: Open Companion / Ansicht öffnen** zeigt Einstellungen und die Vorschau der 110 Bewegungen. Die Erweiterung startet den aktivierten Helfer nach dem VS-Code-Start; `navi.overlay.enabled` steuert dies pro Benutzer. Auf anderen Plattformen bleibt die eingebettete NAVI-Ansicht verfügbar.
 
@@ -65,11 +67,11 @@ Die helle Sprechblase zeigt kurze Reaktionen und Auszüge aus NAVIs eigenen Chat
 
 ## Installation über GitHub
 
-**[Installierbare VSIX v0.6.0](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.6.0.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
+**[Installierbare VSIX v0.6.1](https://raw.githubusercontent.com/noahmagic77/navi-copilot-companion/main/downloads/navi-copilot-companion-0.6.1.vsix)** · [Ausführliche Anleitung](docs/INSTALLATION.md)
 
 1. VSIX über den Link herunterladen (keine ZIP-Datei).
 2. VS Code Desktop öffnen und **Erweiterungen → … → Install from VSIX…** auswählen.
-3. Datei `navi-copilot-companion-0.6.0.vsix` auswählen und VS Code bei Bedarf neu laden.
+3. Datei `navi-copilot-companion-0.6.1.vsix` auswählen und VS Code bei Bedarf neu laden.
 
 Die Datei ist im Repository unter `downloads/` versioniert. Bei einer neuen Version muss dieser Download explizit erneuert werden; [GitHub Actions](https://github.com/noahmagic77/navi-copilot-companion/actions/workflows/ci.yml?query=branch%3Amain) stellt weiterhin temporäre Build-Artefakte bereit. Noch kein VS Code Marketplace Release.
 
@@ -116,7 +118,7 @@ SQLite analysis has been removed. Isolated VS Code tests cover diagnostic naviga
 
 NAVI ist Open Source unter der [MIT-Lizenz](LICENSE.md). Quellcode, Dokumentation und projekteigene Assets dürfen unter den Lizenzbedingungen genutzt, verändert und weitergegeben werden, auch kommerziell. Lizenzen von Drittkomponenten bleiben bestehen: [Hinweise](THIRD_PARTY_NOTICES.md). [Mitmachen](CONTRIBUTING.md). Die Veröffentlichung im VS Code Marketplace ist davon unabhängig.
 
-## Vorhandene KI-Zugänge verbinden (lokale v0.6.0-Entwicklungsvorschau)
+## Vorhandene KI-Zugänge verbinden (lokale v0.6.1-Entwicklungsvorschau)
 
 NAVI reagiert auf ihre eigenen Anfragen an das ausgewählte VS-Code-Modell. Für gezielte Codex-Meldungen ist eine gebündelte MCP-Brücke vorhanden: **NAVI: Configure Codex Connection / Codex-Verbindung einrichten** erzeugt die Konfiguration für den verwendeten Codex-Client. Kein zusätzliches KI-Modell erforderlich. Einrichtung und noch offene Live-Prüfungen: [KI-Verbindung](docs/AI-CONNECTION.md).
 
@@ -124,8 +126,8 @@ Das [Fee-Gehirn-Konzept](docs/FAIRY-BRAIN.md) beschreibt lokale Entscheidungsste
 
 [Das Fee-Gehirn bildlich erkunden](docs/fairy-brain.html): interaktive Offline-Konzeptgrafik mit Selbstmodell und sechs Reaktionsszenarien. Die HTML-Datei lokal im Browser öffnen; sie zeigt simulierte Zustände.
 
-Technischer Einstieg: [Spezifikation](docs/FAIRY-BRAIN-TECHNICAL.md) · [Umsetzungsplan](docs/FAIRY-BRAIN-PLAN.md). In der lokalen v0.6.0-Entwicklungsvorschau öffnet **NAVI: About My State / Eigenen Zustand erklären** eine regelbasierte Momentaufnahme ohne zusätzlichen Modellaufruf.
+Technischer Einstieg: [Spezifikation](docs/FAIRY-BRAIN-TECHNICAL.md) · [Umsetzungsplan](docs/FAIRY-BRAIN-PLAN.md). In der lokalen v0.6.1-Entwicklungsvorschau öffnet **NAVI: About My State / Eigenen Zustand erklären** eine regelbasierte Momentaufnahme ohne zusätzlichen Modellaufruf.
 
-## Gehirnzustände sichtbar machen (lokale v0.6.0)
+## Gehirnzustände sichtbar machen (lokale v0.6.1)
 
 NAVI zeigt Empfang, Warten, Bearbeitung, lokale Hinweise, Antwortabschluss, Abbruch und Fehler durch zusammengehörige Bewegungen, Flügelschlag und Licht. Browser- und Windows-Fee verwenden gemeinsame Ausdrucksprofile; die Maus-Ausweichbewegung bleibt unabhängig. [Verhalten, Architektur und Prüfungen](docs/BRAIN-EXPRESSION.md). Eine fertige Antwort ist noch kein verifiziertes Programmergebnis.

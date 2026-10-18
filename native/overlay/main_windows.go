@@ -357,18 +357,9 @@ func (a *application) apply(c protocol.Command) {
 			a.preview = false
 		}
 	case "motion":
-		// A welcome must not replace an explicit listening/thinking interaction.
-		if a.context {
-			for _, id := range motion.GreetingMotions {
-				if c.Motion == id {
-					return
-				}
-			}
+		if !a.selectMotion(c.Motion, c.Preview) {
+			return
 		}
-		a.lastInteraction = a.elapsed
-		a.expression = ""
-		a.enter(c.Motion, c.Motion == "listen" || c.Motion == "think")
-		a.preview = c.Preview
 		if a.preview {
 			a.cancelAnchor("preview")
 			a.flight.Active = false
@@ -613,17 +604,7 @@ func (a *application) tick() {
 		a.enter("rest", false)
 		a.flight.Active = false
 	}
-	if a.age >= motion.Duration(a.id) {
-		if a.context || a.preview || a.id == "rest" {
-			a.age = motion.Duration(a.id)
-		} else {
-			if a.id == "hover" {
-				a.enter(motion.IdleMotions[rand.IntN(len(motion.IdleMotions))], false)
-			} else {
-				a.enter("hover", false)
-			}
-		}
-	}
+	a.advanceClip()
 	environment := a.environment()
 	var cursor point
 	if ok, _, _ := pGetCursorPos.Call(uintptr(unsafe.Pointer(&cursor))); ok != 0 {

@@ -2,6 +2,12 @@
 
 Die Fee bietet 110 auswählbare Bewegungen: die zwölf bisherigen Grundbewegungen, 88 parametrisierte Choreografien in acht Familien und zehn zusätzliche Begrüßungen. Flügelschlag, Körperbewegung, Licht, Schatten und Glitzer bleiben miteinander verbunden. Lagewechsel werden sanft abgefedert; Flügel und Glitzer behalten beim Wechsel ihre Phase. Beim Ausblenden oder Pausieren bleibt die gesamte Bewegungszeit stehen.
 
+## Wiedergabe ab Hotfix v0.6.1
+
+Automatische Begleiterreaktionen unterbrechen eine ausdrücklich gewählte Vorschau nicht mehr. Eine echte laufende Modellanfrage hat weiterhin Vorrang. Einzelvorschauen laufen auch nativ selbstständig in Schleifen; nach dem Stoppen gilt der aktuelle Begleiterausdruck. Beim Wiederöffnen der Ansicht wird die laufende Vorschau erneut übermittelt. Natürliche Clips verwenden ihre Katalogdauer und die Webview ruht nach 90 stillen Sekunden.
+
+`npm run test:animations` prüft alle 110 Auswahlen und die Gesamtfolge im echten Browser mit steuerbarer Animationszeit. Die nativen Go-Tests rendern jede Vorschau über zwei vollständige Zyklen in GDI+. Dies sind automatische Prüfungen; eine menschliche Sichtabnahme wird dadurch nicht behauptet.
+
 ## Zehn zusätzliche Begrüßungen
 
 Flügelwinken, Verbeugen, Heranhüpfen, Willkommenskreis, Sonnenbogen, Funkeln, Willkommenswirbel, Wiegen, Willkommenstanz und Hervorschauen. Beim Erweiterungsstart, Zurückkehren ins VS-Code-Fenster und Wechsel zu einem anderen Texteditor-Tab wählt NAVI zufällig eine Begrüßung aus einem gemischten Zehner-Vorrat; jede kommt vor einer erneuten Mischung einmal vor, ohne direkte Wiederholung an der Rundengrenze; diese Ereignisse teilen eine Sperrzeit von 15 Sekunden. Bei erneutem Sichtbarwerden der NAVI-Ansicht gibt es ebenfalls eine Begrüßung mit 15 Sekunden Sperrzeit. Die Ansicht unterbricht dafür keine Vorschau oder aktive Prompt-Interaktion; der native Helfer schützt seine Zuhören-/Nachdenken-Zustände. Tabs außerhalb von VS Code werden nicht beobachtet.

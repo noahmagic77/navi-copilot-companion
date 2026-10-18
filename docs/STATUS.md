@@ -2,6 +2,14 @@
 
 Stand: **18.10.2026**. Die [Roadmap](roadmap.md) beschreibt die Reihenfolge; [Bedienung und Architektur](ACTIVE-COMPANION.md) den aktuellen Begleiter und seine Grenzen.
 
+## Animations-Hotfix v0.6.1
+
+Alle 110 Vorschauen sind gegen Unterbrechungen durch automatische Reaktionen abgesichert; echte Modellanfragen behalten Vorrang. Native Vorschauen laufen eigenständig in Schleifen. Begrüßungen funktionieren nach Zuhören/Nachdenken, die Blende kehrt nach dem Vorschauende zum aktuellen Ausdruck zurück und der Ruhezustand beginnt in der Webview nach 90 statt neun Sekunden.
+
+Die vollständige Browserprüfung erfasst jede Auswahl über mehrere Zyklen und alle 110 Einträge in Reihenfolge. Native Windows-Rasterprüfungen erfassen jede Animation über zwei volle Zyklen. Der bestehende 83-Tests-Satz bleibt erhalten; zusätzliche native und isolierte Host-Prüfungen sichern die Vorschau-Prioritäten. Ein reproduzierbarer Test des alten v0.6.0-Browsercodes scheitert bereits an der durch Begleiterreaktionen gesperrten Auswahl.
+
+[v0.6.1-VSIX](../downloads/navi-copilot-companion-0.6.1.vsix) · [Prüfsumme](../downloads/navi-copilot-companion-0.6.1.vsix.sha256) · [Änderungen Deutsch](releases/v0.6.1.de.md) · [English release notes](releases/v0.6.1.en.md). Der tatsächliche Veröffentlichungsstand steht auf [GitHub Releases](https://github.com/noahmagic77/navi-copilot-companion/releases). Die gesonderte Ankerflug-Abnahme bleibt offen; der entsprechende gehostete Windows-Fenstertest ist kein bestandener Nachweis.
+
 ## Aktueller Stand
 
 **Pixelnavigation lokal ergänzt:** Ein sichtbarer Zielanker an der Diagnose liefert dem Windows-Helfer echte Pixelkoordinaten. Die Fee landet auf derselben gemessenen Höhe, 60 DIPs links daneben. Maximal 20 Sekunden und vier Messungen pro Sekunde; keine Produkt-Bildspeicherung oder Übertragung. Erkennung, DPI-Geometrie, native Live-Landung und Anker aus dem echten VS-Code-Renderer geprüft. Die durchgehende VS-Code-Overlay-Abnahme ist weiterhin offen: der isolierte Helfer konnte kein sichtbares zugehöriges Fenster anbinden (`owner=false`). Details und Grenzen: [Editor-Anker](EDITOR-ANCHORS.md).

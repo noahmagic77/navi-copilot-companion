@@ -58,6 +58,9 @@ jobs:
           cat "docs/releases/v$VERSION.en.md" > "$NOTES"
           printf '\n\n---\n\n' >> "$NOTES"
           cat "docs/releases/v$VERSION.de.md" >> "$NOTES"
-          gh release create "$TAG" "$VSIX" "$VSIX.sha256" \
+          ASSETS=("$VSIX" "$VSIX.sha256")
+          AUDIT="downloads/navi-animation-audit-$VERSION.json"
+          if [[ -f "$AUDIT" ]]; then ASSETS+=("$AUDIT"); fi
+          gh release create "$TAG" "${ASSETS[@]}" \
             --target "$(git rev-parse HEAD)" --title "NAVI $TAG (Preview)" \
             --notes-file "$NOTES" --prerelease

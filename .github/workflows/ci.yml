@@ -21,6 +21,16 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run check
       - run: npm test
+      - name: Exercise all 110 rendered animations
+        timeout-minutes: 3
+        run: npm run test:animations
+      - name: Upload animation audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NAVI-animation-audit
+          path: build/animation-catalogue/report.json
+          if-no-files-found: warn
 
   package-vsix:
     name: Package VSIX

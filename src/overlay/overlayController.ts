@@ -96,9 +96,14 @@ export class OverlayController implements vscode.Disposable {
   }
   motion(id: string, preview=false): void {
     if (!motionIds.has(id)) return;
-    this.expression=undefined;
-    if (this.previewActive && !preview && (id==='greet'||id.startsWith('greet-'))) return;
+    const endingPreview=this.previewActive&&!preview;
     this.previewActive=preview;
+    if(endingPreview&&this.expression&&this.expression.frame.state!=='idle'){
+      const {frame,at}=this.expression;
+      this.express({...frame,age:Math.min(86400,frame.age+Math.max(0,(Date.now()-at)/1000))});
+      return;
+    }
+    if(!preview)this.expression=undefined;
     if(preview)this.manualUntil=Date.now()+15000;
     if(preview)this.automaticTarget=false;
     const now = Date.now();
@@ -182,6 +187,7 @@ export class OverlayController implements vscode.Disposable {
   }
   express(frame:ExpressionFrame):void{
     this.expression={frame:{...frame},at:Date.now()};
+    if(this.previewActive&&!frame.engaged)return;
     this.previewActive=false;
     this.bridge.send({type:'expression',state:frame.state,age:Math.min(86400,Math.max(0,frame.age))});
   }
