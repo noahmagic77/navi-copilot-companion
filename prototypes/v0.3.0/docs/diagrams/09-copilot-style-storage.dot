@@ -1,0 +1,24 @@
+digraph NAVI {
+ graph [label="NAVI 0.3 — Persistenz je Benutzer",labelloc=t,fontname="DejaVu Sans",fontsize=22,bgcolor="#091120",fontcolor="#e6f4ff",pad=0.35,ranksep=0.65,nodesep=0.35,splines=ortho];
+ node [shape=box,style="rounded,filled",fillcolor="#18354e",color="#5c88b3",fontcolor="#e8f6ff",fontname="DejaVu Sans",fontsize=12,margin="0.20,0.12"];
+ edge [color="#65a8d0",penwidth=1.5,arrowsize=0.7];
+ user [label="VS Code Benutzerprofil"];
+ extension [label="NAVI Extension Host"];
+ global [label="globalStorageUri"];
+ journal [label="sessions/
+workspace-hash/
+session-hash.jsonl",fillcolor="#173e52"];
+ index [label="navi-index.sqlite
+(rebuildable SQLite-Index)",shape=cylinder,fillcolor="#154443"];
+ hook [label="Copilot Hooks (Opt-in)"];
+ otel [label="OpenTelemetry (Opt-in)"];
+ sanitizer [label="NAVI Sanitizer
+keine Rohprompts",fillcolor="#365077"];
+ ui [label="NAVI UI: Hinweise / Statistik"];
+ user -> extension -> global;
+ global -> journal; global -> index;
+ hook -> sanitizer; otel -> sanitizer;
+ sanitizer -> journal;
+ journal -> index [label="Index / Reindex",fontcolor="#d4e8f9"];
+ index -> ui;
+}

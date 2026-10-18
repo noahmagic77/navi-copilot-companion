@@ -1,0 +1,28 @@
+digraph FLOW {
+  graph [label="NAVI · Programmablauf",labelloc=t,fontname="DejaVu Sans",fontsize=23,fontcolor="#eaf8ff",bgcolor="#091120",pad=0.35,ranksep=0.35];
+  node [shape=box,style="rounded,filled",fillcolor="#17324b",color="#5d89b5",fontname="DejaVu Sans",fontcolor="#f3fbff",fontsize=11,margin="0.24,0.14"];
+  edge [color="#75b0d1",penwidth=1.3,arrowsize=0.7];
+  start [label="VS Code startet\nNAVI Extension",fillcolor="#175c70"];
+  init [label="Settings und lokalen\nZustand laden"];
+  view [label="Webview + Reader +\nCommands initialisieren"];
+  choice [label="Eingehendes Ereignis?",shape=diamond,fillcolor="#2b405f"];
+  manual [label="Manueller\nPrompt Check"];
+  hook [label="Sanitisiertes\nHook-Event"];
+  otel [label="OTel Chat-Spans\nvalidieren"];
+  engine [label="Analysis Engine\nRules + Session"];
+  metric [label="Token Metrics Parser"];
+  decision [label="Sinnvoller Hinweis?",shape=diamond,fillcolor="#2b405f"];
+  debounce [label="Cooldown und History\nmax 150 / 14 Tage"];
+  ui [label="Fee + Sprechblase\naktualisieren",fillcolor="#155d66"];
+  start -> init -> view -> choice;
+  choice -> manual [label="Prompt"];
+  choice -> hook [label="Hook"];
+  choice -> otel [label="OTel"];
+  manual -> engine; hook -> engine;
+  engine -> decision;
+  decision -> debounce [label="Ja"];
+  decision -> choice [label="Nein"];
+  debounce -> ui;
+  otel -> metric -> ui;
+  ui -> choice;
+}

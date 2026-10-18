@@ -1,0 +1,23 @@
+flowchart LR
+    subgraph PACKAGE["navi-0.2.0.vsix immutable archive"]
+      MANIFEST["package.json / manifest"]
+      PROGRAM["Extension JavaScript / Core"]
+      UI["HTML + CSS + SVG + Webview JS"]
+    end
+    INSTALL["VS Code install from VSIX"]
+    PACKAGE --> INSTALL
+    INSTALL --> EXT["VS Code extensions folder"]
+    subgraph RUNTIME["VS Code extension runtime"]
+      GLOBAL["globalStorageUri"]
+      STATE["globalState / workspaceState"]
+      SETTINGS["VS Code settings"]
+    end
+    EXT --> RUNTIME
+    GLOBAL --> SNAP[("navi-state-v1.json")]
+    GLOBAL --> EVENT[("hook-events.jsonl")]
+    GLOBAL --> OTEL[("copilot-otel.jsonl")]
+    STATE --> PREFS["lightweight state / OTel backup"]
+    SETTINGS --> USEROPT["user opt-in / configuration"]
+    ROOT["trusted workspace repository"] --> HOOKS[".github/hooks/* optional"]
+    RUNTIME -. "opt-in only" .-> HOOKS
+    NEXT[("Optional SQLite v0.3")] -. "future migration" .- GLOBAL

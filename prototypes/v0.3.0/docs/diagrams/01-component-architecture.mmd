@@ -1,0 +1,39 @@
+flowchart TB
+    subgraph EDITOR["VS Code Desktop"]
+        subgraph EXT["NAVI Extension Host"]
+            ENTRY["extension.js / Composition Root"]
+            VIEW["NaviViewProvider / Webview"]
+            ENGINE["AnalysisEngine / Core"]
+            SM["SessionManager"]
+            RULES["PromptChecker / RecommendationEngine"]
+            METRICS["TokenMetricsParser"]
+            HOOKS["CopilotHookManager"]
+            TAIL["IncrementalJsonlReader"]
+            PERSIST["JsonEventStore"]
+        end
+    end
+    COPILOT["Copilot Harness / GitHub Copilot"]
+    OTELEXP["Copilot OTel JSONL Export"]
+    HOOKPROC["Hook Observer / Node Process"]
+    EVENTS[("hook-events.jsonl")]
+    NAVISTATE[("navi-state-v1.json")]
+    VSSETTINGS[("VS Code Settings")]
+    ENTRY --> VIEW
+    ENTRY --> ENGINE
+    ENTRY --> METRICS
+    ENTRY --> HOOKS
+    ENGINE --> SM
+    ENGINE --> RULES
+    ENTRY --> PERSIST
+    PERSIST <--> NAVISTATE
+    HOOKS -. "opt-in installs files" .-> HOOKPROC
+    COPILOT -- "optional lifecycle event" --> HOOKPROC
+    COPILOT -- "optional spans" --> OTELEXP
+    HOOKPROC --> EVENTS
+    EVENTS --> TAIL
+    OTELEXP --> TAIL
+    TAIL --> ENTRY
+    ENTRY <--> VSSETTINGS
+    METRICS --> ENTRY
+    ENGINE --> ENTRY
+    ENTRY --> VIEW

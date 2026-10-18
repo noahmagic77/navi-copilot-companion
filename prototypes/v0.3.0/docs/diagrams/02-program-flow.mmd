@@ -1,0 +1,19 @@
+flowchart TD
+    START(["VS Code activates NAVI"]) --> INIT["Load config; create directories; load sanitized history"]
+    INIT --> SHOW["Register commands + Webview + file observers"]
+    SHOW --> WAIT{"Event arrives?"}
+    WAIT -- "Manual prompt" --> ANALYZE["PromptChecker analyzes in memory"]
+    WAIT -- "Hook JSONL" --> SANITIZE["Validate event category / rule IDs"]
+    WAIT -- "OTel JSONL" --> PARSE["Parse chat spans; avoid roll-up/double-count"]
+    WAIT -- "Settings change" --> CONFIG["Refresh config and UI"]
+    SANITIZE --> TOPIC["SessionManager checks topic (weak signal)"]
+    TOPIC --> RECO["RecommendationEngine maps rule IDs to static text"]
+    ANALYZE --> RECO
+    RECO --> ADVICE{"Actionable hint?"}
+    ADVICE -- "No" --> WAIT
+    ADVICE -- "Yes" --> THROTTLE["Debounce repeated advice"]
+    THROTTLE --> SAVE["Write bounded sanitized JSON snapshot"]
+    SAVE --> DISPLAY["Send state via VS Code Webview message"]
+    PARSE --> DISPLAY
+    CONFIG --> DISPLAY
+    DISPLAY --> WAIT

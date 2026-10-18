@@ -1,0 +1,17 @@
+digraph DEPLOY {
+  graph [label="NAVI · VSIX-Paket vs. Laufzeitdaten",labelloc=t,fontname="DejaVu Sans",fontsize=23,fontcolor="#e6f4ff",bgcolor="#091120",pad=0.4,ranksep=0.7,nodesep=0.45];
+  node [shape=box,style="rounded,filled",fontname="DejaVu Sans",fontsize=11,color="#5b83ae",fillcolor="#142b42",fontcolor="#eff9ff",margin="0.24,0.18"];
+  edge [color="#81acd0",penwidth=1.3,arrowsize=0.7];
+  subgraph cluster_pack {label="IMMUTABLE .vsix";fontcolor="#8dc5df";color="#315a78";style="rounded"; manifest[label="extension.vsixmanifest\npackage.json"]; code[label="Extension Code\nUI Assets\nArchitekturdocs"];}
+  install [label="VS Code Installationsvorgang",fillcolor="#16556b"];
+  ext [label="Installierte Extension",fillcolor="#155570"];
+  manifest -> install; code -> install; install -> ext;
+  subgraph cluster_runtime {label="LOKALE LAUFZEIT (separat)";fontcolor="#8dc5df";color="#315a78";style="rounded";
+    global[label="globalStorageUri\nState / Events / OTel",shape=cylinder]; state[label="globalState\nSettings-Backup",shape=cylinder]; settings[label="VS Code User Settings",shape=cylinder];
+  }
+  ext -> global; ext -> state; ext -> settings;
+  hook[label="Projekt-Repository\n.github/hooks/* (opt-in)",fillcolor="#3a374e"];
+  ext -> hook [style=dashed,color="#b39bcc"];
+  future[label="SQLite v0.3 · geplant",style="rounded,dashed",color="#829cb6"];
+  global -> future [style=dashed];
+}
