@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.2 — 2026-10-24 (Editor-anchor hotfix preview)
+
+- Fix self-occlusion during diagnostic flight: exclude only NAVI's fairy/speech HWNDs from Windows capture for the bounded request and restore their capture policy on stop, expiry or focus loss. Preserve desktop composition for Chromium's GPU surface.
+- Synchronize GDI writes before reading/clearing DIB pixels; distinguish capture failure, missing/ambiguous markers, unsupported self-exclusion, placement limits and expiry. Recheck foreground ownership before capture and explain unavailable states in the editor hover.
+- Add a real layered-window overlap regression with visible-cover verification and capture-policy restoration, and failure reports containing bounded states instead of images.
+- Pass the formerly failing hosted Windows integration test and the complete isolated VS Code-to-native flight with baseline, zoom, wrapped text, split editors, scroll reacquisition and diagnostic removal. Keep human acceptance and additional physical display configurations separate.
+- Require successful native Windows acceptance for the same main commit before GitHub publication. Add bilingual notes, verified VSIX/SHA-256 and a sanitized anchor audit.
+
 ## 0.6.1 — 2026-10-18 (Animation hotfix preview)
 
 - Keep explicit animation previews and the full 110-item sequence active across ambient expressions and idle recovery; retain priority for real engaged requests and restore the latest expression when preview ends.

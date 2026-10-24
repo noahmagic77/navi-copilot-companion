@@ -1,0 +1,84 @@
+{
+  "version": "0.6.2",
+  "success": true,
+  "scope": "Sanitized automated editor-anchor acceptance; no source code, chat or captured images",
+  "rootCause": "The native fairy occluded its own beacon in composed desktop capture",
+  "fix": "Temporarily exclude only NAVI fairy and speech windows from capture; synchronize GDI writes before reading pixels",
+  "pixelAnchorArrivals": [
+    {
+      "id": 5,
+      "status": "arrived",
+      "x": 805,
+      "y": 482,
+      "coreX": 805,
+      "coreY": 482,
+      "reason": ""
+    },
+    {
+      "id": 6,
+      "status": "arrived",
+      "x": 834,
+      "y": 488,
+      "coreX": 834,
+      "coreY": 488,
+      "reason": ""
+    },
+    {
+      "id": 7,
+      "status": "arrived",
+      "x": 936,
+      "y": 445,
+      "coreX": 936,
+      "coreY": 445,
+      "reason": ""
+    }
+  ],
+  "anchorScrollTracking": {
+    "before": {
+      "id": 5,
+      "status": "arrived",
+      "x": 805,
+      "y": 482,
+      "coreX": 805,
+      "coreY": 482,
+      "reason": ""
+    },
+    "after": {
+      "id": 5,
+      "status": "arrived",
+      "x": 805,
+      "y": 130,
+      "coreX": 805,
+      "coreY": 130,
+      "reason": ""
+    }
+  },
+  "diagnosticRemovalStopsTracking": true,
+  "nativeWindows": {
+    "success": true,
+    "workflow": "https://github.com/noahmagic77/navi-copilot-companion/actions/runs/39171077885",
+    "sourceCommit": "56663fe29dc644073c486e7d702e627e527884b5",
+    "layeredOcclusionRegression": true,
+    "capturePolicyRestoration": true
+  },
+  "unitTests": 84,
+  "dpiGeometryFactors": [
+    1,
+    1.25,
+    1.5,
+    2,
+    2.25
+  ],
+  "limits": {
+    "maximumTrackingSeconds": 20,
+    "maximumScansPerSecond": 4,
+    "storage": "RAM only",
+    "minimumWindowsCaptureExclusion": "Windows 10 version 2004"
+  },
+  "limitations": [
+    "Automated isolated VS Code profile; no human visual acceptance",
+    "No exhaustive physical monitor, HDR or contrast-mode acceptance",
+    "Focus timing, real models and microphones were outside this targeted host run",
+    "Own overlay windows may be absent from screen recordings while tracking"
+  ]
+}

@@ -24,11 +24,31 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           persist-credentials: false
+      - name: Require successful native Windows acceptance
+        timeout-minutes: 6
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          COMMIT="$(git rev-parse HEAD)"
+          for attempt in {1..60}; do
+            RESULT="$(gh api "repos/$GH_REPO/actions/workflows/overlay-native.yml/runs?head_sha=$COMMIT&branch=main&event=push&per_page=5" --jq '.workflow_runs[0].conclusion // "pending"')"
+            case "$RESULT" in
+              success) echo "Native Windows acceptance passed for $COMMIT."; exit 0 ;;
+              pending) sleep 5 ;;
+              *) echo "Native Windows acceptance did not pass: $RESULT"; exit 1 ;;
+            esac
+          done
+          echo "Native Windows acceptance is still pending; release not published."
+          exit 1
       - name: Verify checked-in VSIX and publish preview
         env:
           GH_TOKEN: ${{ github.token }}
@@ -59,8 +79,9 @@ jobs:
           printf '\n\n---\n\n' >> "$NOTES"
           cat "docs/releases/v$VERSION.de.md" >> "$NOTES"
           ASSETS=("$VSIX" "$VSIX.sha256")
-          AUDIT="downloads/navi-animation-audit-$VERSION.json"
-          if [[ -f "$AUDIT" ]]; then ASSETS+=("$AUDIT"); fi
+          for AUDIT in "downloads/navi-animation-audit-$VERSION.json" "downloads/navi-anchor-audit-$VERSION.json"; do
+            if [[ -f "$AUDIT" ]]; then ASSETS+=("$AUDIT"); fi
+          done
           gh release create "$TAG" "${ASSETS[@]}" \
             --target "$(git rev-parse HEAD)" --title "NAVI $TAG (Preview)" \
             --notes-file "$NOTES" --prerelease

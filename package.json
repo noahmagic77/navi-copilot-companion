@@ -2,7 +2,7 @@
   "name": "navi-copilot-companion",
   "displayName": "NAVI Copilot Companion",
   "description": "Open-source, local-first VS Code fairy companion with editor awareness and explicit problem navigation.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "private": true,
   "license": "MIT",
   "engines": {
@@ -194,7 +194,7 @@
         "navi.overlay.editorAnchors": {
           "type": "boolean",
           "default": true,
-          "description": "After explicit problem navigation, locate NAVI's coloured editor beacon in the active VS Code client area for precise Windows flight (up to 20 seconds, at most 4 scans/second). No screenshots are saved or sent. Disable to keep only the editor marker."
+          "description": "After explicit problem navigation, locate NAVI's editor beacon for precise Windows flight (up to 20 seconds, at most 4 scans/second). Requires Windows capture-exclusion support (Windows 10 2004+). NAVI's native windows may be omitted from screen recordings while tracking; this is reset on stop. No screenshots are saved or sent. Disable to keep only the editor marker."
         },
         "navi.companion.enabled": {
           "type": "boolean",

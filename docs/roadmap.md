@@ -1,6 +1,6 @@
 # NAVI Roadmap
 
-Stand: 18.10.2026. Diese Datei beschreibt Reihenfolge, Umfang und Abnahmekriterien der geplanten Entwicklung. Den tatsächlichen Implementierungs-, Test- und Veröffentlichungsstand dokumentiert der separate [Statusbericht](STATUS.md). Es gibt keine zugesagten Veröffentlichungstermine.
+Stand: 24.10.2026. Diese Datei beschreibt Reihenfolge, Umfang und Abnahmekriterien der geplanten Entwicklung. Den tatsächlichen Implementierungs-, Test- und Veröffentlichungsstand dokumentiert der separate [Statusbericht](STATUS.md). Es gibt keine zugesagten Veröffentlichungstermine.
 
 ## Neu: aktiver Begleiter B → C → D/E → Sprache
 
@@ -8,13 +8,17 @@ Stand: 18.10.2026. Diese Datei beschreibt Reihenfolge, Umfang und Abnahmekriteri
 
 Sprache hat eine registrierbare Anbieterschnittstelle, Befehlsparser, sichtbaren Zuhörmodus und Stopplogik. Ein kompatibler vorhandener Aufnahme-/Transkriptionsanbieter ist in dieser Umgebung **nicht angebunden**; ohne ihn bleibt die Funktion deaktiviert. Kein zusätzliches Modell oder neuer Cloud-Dienst wird vorausgesetzt. Nächste Abnahme: aktuelle VSIX installieren und Zusammenspiel mit Overlay, Spielen und realen Modellanfragen prüfen.
 
+## Flug-Hotfix v0.6.2
+
+Selbstüberdeckung des Zielmarkers behoben; GDI-Synchronisation, begrenzte Aufnahmeausschlüsse und nachvollziehbare Ausfallgründe ergänzt. Die vollständige isolierte VS-Code-Overlay-Kette mit Zoom, Umbruch, geteilten Editoren und Scroll-Verfolgung sowie der Windows-CI-Fenstertest bestehen. Weitere physische Displays und die menschliche Sichtabnahme im normalen Profil bleiben eigene Abnahmepunkte. Der GitHub-Release wartet zusätzlich auf die erfolgreiche Windows-Abnahme desselben main-Commits.
+
 ## Animations-Hotfix v0.6.1
 
 Vorschau-Prioritäten, native Schleifen, Begrüßungswechsel und Ruhezustand korrigiert. Jede der 110 Animationen wird im Browser und im Windows-Renderer automatisch geprüft. Die offene Diagnoseflug-Abnahme bleibt ein eigener Punkt; der Hotfix setzt sie nicht auf erledigt.
 
 ## Aktuelle Position
 
-**Expliziter Quick Fix lokal ergänzt:** Nach „Problem beheben“ darf ein eindeutig vom Sprachdienst empfohlener Vorschlag sofort angewendet werden; mehrere oder nicht empfohlene Vorschläge bleiben auswählbar. NAVIs Symbol markiert die tatsächliche Diagnosezeile. Die [markergebundene Pixelnavigation](EDITOR-ANCHORS.md) ist jetzt lokal implementiert: echte Erkennung und native Landung sind geprüft; die vollständige VS-Code-Abnahme mit Zoom, Umbruch und geteilten Editoren bleibt offen. Allgemeines autonomes Reparieren ohne Diagnose/Sprachdienst ist nicht umgesetzt.
+**Expliziter Quick Fix lokal ergänzt:** Nach „Problem beheben“ darf ein eindeutig vom Sprachdienst empfohlener Vorschlag sofort angewendet werden; mehrere oder nicht empfohlene Vorschläge bleiben auswählbar. NAVIs Symbol markiert die tatsächliche Diagnosezeile. Die [markergebundene Pixelnavigation](EDITOR-ANCHORS.md) ist jetzt lokal implementiert: die vollständige isolierte VS-Code-Kette mit Zoom, Umbruch, geteilten Editoren und Scroll-Verfolgung besteht seit v0.6.2. Andere physische Displays und menschliche Profilabnahme bleiben zusätzlich. Allgemeines autonomes Reparieren ohne Diagnose/Sprachdienst ist nicht umgesetzt.
 
 **Direkt nutzbare Hilfe lokal ergänzt:** Rechtsklick-Aktionsmenü, wiederholtes Weitergehen durch Diagnosen, Auswahl bekannter Projektprobleme, vorhandene VS-Code-Korrekturvorschläge und vorbereitete Besprechung markierten Codes. Konkrete Hilfeangebote verweisen auf ihre geprüfte Diagnose. Die Sprechblasenspitze ist in beiden Darstellungen am gerenderten Feenkern befestigt. Die nächste Abnahme prüft Lesbarkeit und Bedienung im normalen VS-Code-Profil; echte Modellantworten bleiben gesondert offen.
 

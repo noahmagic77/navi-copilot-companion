@@ -1,6 +1,14 @@
 # NAVI Statusbericht
 
-Stand: **18.10.2026**. Die [Roadmap](roadmap.md) beschreibt die Reihenfolge; [Bedienung und Architektur](ACTIVE-COMPANION.md) den aktuellen Begleiter und seine Grenzen.
+Stand: **24.10.2026**. Die [Roadmap](roadmap.md) beschreibt die Reihenfolge; [Bedienung und Architektur](ACTIVE-COMPANION.md) den aktuellen Begleiter und seine Grenzen.
+
+## Flug-Hotfix v0.6.2
+
+Die Ursache ist nachgewiesen und behoben: NAVIs eigenes Overlay verdeckte den Marker in der Desktop-Aufnahme. Während der höchstens 20 Sekunden Zielverfolgung werden nur die native Fee und Sprechblase aus Windows-Aufnahmen ausgenommen; danach wird der Zustand zurückgesetzt. Unterstützt ab Windows 10 Version 2004. Die Fee bleibt auf dem Bildschirm sichtbar, kann währenddessen aber in Bildschirmaufnahmen fehlen.
+
+Die vollständige Kette im tatsächlichen isolierten VS Code besteht jetzt für Ausgangslayout, Zoom, umgebrochenen Text und geteilte Editoren. Nach Scrollen erreicht die Fee die geänderte Pixelhöhe erneut; Diagnoseentfernung stoppt die Verfolgung. Der zuvor fehlgeschlagene Windows-CI-Fenstertest ist mit dem Fix vollständig erfolgreich. 84 JavaScript-/TypeScript-Tests und native Go-Tests einschließlich echter Überdeckung und Wiederherstellung bestehen. Die 110 Animationsprüfungen bleiben erhalten.
+
+[v0.6.2-VSIX](../downloads/navi-copilot-companion-0.6.2.vsix) · [SHA-256](../downloads/navi-copilot-companion-0.6.2.vsix.sha256) · [Anker-Prüfbericht](../downloads/navi-anchor-audit-0.6.2.json) · [Änderungen Deutsch](releases/v0.6.2.de.md) · [English](releases/v0.6.2.en.md). Der Release-Workflow wartet jetzt zusätzlich auf die Windows-Abnahme desselben main-Commits; den tatsächlichen Veröffentlichungsstand zeigt GitHub Releases.
 
 ## Animations-Hotfix v0.6.1
 
@@ -12,11 +20,11 @@ Die vollständige Browserprüfung erfasst jede Auswahl über mehrere Zyklen und 
 
 ## Aktueller Stand
 
-**Pixelnavigation lokal ergänzt:** Ein sichtbarer Zielanker an der Diagnose liefert dem Windows-Helfer echte Pixelkoordinaten. Die Fee landet auf derselben gemessenen Höhe, 60 DIPs links daneben. Maximal 20 Sekunden und vier Messungen pro Sekunde; keine Produkt-Bildspeicherung oder Übertragung. Erkennung, DPI-Geometrie, native Live-Landung und Anker aus dem echten VS-Code-Renderer geprüft. Die durchgehende VS-Code-Overlay-Abnahme ist weiterhin offen: der isolierte Helfer konnte kein sichtbares zugehöriges Fenster anbinden (`owner=false`). Details und Grenzen: [Editor-Anker](EDITOR-ANCHORS.md).
+**Pixelnavigation v0.6.2 geprüft:** Die eindeutige Editor-Markierung wird trotz der heranfliegenden Fee erkannt. GDI-Synchronisation, begrenzte Aufnahmeausschlüsse für NAVI und konkrete Ausfallgründe stabilisieren die Zuordnung. Die komplette isolierte VS-Code-Overlay-Kette sowie der native Windows-Fenstertest bestehen. Weitere physische Bildschirmkonfigurationen und menschliche Sichtabnahme bleiben separat. [Details](EDITOR-ANCHORS.md).
 
-Die drei echten Editor-Rasterfälle Grundzustand, Zoom mit Wortumbruch und duplizierte Datei in geteilten Gruppen werden jeweils vom nativen Erkenner gefunden. Der aktuelle erfolgreiche Host-Lauf ist ausdrücklich ein Renderer-/Quick-Fix-Lauf; die vollständige Fensteraktivierung wurde separat verweigert und gilt nicht als bestanden.
+Die früheren getrennten Raster-/Landungsprüfungen sind jetzt durch echte gemeinsame Anflüge im isolierten VS-Code-Host ergänzt: Grundzustand, Zoom und umgebrochener Text in geteilten Gruppen. Scroll-Verfolgung und Abbruch bei Diagnoseentfernung bestehen ebenfalls. Die frühere fehlende Fensteraktivierung ist im aktuellen vollständigen Lauf nicht mehr blockierend.
 
-**Explizites Beheben ergänzt:** „Problem beheben“ verwendet die vorhandene VS-Code-Quick-Fix-Ausführung: eindeutig empfohlener Vorschlag nach Klick direkt, mehrere oder nicht empfohlene zur Auswahl, ohne Vorschlag keine Änderung. Reine KI-/Erkläraktionen werden nicht automatisch gewählt. Die ausgewählte Diagnose erhält ein Feensymbol im Zeilenrand. Kein eigener Syntaxparser, kein Modellaufruf und kein automatisches Speichern durch NAVI. Die neue Pixelnavigation ist als lokale Testfunktion angebunden; ihre vollständige VS-Code-Abnahme bleibt offen.
+**Explizites Beheben ergänzt:** „Problem beheben“ verwendet die vorhandene VS-Code-Quick-Fix-Ausführung: eindeutig empfohlener Vorschlag nach Klick direkt, mehrere oder nicht empfohlene zur Auswahl, ohne Vorschlag keine Änderung. Reine KI-/Erkläraktionen werden nicht automatisch gewählt. Die ausgewählte Diagnose erhält ein Feensymbol im Zeilenrand. Kein eigener Syntaxparser, kein Modellaufruf und kein automatisches Speichern durch NAVI. Die vollständige Pixelnavigation besteht mit v0.6.2 im isolierten echten VS-Code-Host; normale Profil-/Displayabnahme bleibt zusätzlich.
 
 **Konkrete Programmierhilfe ergänzt:** Rechtsklick-Aktionsmenü in beiden Darstellungen, Diagnose-Navigation mit Weitergehen und Rücksprung, Auswahl bekannter Workspace-Probleme, Öffnen vorhandener Quick Fixes und vorbereitete Besprechung einer Codeauswahl. Hilfeangebote nennen ihre Diagnose; veraltete Ziele werden erneut geprüft. Offene Hinweisnachrichten blockieren weitere Navigation nicht mehr. Die Blasenspitze folgt dem tatsächlich gerenderten Kern; passende Aktionsknöpfe erscheinen nur bei Hilfeangeboten.
 
@@ -38,7 +46,7 @@ Die drei echten Editor-Rasterfälle Grundzustand, Zoom mit Wortumbruch und dupli
 | A1/A2: Zustand und Anfragen | Zustandskern, Selbstmodell, Anfrage-IDs, Konkurrenzregeln, Selbstauskunft und Ausdruckssteuerung | Automatische Lebenszyklus-, Konkurrenz-, Abbruch- und Fehlerprüfungen bestehen. Echte Modell-/Client-Anfragen separat offen. |
 | A2b: Wahrnehmung | Fenstermaus, Auswahl/Cursorzeile bis 2.000 Zeichen, maximal 25 Diagnosen im Brain-Snapshot | RAM-only; keine automatische Modellweitergabe. Reale Editoränderungen und Diagnosebeobachtung im isolierten VS-Code-Host geprüft. |
 | B: Begleiterentscheidungen | Nach drei Änderungen in fünf Sekunden Platz machen, nach zehn Sekunden Ruhe zurückkommen; Diagnoseaufmerksamkeit und begrenzte Angebote | Zeit-/Vorrangtests bestehen. Tatsächlicher VS-Code-Host bestätigt Platzmachen, Rückkehr und Abschalten. |
-| C: Probleme zeigen | Fehler vor Warnungen, Auswahl, Diagnosezyklus, bekannte Projektprobleme, Markierung, vorhandene Quick Fixes und gemessene Anker-Pixelnavigation als Testfunktion | Diagnosemarkierung, Weitergehen/Rücksprung, Fix und Undo im Host geprüft. Ankerdarstellung und native Landung getrennt bestanden; vollständige VS-Code-Overlay-Abnahme und echte Modellantwort separat offen. |
+| C: Probleme zeigen | Fehler vor Warnungen, Auswahl, Diagnosezyklus, bekannte Projektprobleme, Markierung, vorhandene Quick Fixes und gemessene Anker-Pixelnavigation als Testfunktion | Diagnosemarkierung, Weitergehen/Rücksprung, Fix und Undo im Host geprüft. Vollständige isolierte VS-Code-Overlay-Ankunft mit Zoom, Umbruch, geteilten Editoren und Scrollen bestanden; echte Modellantwort und menschliche Profilabnahme separat. |
 | D: Erinnerungen | Bestätigte Vorlieben im Profil, Projektmerksätze/Aufgaben/nächste Schritte je Workspace; ansehen, bearbeiten, löschen und zurücksetzen | Standardmäßig aus. Speichergrenzen, Rekonstruktion und Projekttrennung automatisch geprüft. Kein automatisches Sammeln oder Modellversand. Andere Workspaces werden dort getrennt verwaltet. |
 | E: Live-Gehirn | Echte Wahrnehmung → Zustand → Entscheidung → Ausdruck; Gründe, Fähigkeiten, Erinnerungen und 50 Entscheidungen im RAM | Ansicht nur sichtbar mit maximal 4 Hz aktualisiert. Sichere Textdarstellung und Schaltflächen im Edge-Browser geprüft, Webview im echten VS-Code-Host geöffnet. Konzeptgrafik bleibt Simulation. |
 | Sprache | Anbieterschnittstelle, expliziter Zuhörmodus, Statusleiste mit Stopp, Befehlsparser und Fokus-/Fehler-/Schließlogik | Mit simuliertem Anbieter getestet. Kein kompatibler echter Audio-/Transkriptionsanbieter angebunden: deaktiviert mit Erklärung. Installiertes Codex Audio hat laut Manifest keine öffentliche API. |
@@ -52,7 +60,7 @@ Die Extension verarbeitet Entscheidungen und Darstellung lokal im Extension-Host
 
 ## Prüfstand
 
-- **83 JavaScript-/TypeScript-Tests bestanden**, einschließlich Ankerfarben, begrenzter Geometrie, Helper-Lebenszyklus, Fix-Ziel am Cursor, Diagnosezyklus, Begleiterregeln, Hinweisbudgets, Aufgabenbesitz, Wahrnehmung, Problemidentität/Bereiche, Erinnerungen, Live-Projektion und Sprach-Lebenszyklus. Ein fehlgeschlagener Mikrofon-Stopp bleibt sichtbar unbestätigt und kann erneut versucht werden.
+- **84 JavaScript-/TypeScript-Tests bestanden**, einschließlich Ankerfarben, begrenzter Geometrie, Helper-Lebenszyklus, Fix-Ziel am Cursor, Diagnosezyklus, Begleiterregeln, Hinweisbudgets, Aufgabenbesitz, Wahrnehmung, Problemidentität/Bereiche, Erinnerungen, Live-Projektion und Sprach-Lebenszyklus. Ein fehlgeschlagener Mikrofon-Stopp bleibt sichtbar unbestätigt und kann erneut versucht werden.
 - Native Go-Tests für Overlay, Bewegung, Ausdruck, Spiele, Trefferregionen, Protokoll und Sprechblasen bestanden.
 - Echter Edge-Browser: Platzmachen, Hilfe-/Gehirnaktionen, sichere Live-Darstellung, Vorschau, Pause/Fortsetzen, Sichtbarkeit, Mausreaktion, Sprechblase und tatsächlicher Audiostart bestanden. Drei repräsentative Animationen zeigen im gemessenen Abschnitt ungefähr 26–46 Pixel Bewegung; keine Prüfung aller Animationen durch einen Menschen.
 - Echter isolierter VS-Code-Extension-Host: aktueller gezielter Lauf prüft Diagnosebeobachtung, bereinigte Live-Daten, Anbieterregistrierung ohne Aufnahme, Markieren/Weitergehen/Rücksprung bei offenen Hinweisen und die Auswahl eines Projektproblems. Mit kontrolliertem registriertem Code-Action-Anbieter: fehlende Klammer ergänzen, echtes Undo, mehrdeutige/fehlende Fixes ohne Änderung und Abbruch bei Änderungen während der Abfrage bestanden. Fokusabhängige Zeitprüfungen wurden in diesem Lauf ausdrücklich ausgelassen; frühere fokussierte Läufe prüften Platzmachen/Rückkehr, Speichern und Task-Ergebnis. Menschliche Sichtabnahme und produktive Sprachdienste bleiben separat offen.
@@ -77,7 +85,7 @@ Build-Berichte bleiben im ignorierten Build-Verzeichnis. Das neue Release-Paket 
 2. Mit dem tatsächlich eingerichteten VS-Code-Modell Anfrage, Streaming, Abschluss, Fehler und Abbruch prüfen; Codex-MCP beim tatsächlichen Host einrichten und separat testen.
 3. Erinnerungsverwaltung mit bewusst bestätigten Einträgen durchspielen; Projekttrennung, Löschen und Neustart im normalen Profil abnehmen.
 4. Für Sprache erst einen unterstützten vorhandenen Anbieter belegen und anbinden. Dann Aufnahmegerät, Datenweg, dauerhaften Indikator und tatsächliches Beenden separat prüfen. Bis dahin keine Aufnahme.
-5. Die CI und den automatischen GitHub-Vorschau-Release prüfen. Die vollständige Flug-/Sichtabnahme bleibt offen und wird im Release genannt; ihre erfolgreiche Abnahme wird separat dokumentiert.
+5. Die CI und den automatischen GitHub-Vorschau-Release prüfen. Die automatische vollständige Flugabnahme besteht; weitere Displaykonfigurationen und menschliche Sichtabnahme werden getrennt dokumentiert.
 
 ## Veröffentlichung und Open Source
 
